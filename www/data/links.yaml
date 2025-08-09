@@ -1,0 +1,12 @@
+
+# You can even have internal links here! We'll handle this in the shortcode.
+- id: "about-us"
+  name: "About Our Company"
+  url: "/about" # This is a page path, not a full URL
+  description: "Learn more about our team and mission."
+
+- id: "wolfram"
+  name: "A new kind of science"
+  url: "https://www.wolframscience.com/nks/"
+  description: "Explore the groundbreaking work of Stephen Wolfram in 'A New Kind of Science', a monumental book that redefines the foundations of computation, complexity, and the natural world. Discover how simple computational rules can generate intricate patterns and behaviors, challenging traditional notions of science and philosophy."
+

@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "workspaces/genetic",
+  "workspaces/wasm",
+  "workspaces/nikolaus",
+  "workspaces/monkey",
+  "workspaces/fertilization",
+]

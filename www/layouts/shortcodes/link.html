@@ -1,0 +1,51 @@
+{{/*
+  Shortcode: link
+  Description: Renders a link from the central data/links.yaml file.
+  Usage: {{< link "id-from-data-file" >}}
+  Usage with overrides: {{< link "id-from-data-file" text="Custom Link Text" >}}
+*/}}
+
+{{- $id := .Get 0 -}}
+{{- if not $id -}}
+  {{- errorf "The 'link' shortcode requires a link ID as the first parameter. File: %s" .Page.Path -}}
+{{- end -}}
+
+{{/* Find all links from the data file that match the provided ID */}}
+{{- $foundLinks := where .Site.Data.links "id" $id -}}
+
+{{/* Check if we found any matching links */}}
+{{- if eq (len $foundLinks) 0 -}}
+  {{/* If the list of found links is empty, stop the build and complain. */}}
+  {{- errorf "Could not find a link with ID '%s' in data/links.yaml. File: %s" $id .Page.Path -}}
+{{- else -}}
+  {{/* We found at least one match. Grab the very first one to use its data. */}}
+  {{- $linkData := index $foundLinks 0 -}}
+
+  {{/* --- Determine Link Attributes --- */}}
+
+  {{/* 1. URL: Use the URL from the data file */}}
+  {{- $url := $linkData.url -}}
+
+  {{/* 2. Text: Use override if provided, otherwise use the 'name' from data file */}}
+  {{- $text := $linkData.name -}}
+  {{- if $.IsNamedParams -}}
+    {{- $text = $.Get "text" | default $text -}}
+  {{- end -}}
+
+  {{/* 3. Description (for title attribute): Use override if provided, otherwise use data file */}}
+  {{- $description := $linkData.description -}}
+  <!-- {{- if $.IsNamedParams -}} -->
+    {{- $description = $.Get "description" | default $description -}}
+  <!-- {{- end -}} -->
+
+  {{/* --- Logic for Internal vs. External Links --- */}}
+  {{- $isExternal := strings.HasPrefix $url "http" -}}
+
+  <a href="{{ if $isExternal }}{{ $url | safeURL }}{{ else }}{{ relref $.Page $url }}{{ end }}"
+     {{- with $description }} title="{{ . }}"{{ end -}}
+     {{- if $isExternal }} target="_blank" rel="noopener noreferrer"{{ end -}}
+  >
+    {{- $text | markdownify -}}
+  </a>
+     {{ $description }} 
+{{- end -}}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Basics on My New Hugo Site</title>
+    <link>http://localhost:1313/tags/basics/</link>
+    <description>Recent content in Basics on My New Hugo Site</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 15 Jan 2023 09:00:00 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/basics/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>wasm</title>
+      <link>http://localhost:1313/posts/wasm/</link>
+      <pubDate>Sun, 15 Jan 2023 09:00:00 -0700</pubDate>
+      <guid>http://localhost:1313/posts/wasm/</guid>
+      <description>&lt;p&gt;In this article we want to create wasm apps with rust and emscripten.&lt;/p&gt;&#xA;&lt;script&gt;&#xA;    let fn_add; &#xA;    function on_load() {&#xA;        const dpr = window.devicePixelRatio;&#xA;        let canvas = document.getElementById(&#39;canvas&#39;);&#xA;&#xA;        fn_add = Module.cwrap(&#xA;            &#34;add&#34;,&#xA;            null,&#xA;            [&#34;number&#34;,&#34;number&#34;]&#xA;        );&#xA;&#xA;        // let on_resize = Module.cwrap(&#xA;        //     &#34;on_resize&#34;,&#xA;        //     null,&#xA;        //     [&#34;number&#34;,&#34;number&#34;]&#xA;        // );&#xA;        //&#xA;        // let resize_handler = () =&gt; {&#xA;        //     const width = this.canvas.width&#xA;        //         = window.innerWidth * dpr;&#xA;        //     const height = this.canvas.height&#xA;        //         = window.innerHeight * dpr;&#xA;        //     on_resize(width, height);&#xA;        // };&#xA;        //&#xA;        // window.addEventListener(&#xA;        //     &#34;resize&#34;,&#xA;        //     resize_handler,&#xA;        //     true&#xA;        // );&#xA;&#xA;        // resize_handler();&#xA;    }&#xA;&#xA;    var Module = {&#xA;        postRun: [ on_load ],&#xA;        canvas: document.getElementById(&#39;canvas&#39;),&#xA;    };&#xA;&#xA;    function add_one() {&#xA;            let text = document.getElementById(&#34;counter&#34;).innerText;&#xA;            let val = fn_add(text, 1);&#xA;            document.getElementById(&#34;counter&#34;).innerText = val;&#xA;    }&#xA;&lt;/script&gt;&#xA;&lt;script src=&#34;http://localhost:1313/wasm.js&#34;&gt;&lt;/script&gt;&#xA;&lt;h1&gt;WASM Example&lt;/h1&gt;&#xA;&lt;p&gt;&#xA; &lt;p&gt;Counter &lt;span id=&#34;counter&#34;&gt;0&lt;/span&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

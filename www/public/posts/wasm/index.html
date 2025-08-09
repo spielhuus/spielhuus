@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>wasm | My New Hugo Site</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+
+</head>
+<body>
+  <header>
+    <h1>My New Hugo Site</h1>
+
+  <nav>
+    <ul>
+    <li>
+      <a href="/">Home</a>
+    </li>
+    <li>
+      <a aria-current="true" class="ancestor" href="/posts/">Posts</a>
+    </li>
+    <li>
+      <a href="/tags/">Tags</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>wasm</h1>
+  <h1>Header</h1>
+  <div id="header">
+      
+  </div>
+
+  
+  
+  <time datetime="2023-01-15T09:00:00-07:00">January 15, 2023</time>
+
+  <p>In this article we want to create wasm apps with rust and emscripten.</p>
+<script>
+    let fn_add; 
+    function on_load() {
+        const dpr = window.devicePixelRatio;
+        let canvas = document.getElementById('canvas');
+
+        fn_add = Module.cwrap(
+            "add",
+            null,
+            ["number","number"]
+        );
+
+        // let on_resize = Module.cwrap(
+        //     "on_resize",
+        //     null,
+        //     ["number","number"]
+        // );
+        //
+        // let resize_handler = () => {
+        //     const width = this.canvas.width
+        //         = window.innerWidth * dpr;
+        //     const height = this.canvas.height
+        //         = window.innerHeight * dpr;
+        //     on_resize(width, height);
+        // };
+        //
+        // window.addEventListener(
+        //     "resize",
+        //     resize_handler,
+        //     true
+        // );
+
+        // resize_handler();
+    }
+
+    var Module = {
+        postRun: [ on_load ],
+        canvas: document.getElementById('canvas'),
+    };
+
+    function add_one() {
+            let text = document.getElementById("counter").innerText;
+            let val = fn_add(text, 1);
+            document.getElementById("counter").innerText = val;
+    }
+</script>
+<script src="/wasm.js"></script>
+<h1>WASM Example</h1>
+<p>
+ <p>Counter <span id="counter">0</span></p>
+</p>
+<p>
+    <button onClick="add_one()">ADD</button>
+</p>
+
+  
+  <div>
+    <div>Tags:</div>
+    <ul>
+        <li><a href="/tags/basics/">Basics</a></li>
+    </ul>
+  </div>
+
+
+  </main>
+  <footer>
+    <p>Copyright 2025. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>

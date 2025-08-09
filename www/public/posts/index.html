@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Posts | My New Hugo Site</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+
+</head>
+<body>
+  <header>
+    <h1>My New Hugo Site</h1>
+
+  <nav>
+    <ul>
+    <li>
+      <a href="/">Home</a>
+    </li>
+    <li>
+      <a aria-current="page" class="active" href="/posts/">Posts</a>
+    </li>
+    <li>
+      <a href="/tags/">Tags</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>Posts</h1>
+  
+  
+    <h2><a href="/posts/nikolaus/">Das Haus des Nikolaus (SVG)</a></h2>
+    <p>Das kleine haus des nikolaus ist ein zeichen raetsel fuer kinder. Das haus muss in einem Linienzug aus acht strecken
+gezeichnet werden ohne ohne eine Strecke zweimal zu durchlaufen. Dazu sagt man „Das klei-ne Haus des Ni-ko-laus.“</p>
+<p>Dabei handelt es sich um einen Eulerweg. Es gibt zwei Knoten von ungeradem Grad (die Knoten 1 und 5). Komplett mit nur einer
+Linie kann das Haus nur vom Knoten 1 oder vom Knoten 5 aus gezeichnet werden.</p>
+  
+    <h2><a href="/posts/game_of_life/">Game of Life</a></h2>
+    <div class="emscripten_border">
+  <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+</div>
+<script type="text/javascript" src="/load_wasm.js"></script>
+<script async type="text/javascript" src="/game_of_life.js"></script>
+
+
+<h2 id="links">Links:</h2>
+<ul>
+<li>
+
+  
+
+  <a href="https://www.wolframscience.com/nks/" title="Explore the groundbreaking work of Stephen Wolfram in &#39;A New Kind of Science&#39;, a monumental book that redefines the foundations of computation, complexity, and the natural world. Discover how simple computational rules can generate intricate patterns and behaviors, challenging traditional notions of science and philosophy." target="_blank" rel="noopener noreferrer">A new kind of science</a>
+     Explore the groundbreaking work of Stephen Wolfram in &#39;A New Kind of Science&#39;, a monumental book that redefines the foundations of computation, complexity, and the natural world. Discover how simple computational rules can generate intricate patterns and behaviors, challenging traditional notions of science and philosophy..</li>
+</ul>
+  
+    <h2><a href="/posts/ca_rules/">Cellular automata</a></h2>
+    <p>cellular automata rules</p>
+
+<div class="emscripten_border">
+  <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+</div>
+<script type="text/javascript" src="/load_wasm.js"></script>
+<script async type="text/javascript" src="/ca_rules.js"></script>
+
+
+<h2 id="links">Links:</h2>
+<ul>
+<li>
+
+  
+
+  <a href="https://www.wolframscience.com/nks/" title="Explore the groundbreaking work of Stephen Wolfram in &#39;A New Kind of Science&#39;, a monumental book that redefines the foundations of computation, complexity, and the natural world. Discover how simple computational rules can generate intricate patterns and behaviors, challenging traditional notions of science and philosophy." target="_blank" rel="noopener noreferrer">A new kind of science</a>
+     Explore the groundbreaking work of Stephen Wolfram in &#39;A New Kind of Science&#39;, a monumental book that redefines the foundations of computation, complexity, and the natural world. Discover how simple computational rules can generate intricate patterns and behaviors, challenging traditional notions of science and philosophy..</li>
+</ul>
+  
+    <h2><a href="/posts/fertilization/">fertilization</a></h2>
+    find the way to the 'target'
+
+<canvas id=canvas oncontextmenu=event.preventdefault()></canvas>
+
+<script>
+    let get_steps;
+
+    function on_load() {
+        const dpr = window.devicePixelRatio;
+        let canvas = document.getElementById('canvas');
+    }
+    var Module = {
+        postRun: [ on_load ],
+        canvas: document.getElementById('canvas'),
+    };
+
+</script>
+<script src="/fertilization.js"></script>
+  
+    <h2><a href="/posts/maze/">maze</a></h2>
+    maze creation and solving
+
+
+
+<div class="emscripten_border">
+  <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+</div>
+<script type="text/javascript" src="/load_wasm.js"></script>
+<script async type="text/javascript" src="/maze.js"></script>
+  
+    <h2><a href="/posts/wasm/">wasm</a></h2>
+    <p>In this article we want to create wasm apps with rust and emscripten.</p>
+<script>
+    let fn_add; 
+    function on_load() {
+        const dpr = window.devicePixelRatio;
+        let canvas = document.getElementById('canvas');
+
+        fn_add = Module.cwrap(
+            "add",
+            null,
+            ["number","number"]
+        );
+
+        // let on_resize = Module.cwrap(
+        //     "on_resize",
+        //     null,
+        //     ["number","number"]
+        // );
+        //
+        // let resize_handler = () => {
+        //     const width = this.canvas.width
+        //         = window.innerWidth * dpr;
+        //     const height = this.canvas.height
+        //         = window.innerHeight * dpr;
+        //     on_resize(width, height);
+        // };
+        //
+        // window.addEventListener(
+        //     "resize",
+        //     resize_handler,
+        //     true
+        // );
+
+        // resize_handler();
+    }
+
+    var Module = {
+        postRun: [ on_load ],
+        canvas: document.getElementById('canvas'),
+    };
+
+    function add_one() {
+            let text = document.getElementById("counter").innerText;
+            let val = fn_add(text, 1);
+            document.getElementById("counter").innerText = val;
+    }
+</script>
+<script src="/wasm.js"></script>
+<h1>WASM Example</h1>
+<p>
+ <p>Counter <span id="counter">0</span></p>
+  
+
+  </main>
+  <footer>
+    <p>Copyright 2025. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>

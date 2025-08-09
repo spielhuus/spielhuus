@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Graph on My New Hugo Site</title>
+    <link>http://localhost:1313/tags/graph/</link>
+    <description>Recent content in Graph on My New Hugo Site</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 07 Aug 2023 09:00:00 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/graph/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Das Haus des Nikolaus (SVG)</title>
+      <link>http://localhost:1313/posts/nikolaus/</link>
+      <pubDate>Mon, 07 Aug 2023 09:00:00 -0700</pubDate>
+      <guid>http://localhost:1313/posts/nikolaus/</guid>
+      <description>&lt;p&gt;Das kleine haus des nikolaus ist ein zeichen raetsel fuer kinder. Das haus muss in einem Linienzug aus acht strecken&#xA;gezeichnet werden ohne ohne eine Strecke zweimal zu durchlaufen. Dazu sagt man „Das klei-ne Haus des Ni-ko-laus.“&lt;/p&gt;&#xA;&lt;p&gt;Dabei handelt es sich um einen Eulerweg. Es gibt zwei Knoten von ungeradem Grad (die Knoten 1 und 5). Komplett mit nur einer&#xA;Linie kann das Haus nur vom Knoten 1 oder vom Knoten 5 aus gezeichnet werden.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
