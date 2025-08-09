@@ -1,6 +1,3 @@
-
-
-
 ## Evolutionary computing
 
 ### Infinite-Monkey-Theorem
