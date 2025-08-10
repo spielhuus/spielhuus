@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-lazy_static = "1.5"
-raylib-egui-rs = { path = "../../../raylib-egui-rs", features = ["raygui"] }
-egui = { version = "0.32.0" }
+raylib-egui-rs = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+egui = "0.32.0"
 egui_extras = { version = "0.32.0", features = ["default", "image"] }
-env_logger = "0.11.8"

@@ -10,3 +10,7 @@
   url: "https://www.wolframscience.com/nks/"
   description: "Explore the groundbreaking work of Stephen Wolfram in 'A New Kind of Science', a monumental book that redefines the foundations of computation, complexity, and the natural world. Discover how simple computational rules can generate intricate patterns and behaviors, challenging traditional notions of science and philosophy."
 
+- id: "infinite_monkey"
+  name: "Infinite Monkey Theorem"
+  url: "https://en.wikipedia.org/wiki/Infinite_monkey_theorem"
+  description: "Description at wikipedia"

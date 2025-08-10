@@ -1,5 +1,6 @@
 +++
-title = 'Das Haus des Nikolaus (SVG)'
+title = 'Das kleine Haus des Nikolaus'
+description = 'The small house of Nikolaus is a drawing puzzle for children. The house must be drawn in a single stroke using eight lines without tracing any line twice. To do this, one says, “Das klei-ne Haus des Ni-ko-laus.”'
 date = 2023-08-07T09:00:00-07:00
 draft = false
 tags = ['graph']
@@ -11,7 +12,7 @@ gezeichnet werden ohne ohne eine Strecke zweimal zu durchlaufen. Dazu sagt man �
 Dabei handelt es sich um einen Eulerweg. Es gibt zwei Knoten von ungeradem Grad (die Knoten 1 und 5). Komplett mit nur einer 
 Linie kann das Haus nur vom Knoten 1 oder vom Knoten 5 aus gezeichnet werden.
 
-{{< figure src="nikolaus.svg" title="A Cool Photo" caption="Das kleine Haus des Nikolaus" >}}
+{{< figure src="nikolaus.svg" caption="Das kleine Haus des Nikolaus" width=100 height=100 >}}
 
 Basically the problem could be solved using backtraching. but we want to find all solutions so we have to find all possible solutions.
 
@@ -47,8 +48,9 @@ the possible roads are 2 and 5
 
 from 2 we can go to 1, 3, 4 and 5. but we have already visited 1
 
-
-<canvas id=canvas oncontextmenu=event.preventdefault()></canvas>
+<figure>
+  <canvas id=canvas oncontextmenu=event.preventdefault()></canvas>
+</figure>
 
 <div>
     <table id="solutions"></table>
@@ -80,7 +82,7 @@ from 2 we can go to 1, 3, 4 and 5. but we have already visited 1
             let table = "";
             for (var i = 0; i < jsArray.length; i++) {
                     table += "<tr>";
-                    let radio = "<td><input type='radio' id='selected_solution' name='" + i + "' value='" + i + "' " + (i == 0 ? "selected" : "") + " /></td>";
+                    let radio = "<td><input type='radio' id='solution" + i + "' name='selected' value='" + i + "' " + (i == 0 ? "checked" : "") + " /></td>";
                     console.log(radio);
                     table += radio;
                     for (var j = 0; j<jsArray[i].length; j++) {

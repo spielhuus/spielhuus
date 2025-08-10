@@ -1,14 +1,34 @@
-fn main() {
-    // This build script should only apply flags for the emscripten target.
-    if std::env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
-        // Tell cargo to pass these arguments to the linker (emcc).
-        // These flags will ONLY apply to the 'nikolaus' crate.
-        println!("cargo:rustc-link-arg=-sUSE_GLFW=3");
-        println!("cargo:rustc-link-arg=-sASYNCIFY");
-        println!("cargo:rustc-link-arg=-sGL_ENABLE_GET_PROC_ADDRESS=1");
-        println!("cargo:rustc-link-arg=--bind");
-        println!("cargo:rustc-link-arg=-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,UTF8ToString");
+use std::env;
+use std::path::PathBuf;
 
-        // Add any other flags specific to 'nikolaus' here.
+fn main() {
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    if target_arch != "wasm32" {
+        return;
+    }
+
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let lib_path = manifest_dir.join("src").join("library.js");
+
+    println!("cargo:rustc-link-arg=--js-library");
+    println!("cargo:rustc-link-arg={}", lib_path.to_str().unwrap());
+
+    let other_flags = vec![
+        "-s",
+        "USE_GLFW=3",
+        "-s",
+        "ASYNCIFY",
+        "-s",
+        "GL_ENABLE_GET_PROC_ADDRESS=1",
+        "-s",
+        "EXPORTED_RUNTIME_METHODS=[\"ccall\", \"cwrap\", \"UTF8ToString\"]",
+        "-s",
+        "ABORTING_MALLOC=0",
+        "-s",
+        "WASM_BIGINT",
+    ];
+
+    for flag in other_flags {
+        println!("cargo:rustc-link-arg={flag}");
     }
 }

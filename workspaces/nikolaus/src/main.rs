@@ -1,6 +1,8 @@
 mod nikolaus;
 
+#[cfg(not(target_arch = "wasm32"))]
 use egui::ScrollArea;
+
 use nikolaus::Result;
 use raylib_egui_rs::{color::Color, egui::EguiRaylib, math::Vector2, raylib};
 
@@ -24,22 +26,18 @@ unsafe extern "C" {
 }
 
 #[cfg(target_arch = "wasm32")]
-unsafe extern "C" {
-    fn select_solution(index: i32);
-}
-
-#[cfg(target_arch = "wasm32")]
 unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
-    // Access the thread-local state using `.with()`
     GAME_STATE.with(|cell| {
-        // Borrow the state mutably. This will panic if it's already borrowed mutably,
-        // which is fine in a single-threaded context.
         if let Some(game_state) = &mut *cell.borrow_mut() {
             update(game_state);
         }
     });
-    // let game_state = &mut *(arg as *mut GameState);
-    // update(game_state);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[link(wasm_import_module = "env")]
+unsafe extern "C" {
+    fn select_solution(index: i32);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -226,15 +224,10 @@ fn update(state: &mut GameState) {
             if state.step == 1 {
                 state.selected = (state.selected + 1) % state.data.len();
 
-                // #[cfg(target_arch = "wasm32")]
-                // {
-                //     let console = Val::global("console");
-                //     console.call("log", argv!["Ahoi Saylor!"]);
-                // }
-
-                // unsafe {
-                //     select_solution(state.selected as i32);
-                // }
+                #[cfg(target_arch = "wasm32")]
+                unsafe {
+                    select_solution(state.selected as i32);
+                }
             }
         }
     }
