@@ -59,6 +59,7 @@ jobs:
           mkdir -p www/static
           cp target/wasm32-unknown-emscripten/release/*.js www/static/
           cp target/wasm32-unknown-emscripten/release/*.wasm www/static/
+          ls www/static
 
       - name: Build Hugo site
         env:

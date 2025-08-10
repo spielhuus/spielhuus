@@ -39,7 +39,7 @@ web: copy-www
 	cd www && hugo build
 
 serve: copy-www
-	cd www && hugo serve
+	hugo --source www serve
 
 clean:
 	rm -rf target
