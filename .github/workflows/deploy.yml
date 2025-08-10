@@ -55,7 +55,6 @@ jobs:
         run: cargo build --workspace --target wasm32-unknown-emscripten --release
 
       - name: Copy Wasm artifacts to static folder
-        # working-directory: ./spielhuus
         run: |
           mkdir -p www/static
           cp target/wasm32-unknown-emscripten/release/*.js www/static/
@@ -64,12 +63,11 @@ jobs:
       - name: Build Hugo site
         env:
           HUGO_baseURL: ${{ steps.pages.outputs.base_url }}
-        run: hugo --source spielhuus/www --minify
+        run: hugo --source www --minify
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the public directory from the www subdir
           path: ./www/public
 
   # Deployment job
