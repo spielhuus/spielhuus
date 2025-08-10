@@ -59,12 +59,13 @@ jobs:
           mkdir -p www/static
           cp target/wasm32-unknown-emscripten/release/*.js www/static/
           cp target/wasm32-unknown-emscripten/release/*.wasm www/static/
-          ls www/static
 
       - name: Build Hugo site
         env:
           HUGO_baseURL: ${{ steps.pages.outputs.base_url }}
-        run: hugo --source www --minify
+        run: |
+          hugo --source www --minify
+          ls ./www/public
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -8,6 +8,13 @@ tags = ['basics']
 
 In this article we want to create wasm apps with rust and emscripten. 
 
+## Rust to WebAssembly
+
+First you will have to create a rust project with some main.rs file. I guess you know 
+how to do that. 
+
+
+
 <script>
     let fn_add; 
     function on_load() {
