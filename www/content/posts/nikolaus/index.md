@@ -94,4 +94,4 @@ from 2 we can go to 1, 3, 4 and 5. but we have already visited 1
             document.getElementById("solutions").innerHTML = "<table border='1'>" + table + "</table>";
     }
 </script>
-<script src="/nikolaus.js"></script>
+<script src="{{ .Site.BaseURL }}/nikolaus.js"></script>
