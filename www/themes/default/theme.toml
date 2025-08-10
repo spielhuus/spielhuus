@@ -1,0 +1,13 @@
+# theme.toml template for a Hugo theme
+# See https://github.com/gohugoio/hugoThemes#themetoml for an example
+
+name = "spielhuus"
+license = "MIT"
+tags = ["blog","simple","responsive","minimal","tags","personal","clean","shortcodes"]
+features = ["blog", "Clean and minimal", "Responsive", "Syntax highlighting",]
+min_version = "0.41"
+
+[author]
+  name = "spielhuus"
+  homepage = "https://github.com/spielhuus"
+
