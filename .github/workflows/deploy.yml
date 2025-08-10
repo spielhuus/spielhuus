@@ -64,7 +64,6 @@ jobs:
 
       - name: Build Hugo site
         env:
-          # Set the HUGO_baseURL environment variable for the hugo build command.
           HUGO_baseURL: ${{ steps.pages.outputs.base_url }}
         run: hugo --source spielhuus/www --minify
 
