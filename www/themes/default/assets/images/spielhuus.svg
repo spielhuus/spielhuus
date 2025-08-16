@@ -1,0 +1,20 @@
+<svg width="60" height="80" viewBox="0 -10 160 150" xmlns="http://www.w3.org/2000/svg">
+        <style>
+            .house-line {
+                stroke: #ce572c;
+                stroke-width: 10;
+                stroke-linecap: round;
+            }
+        </style>
+
+        <g>
+            <line x1="50"  y1="150" x2="50"  y2="50"  class="house-line" />
+            <line x1="50"  y1="50"  x2="150" y2="50"  class="house-line" />
+            <line x1="150" y1="50"  x2="150" y2="150" class="house-line" />
+            <line x1="150" y1="150" x2="50"  y2="150" class="house-line" />
+            <line x1="50"  y1="150" x2="150" y2="50"  class="house-line" />
+            <line x1="150" y1="150" x2="50"  y2="50"  class="house-line" />
+            <line x1="50"  y1="50"  x2="100" y2="-10" class="house-line" />
+            <line x1="100" y1="-10" x2="150" y2="50"  class="house-line" />
+        </g>
+ </svg>

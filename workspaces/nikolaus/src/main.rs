@@ -127,6 +127,7 @@ pub extern "C" fn solutions() -> i32 {
 pub extern "C" fn get_steps() -> *const c_char {
     GAME_STATE.with(|cell| {
         if let Some(state) = cell.borrow().as_ref() {
+            println!("get steps: {}", state.data.len());
             let data = &state.data;
             let mut json = String::from("[");
             for (i, path) in data.iter().enumerate() {
@@ -156,7 +157,10 @@ pub extern "C" fn get_steps() -> *const c_char {
 
 pub fn main() {
     // initialize raylib
-    raylib::SetConfigFlags(raylib::ConfigFlags::FLAG_MSAA_4X_HINT as u32);
+    raylib::SetConfigFlags(
+        raylib::ConfigFlags::FLAG_MSAA_4X_HINT as u32
+            | raylib::ConfigFlags::FLAG_WINDOW_TRANSPARENT as u32,
+    );
     raylib::InitWindow(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, TITLE);
     raylib::SetTargetFPS(60);
 
@@ -189,7 +193,7 @@ pub fn main() {
 
 fn update(state: &mut GameState) {
     raylib::BeginDrawing();
-    raylib::ClearBackground(Color::BLACK);
+    raylib::ClearBackground(Color::BLANK);
 
     if !state.data.is_empty() {
         for i in 0..state.step {

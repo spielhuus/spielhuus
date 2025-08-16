@@ -45,3 +45,4 @@ clean:
 	rm -rf target
 	rm -f $(TARGET_WASM_FILES) $(TARGET_JS_FILES)
 	rm -rf www/public
+	rm -rf www/resources/

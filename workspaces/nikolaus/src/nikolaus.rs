@@ -9,40 +9,48 @@ const MOVES: [[usize; 5]; 5] = [
 pub type ResultItem = (Vec<usize>, Vec<(usize, usize)>);
 pub type Result = Vec<ResultItem>;
 
-fn next_step(result: Result, start: usize) -> Result {
-    let mut new_result: Result = Vec::new();
-    if result.is_empty() {
-        for (node, possible_move) in MOVES[start].iter().enumerate() {
-            if *possible_move == 1 {
-                let mut new_move = (Vec::<usize>::new(), Vec::<(usize, usize)>::new());
-                new_move.0.push(node);
-                new_move.1.push((start, node));
-                new_result.push(new_move);
-            }
-        }
-    } else {
-        for i in 0..result.len() {
-            let last_move = result[i].0.last().unwrap();
-            for (node, possible_move) in MOVES[*last_move].iter().enumerate() {
-                if *possible_move == 1
-                    && !result[i].1.contains(&(*last_move, node))
-                    && !result[i].1.contains(&(node, *last_move))
-                {
-                    let mut new_move = result[i].clone();
-                    new_move.0.push(node);
-                    new_move.1.push((*last_move, node));
-                    new_result.push(new_move);
-                }
-            }
-        }
-    }
-    new_result
+fn extend_paths(current_paths: Result) -> Result {
+    current_paths
+        .into_iter()
+        .flat_map(|path_item| {
+            let last_node = *path_item.0.last().expect("Path should not be empty.");
+            MOVES[last_node]
+                .iter()
+                .enumerate()
+                .filter_map(move |(next_node, &can_move)| {
+                    if can_move == 1
+                        && !path_item.1.contains(&(last_node, next_node))
+                        && !path_item.1.contains(&(next_node, last_node))
+                    {
+                        let mut new_path_item = path_item.clone();
+                        new_path_item.0.push(next_node);
+                        new_path_item.1.push((last_node, next_node));
+                        Some(new_path_item)
+                    } else {
+                        None
+                    }
+                })
+        })
+        .collect()
 }
 
 pub fn nikolaus(start: usize) -> Result {
-    let mut result: Result = Result::new();
-    for _ in 0..8 {
-        result = next_step(result, start);
+    // add the possible moves from the `start` node.
+    let mut current_results: Result = MOVES[start]
+        .iter()
+        .enumerate()
+        .filter_map(|(node, &possible_move)| {
+            if possible_move == 1 {
+                Some((vec![node], vec![(start, node)]))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    for _ in 0..7 {
+        current_results = extend_paths(current_results);
     }
-    result
+
+    current_results
 }

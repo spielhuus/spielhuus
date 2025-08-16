@@ -3,6 +3,9 @@ resolver = "3"
 members = [
   "workspaces/genetic",
   "workspaces/wasm",
+  "workspaces/wasm_callback",
+  "workspaces/wasm_raylib",
+  "workspaces/worm",
   "workspaces/nikolaus",
   "workspaces/monkey",
   "workspaces/fertilization",

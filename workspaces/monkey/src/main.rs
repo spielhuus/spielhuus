@@ -5,6 +5,7 @@ use rand::{distr::Uniform, prelude::*};
 const MUTATION_RATE: f64 = 0.01;
 
 use std::cell::RefCell;
+
 #[cfg(target_arch = "wasm32")]
 use std::ffi::{CStr, CString, c_char, c_int, c_void};
 

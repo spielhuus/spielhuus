@@ -1,8 +1,15 @@
 {{ define "main" }}
-  <h1>{{ .Title }}</h1>
+  -- <h1>{{ .Title }}</h1> --
+  <div class="description">
+  	{{ if isset .Params "description" }}
+  	{{ .Description }}
+  	{{ else }}
+  	{{ .Summary }}&hellip;
+  	{{ end }}
+  </div>
   {{ .Content }}
-  {{ range .Pages }}
-    <h2><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-    {{ .Description }}
-  {{ end }}
+  <!-- {{ range .Pages }} -->
+  <!--   --> <h1><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h1>
+  <!--   {{ .Description }} -->
+  <!-- {{ end }} -->
 {{ end }}

@@ -1,7 +1,18 @@
-baseURL = 'https://example.org/'
+baseURL = "http://localhost:1313"
 languageCode = 'en-us'
 title = 'spielhuus'
 theme = 'default'
 
 [markup.goldmark.renderer]
   unsafe = true # Allow HTML in md files
+
+  [markup.highlight]
+    codeFences = true
+    guessSyntax = false
+    hl_Lines = ""
+    lineNoStart = 1
+    lineNos = false
+    lineNumbersInTable = true
+    noClasses = true
+    style = "paraiso-light"
+    tabWidth = 4

@@ -15,19 +15,15 @@ fn main() {
 
     let other_flags = vec![
         "-s",
-        "USE_GLFW=3",
-        "-s",
         "ASYNCIFY",
         "-s",
-        "GL_ENABLE_GET_PROC_ADDRESS=1",
-        "-s",
-        "EXPORTED_RUNTIME_METHODS=ccall,cwrap,UTF8ToString",
+        "EXPORTED_RUNTIME_METHODS=ccall,cwrap",
         "-s",
         "ABORTING_MALLOC=0",
         "-s",
         "WASM_BIGINT",
         "-s",
-        "EXPORTED_FUNCTIONS=['_main', '_set_target']",
+        "EXPORTED_FUNCTIONS=['_main']",
     ];
 
     for flag in other_flags {

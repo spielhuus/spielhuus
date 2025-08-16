@@ -1,2 +1,9 @@
-<h1>{{ site.Title }}</h1>
+<h1><a href="{{ "/" | absURL }}" id="logo">{{ site.Title }}</a></h1>
 {{ partial "menu.html" (dict "menuID" "main" "page" .) }}
+<div class="arrows">
+  <div class="arrow white"></div>
+  <div class="arrow orange_light"></div>
+  <div class="arrow orange"></div>
+  <div class="arrow red"></div>
+  <div class="arrow purple"></div>
+</div>
