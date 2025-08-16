@@ -60,7 +60,6 @@ pub extern "C" fn set_target(text: *const c_char) {
 
 struct GameState<E: Phenotype> {
     target: String,
-    target_len: usize,
     population_size: usize,
     generations: usize,
     generation: usize,
@@ -73,7 +72,6 @@ impl GameState<StringEvolver> {
         let target_len = target.len();
         Self {
             target,
-            target_len,
             population_size,
             generations: 10_000,
             generation: 1,
@@ -86,7 +84,6 @@ impl GameState<StringEvolver> {
         self.solved = true;
         let target_len = target.len();
         self.target = target;
-        self.target_len = target_len;
         self.generation = 1;
         self.population = Population::<StringEvolver>::new(self.population_size, target_len);
         self.solved = false;

@@ -160,32 +160,30 @@ impl Solver for DeadEndFilling {
     }
 
     fn draw(&self, board: &Board) {
-        unsafe {
-            for index in &self.dead_path {
-                let cell = &board.cells[*index];
-                raylib::DrawLine(
-                    (board.x + cell.x * board.cell_size + 1) as i32,
-                    (board.y + cell.y * board.cell_size + 1) as i32,
-                    (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
-                    (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
-                    Color::RED,
-                );
-                raylib::DrawLine(
-                    (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
-                    (board.y + cell.y * board.cell_size + 1) as i32,
-                    (board.x + cell.x * board.cell_size + 1) as i32,
-                    (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
-                    Color::RED,
-                );
-            }
-            let current = &board.cells[self.current as usize];
-            raylib::DrawCircle(
-                (board.x + current.x * board.cell_size + board.cell_size / 2) as i32,
-                (board.y + current.y * board.cell_size + board.cell_size / 2) as i32,
-                board.cell_size as f32 / 5.0,
-                Color::GREEN,
+        for index in &self.dead_path {
+            let cell = &board.cells[*index];
+            raylib::DrawLine(
+                (board.x + cell.x * board.cell_size + 1) as i32,
+                (board.y + cell.y * board.cell_size + 1) as i32,
+                (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
+                (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
+                Color::RED,
             );
-            path::draw_path(board, self.get_path(), PATH_COLOR);
+            raylib::DrawLine(
+                (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
+                (board.y + cell.y * board.cell_size + 1) as i32,
+                (board.x + cell.x * board.cell_size + 1) as i32,
+                (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
+                Color::RED,
+            );
         }
+        let current = &board.cells[self.current as usize];
+        raylib::DrawCircle(
+            (board.x + current.x * board.cell_size + board.cell_size / 2) as i32,
+            (board.y + current.y * board.cell_size + board.cell_size / 2) as i32,
+            board.cell_size as f32 / 5.0,
+            Color::GREEN,
+        );
+        path::draw_path(board, self.get_path(), PATH_COLOR);
     }
 }

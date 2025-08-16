@@ -6,22 +6,26 @@ draft = false
 tags = ['graph']
 +++
 
-"das kleine Haus des Nikolaus" (The little house of St. Nicholas) is a popular
-children's puzzle in which the objective is to draw a single, continuous line
-that traces eight segments without lifting the pencil and without retracing any
-segment. This is achieved by saying, "das-klei-ne-Haus-des-Ni-ko-laus"
+### "Das Kleine Haus des Nikolaus" Puzzle
 
-This puzzle is an example of an Eulerian path. An Eulerian path is a trail in a
-graph that visits every edge exactly once. In this case, there are two nodes
-with an odd degree (nodes 1 and 5). Consequently, the house can only be
-completely drawn in one line starting from either node 1 or node 5.
+**"Das kleine Haus des Nikolaus"** is a popular children's puzzle where the
+objective is to draw a continuous line that traces eight segments without
+lifting the pencil and without retracing any segment. This can be accomplished
+while verbalizing the phrase, "das-klei-ne-Haus-des-Ni-ko-laus."
+
+This puzzle exemplifies an Eulerian path, which is a path in a graph that
+visits every edge exactly once. In this case, the nodes `0` and `4` each have
+an odd degree, implying that an Eulerian path, if it exists, must start at one
+of these nodes and end at the other.
 
 {{< figure src="nikolaus.svg" caption="Das kleine Haus des Nikolaus" >}}
 
-Basically, the problem could be solved using backtracking. However, since we
-want to find all solutions, we need to identify all possible solutions.
+To solve the puzzle algorithmically, we could use a backtracking approach.
+However, since we aim to find all possible solutions, it is necessary to
+identify all valid Eulerian paths.
 
-First, we create an array containing all possible moves from the junctions.
+The initial step involves creating an array that lists all possible moves from
+the junctions.
 
 ```rust
 const MOVES: [[usize; 5]; 5] = [
@@ -33,11 +37,8 @@ const MOVES: [[usize; 5]; 5] = [
 ];
 ```
 
-We start at node `1`, posible moves are `2` and `5`. We add them to the path. we
-then iterate over the result array and add the next path if it is not already in the 
-list. when it is we delete the entire solution from the result array.
-
-first we create a result array with the possible moves from the start node.
+We begin at node `0`. Possible moves are nodes `1`, `3`, and `4`. We add these
+to our path array.
 
 ```rust
 pub fn nikolaus(start: usize) -> Result {
@@ -62,7 +63,9 @@ pub fn nikolaus(start: usize) -> Result {
 }
 ```
 
-we are collecting all the possible next moves and remove the item if it does not exist.
+Next, we iterate over this path array, adding subsequent nodes only if they
+haven't already been included in the path. If adding a node results in a path
+that is already in our result list, we skip that solution.
 
 ```rust
 fn extend_paths(current_paths: Result) -> Result {
@@ -91,7 +94,8 @@ fn extend_paths(current_paths: Result) -> Result {
 }
 ```
 
-e voila, we have all the possible solutions. which should be 44 for node `1` and `5`.
+ E Voilà, we've collected all possible solutions, resulting in 
+**44 distinct Eulerian paths**
 
 <style>
   .flex-container {
@@ -135,8 +139,7 @@ e voila, we have all the possible solutions. which should be 44 for node `1` and
             const jsArray = JSON.parse(rustMessage);
             let content = "<div>";
             for (var i = 0; i < jsArray.length; i++) {
-                console.log(i + " " + Math.floor(jsArray.length / 3) + " == " + Math.floor(i % (jsArray.length / 3)));
-                if (Math.floor(i % (Math.floor(jsArray.length / 3) + 1) == 0)) {
+                if (i > 0 && Math.floor(i % (Math.floor(jsArray.length / 4) + 1) == 0)) {
                     content += "</div><div>";
                 }
                 content += "<p><input type='radio' id='solution" + i + "' name='selected' value='" + i + "' " + (i == 0 ? "checked" : "") + " />";

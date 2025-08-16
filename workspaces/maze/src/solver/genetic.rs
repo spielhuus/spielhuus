@@ -311,16 +311,8 @@ impl Solver for Genetic<PathEvolver> {
     }
 
     fn draw(&self, board: &Board) {
-        let max_fitness = self.population.max_fitness();
-        for (i, p) in self.population.get_phenotypes().iter().enumerate() {
-            // if i % 10 == 0 {
-            path::draw_path(
-                board,
-                &p.path,
-                // raylib::ColorFromHSV(80.0, 0.75, (p.calc_fitness / max_fitness) as f32),
-                raylib::ColorFromHSV(80.0, 0.75, 1.0),
-            );
-            // }
+        for p in self.population.get_phenotypes().iter() {
+            path::draw_path(board, &p.path, raylib::ColorFromHSV(80.0, 0.75, 1.0));
         }
         let winner = self
             .population

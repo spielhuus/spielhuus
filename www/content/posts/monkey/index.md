@@ -1,8 +1,8 @@
 +++
 title = 'Infinite monkey'
 description = 'The **Infinite Monkey Theorem** states that a monkey typing randomly on a typewriter will eventually type the complete works of Shakespeare. This is a concept in probability theory. However, it would take an infinite amount of time, and the monkey would not live long enough to achieve this goal. Using a generative algorithm, we could significantly speed up the process.'
-date = 2023-08-07T09:00:00-07:00
-draft = true
+date = 2025-08-14T18:35:00+02:00
+draft = false
 tags = ['GA']
 +++
 

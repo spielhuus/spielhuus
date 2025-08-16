@@ -2,7 +2,6 @@ use rand::prelude::*;
 
 use crate::{Board, CURSOR_COLOR, Generator, State};
 
-use raylib_egui_rs::color::Color;
 use raylib_egui_rs::raylib;
 
 #[derive(Debug)]
