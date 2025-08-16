@@ -103,12 +103,8 @@ impl GameState {
 }
 
 thread_local! {
-    static GAME_STATE: RefCell<Option<GameState>> = RefCell::new(None);
-    static JSON_BUFFER: RefCell<Option<String>> = RefCell::new(None);
-}
-
-pub fn set_start(start: usize) {
-    // set start here
+    static GAME_STATE: RefCell<Option<GameState>> = const { RefCell::new(None) };
+    static JSON_BUFFER: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
 #[unsafe(no_mangle)]

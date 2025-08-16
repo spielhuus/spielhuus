@@ -7,7 +7,6 @@ use raylib_egui_rs::math::*;
 use raylib_egui_rs::raylib;
 
 use rand::prelude::*;
-use std::ffi::CString;
 
 pub const FONT: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -274,47 +273,38 @@ unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
 }
 
 fn main() {
-    unsafe {
-        raylib::InitWindow(1280, 720, TITLE);
-        let screen_width = 1280;
-        let screen_height = 720;
-        let path_len: i32 = screen_width / 3;
+    raylib::InitWindow(1280, 720, TITLE);
+    let screen_width = 1280;
+    let screen_height = 720;
+    let path_len: i32 = screen_width / 3;
 
-        raylib::SetTargetFPS(60);
+    raylib::SetTargetFPS(60);
 
-        let file_type_c_str = CString::new(".ttf").expect("CString::new failed");
+    let font = raylib::LoadFontFromMemory(".ttf", FONT, 192, None);
 
-        let font = raylib::LoadFontFromMemory(
-            // file_type_c_str.as_ptr(),
-            ".ttf", // FONT.as_ptr(),
-            FONT,   // FONT.len() as i32,
-            192,    // std::ptr::null_mut(),
-            // 0,
-            None,
-        );
+    let mut game_state = GameState {
+        board: Board::new(screen_width, screen_height, path_len),
+        population: Population::<SpermEvolver>::new(POPULATION_SIZE, path_len as usize),
+        loops: 0,
+        round: 0,
+        winners: 0,
+        font,
+        fast: false,
+    };
 
-        let mut game_state = GameState {
-            board: Board::new(screen_width, screen_height, path_len),
-            population: Population::<SpermEvolver>::new(POPULATION_SIZE, path_len as usize),
-            loops: 0,
-            round: 0,
-            winners: 0,
-            font,
-            fast: false,
-        };
-
-        // Main game loop
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            while !raylib::WindowShouldClose() {
-                update(&mut game_state);
-            }
-            raylib::CloseWindow();
+    // Main game loop
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        while !raylib::WindowShouldClose() {
+            update(&mut game_state);
         }
-        #[cfg(target_arch = "wasm32")]
-        {
-            let boxed_state = Box::new(game_state);
-            let state_ptr = Box::into_raw(boxed_state) as *mut c_void;
+        raylib::CloseWindow();
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let boxed_state = Box::new(game_state);
+        let state_ptr = Box::into_raw(boxed_state) as *mut c_void;
+        unsafe {
             emscripten_set_main_loop_arg(main_loop_wrapper, state_ptr, 0, 1);
         }
     }
