@@ -1,5 +1,4 @@
 use std::env;
-use std::path::PathBuf;
 
 fn main() {
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
