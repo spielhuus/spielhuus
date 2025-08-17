@@ -142,7 +142,8 @@ start the game loop:
     };
 
 </script>
-{{< script "wasm_raylib.js" >}}
+{{< wasm path="wasm_raylib.js" >}}
+
 ```
 
 ## Result

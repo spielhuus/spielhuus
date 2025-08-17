@@ -53,5 +53,5 @@ tags = ['ca']
             // document.getElementById("solutions").innerHTML = "<table border='1'>" + table + "</table>";
     // } 
 </script>
-<script src="/game_of_life.js"></script>
+{{< wasm path="game_of_life.js" >}}
 

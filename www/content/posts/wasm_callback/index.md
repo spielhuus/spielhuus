@@ -176,7 +176,7 @@ fn main() {
 <script> 
     var Module = { }; 
 </script> 
-<script src="/wasm_callback.js"></script> 
+{{< wasm path="wasm_callback.js" >}}
 
 <figure> 
 <h1>WASM Example</h1> 

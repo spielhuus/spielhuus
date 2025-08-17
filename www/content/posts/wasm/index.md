@@ -133,7 +133,7 @@ and call the `add` function exported from the Rust code.
             document.getElementById("counter").innerText = val; 
     } 
 </script> 
-<script src="/wasm.js"></script> 
+{{< wasm path="wasm.js" >}}
 
 <figure> 
 <h1>WASM Example</h1> 

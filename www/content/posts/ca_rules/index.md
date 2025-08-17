@@ -53,4 +53,3 @@ cellular automata rules
     // } 
 </script>
 {{< wasm path="ca.js" >}}
-<!-- script src="ca.js"></script -->

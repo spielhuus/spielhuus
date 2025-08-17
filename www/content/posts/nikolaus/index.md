@@ -152,4 +152,4 @@ fn extend_paths(current_paths: Result) -> Result {
             document.getElementById("solutions").innerHTML = content;
     }
 </script>
-{{< script "nikolaus.js" >}}
+{{< wasm path="nikolaus.js" >}}

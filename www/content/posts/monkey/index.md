@@ -56,4 +56,4 @@ tags = ['GA']
         set_target(inputValue);
     });
 </script>
-<script src="/monkey.js"></script>
+{{< wasm path="monkey.js" >}}
