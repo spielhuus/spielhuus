@@ -2,6 +2,6 @@
 <div class="emscripten_border">
   <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
 </div>
-<script type="text/javascript" src="/load_wasm.js"></script>
-<script async type="text/javascript" src="{{ $path }}"></script>
+<script type="text/javascript" src="{{ "/load_wasm.js" | relURL  }}"></script>
+<script async type="text/javascript" src="{{ $path | relURL }}"></script>
 
