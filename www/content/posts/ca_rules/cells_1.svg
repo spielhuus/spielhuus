@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="40" viewBox="0 0 465 60" xmlns="http://www.w3.org/2000/svg">
+  <title>Initial State of a 1D Cellular Automaton with Scope</title>
+  <desc>A row of 10 cells, with a yellow box highlighting the first three cells as being in scope.</desc>
+  
+  <!-- Style definitions for the cell states. -->
+  <defs>
+    <style>
+      .cell {
+        stroke: #333333;
+        stroke-width: 1;
+      }
+      .active {
+        fill: #2c3e50; /* A dark slate blue for active cells */
+      }
+      .inactive {
+        fill: #ecf0f1; /* A light, soft gray for inactive cells */
+      }
+    </style>
+  </defs>
+
+  <!-- A light background for the canvas (optional) -->
+  <rect x="0" y="0" width="100%" height="100%" fill="#ffffff" />
+  
+  <!-- The 10 cells, laid out in a row -->
+  <!-- Cell size = 40x40, Gap = 5, Padding = 10 -->
+  
+  <!-- Cell 0 (Inactive) -->
+  <rect x="10" y="10" width="40" height="40" class="cell inactive" />
+  
+  <!-- Cell 1 (Active) -->
+  <rect x="55" y="10" width="40" height="40" class="cell active" />
+  
+  <!-- Cell 2 (Inactive) -->
+  <rect x="100" y="10" width="40" height="40" class="cell inactive" />
+  
+  <!-- Cell 3 (Active) -->
+  <rect x="145" y="10" width="40" height="40" class="cell active" />
+  
+  <!-- Cell 4 (Active) -->
+  <rect x="190" y="10" width="40" height="40" class="cell active" />
+  
+  <!-- Cell 5 (Inactive) -->
+  <rect x="235" y="10" width="40" height="40" class="cell inactive" />
+  
+  <!-- Cell 6 (Inactive) -->
+  <rect x="280" y="10" width="40" height="40" class="cell inactive" />
+  
+  <!-- Cell 7 (Active) -->
+  <rect x="325" y="10" width="40" height="40" class="cell active" />
+  
+  <!-- Cell 8 (Active) -->
+  <rect x="370" y="10" width="40" height="40" class="cell active" />
+  
+  <!-- Cell 9 (Inactive) -->
+  <rect x="415" y="10" width="40" height="40" class="cell inactive" />
+
+  <!-- ======================================================= -->
+  <!-- == NEW: Yellow box highlighting the first three cells == -->
+  <!-- ======================================================= -->
+  <!-- This box covers the first 3 cells (3*40px) and the 2 gaps between them (2*5px). -->
+  <!-- It has a small padding around the cells for better visual separation. -->
+  <rect 
+    x="7.5" 
+    y="7.5" 
+    width="135" 
+    height="45" 
+    fill="none"
+    stroke="#f1c40f" 
+    stroke-width="3" 
+    stroke-dasharray="6 3"
+    rx="5"
+  />
+  
+</svg>

@@ -26,9 +26,11 @@ fn main() {
         "ABORTING_MALLOC=0",
         "-s",
         "WASM_BIGINT",
+        "-s",
+        "EXPORTED_FUNCTIONS=['_main', '_set_rule', '_set_size', '_set_initial']",
     ];
 
     for flag in other_flags {
-        println!("cargo:rustc-link-arg={}", flag);
+        println!("cargo:rustc-link-arg={flag}");
     }
 }

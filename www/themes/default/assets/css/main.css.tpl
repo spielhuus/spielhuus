@@ -55,9 +55,7 @@
   {{ $image := resources.Get "images/arrow.svg" }}
   --arrow-file: url({{ $image.RelPermalink }});
   --arrow-right-file: url(/assets/arrow-right.fd936d11.svg);
-}
 
-:root {
   --maincolor: orange;
   --bordercl: rebeccapurple;
   --callouctcolor: dodgerblue;
@@ -79,7 +77,7 @@ html {
 }
 body {
   display: block;
-  margin: 8px;
+  /*margin: 8px;*/
 }
 * {
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -112,13 +110,12 @@ footer {
   flex-wrap: wrap;
   justify-content: stretch;
   align-items: flex-end;
-  padding: var(--spacing);
   position: relative;
 }
 
 header > h1 {
   margin: 0;
-  margin-top: 0; /*calc(1 * var(--grid-height));*/
+  margin-top: 0;
   padding: 0;
   flex-basis: 50%;
   transform-origin: 0% 100%;
@@ -197,7 +194,7 @@ h6::before {
 
 header > .arrows,
 footer > .arrows {
-  flex-basis: calc(100% + 2 * var(--spacing));
+  flex-basis: calc(100% + 1.3 * var(--spacing));
   margin: calc(-1 * var(--spacing));
 }
 header > .arrows {
@@ -304,9 +301,19 @@ pre > code,
     monospace;
 }
 
-pre,
-.codestyle,
 figure {
+  text-align: center;
+}
+
+.content > figure {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+pre,
+.codestyle {
   margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
 }
 

@@ -91,7 +91,7 @@ impl GameState<StringEvolver> {
 }
 
 thread_local! {
-    static GAME_STATE: RefCell<Option<GameState<StringEvolver>>> = RefCell::new(None);
+    static GAME_STATE: RefCell<Option<GameState<StringEvolver>>> = const { RefCell::new(None) };
 }
 
 pub struct TargetString(pub String);
