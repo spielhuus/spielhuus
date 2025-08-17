@@ -187,4 +187,7 @@ fn main() {
 
 ## links
 
-- {{< link "emscripten" >}}.
+- {{< link "emscripten" >}}
+- {{< github "wasm_callback" >}}
+
+

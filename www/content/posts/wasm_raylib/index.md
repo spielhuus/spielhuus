@@ -168,3 +168,4 @@ start the game loop:
 - {{< link "emscripten" >}}
 - {{< link "raylib" >}}
 - {{< link "raylib-egui-rs" >}}
+- {{< github "wasm_raylib" >}}

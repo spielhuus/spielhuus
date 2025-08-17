@@ -70,6 +70,7 @@ as per the specific requirements or conditions of the simulation.
 
 ## Links:
 - {{< link "wolfram" >}}.
+- {{< github "ca_rules" >}}.
 
 <script>
     let set_rule;

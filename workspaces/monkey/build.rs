@@ -27,7 +27,7 @@ fn main() {
         "-s",
         "WASM_BIGINT",
         "-s",
-        "EXPORTED_FUNCTIONS=['_main', '_set_target']",
+        "EXPORTED_FUNCTIONS=['_main', '_set_target', '_get_target']",
     ];
 
     for flag in other_flags {

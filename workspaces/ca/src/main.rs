@@ -294,14 +294,8 @@ fn update(state: &mut GameState) {
                                     InitialState::Right,
                                     InitialState::Random,
                                 ] {
-                                    if ui
-                                        .selectable_value(
-                                            &mut init,
-                                            state_option,
-                                            format!("{:?}", init),
-                                        )
-                                        .changed()
-                                    {
+                                    let val = format!("{init:?}");
+                                    if ui.selectable_value(&mut init, state_option, val).changed() {
                                         reload = true;
                                     }
                                 }

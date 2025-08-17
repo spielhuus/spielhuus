@@ -114,6 +114,11 @@ fn extend_paths(current_paths: Result) -> Result {
 
 <div class="flex-container" id="solutions"></div>
 
+
+# links
+
+- {{< github "nikolaus" >}}
+
 <script>
     let get_steps;
 

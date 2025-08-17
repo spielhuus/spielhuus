@@ -145,4 +145,5 @@ and call the `add` function exported from the Rust code.
 
 ## links
 
-- {{< link "emscripten" >}}.
+- {{< link "emscripten" >}}
+- {{< github "wasm" >}}

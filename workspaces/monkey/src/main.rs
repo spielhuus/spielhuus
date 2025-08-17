@@ -47,10 +47,27 @@ pub extern "C" fn set_target(text: *const c_char) {
     unsafe {
         let c_str = CStr::from_ptr(text);
         let target = c_str.to_string_lossy().into_owned();
-        println!("update target: {}", target);
+        println!("update target: '{}'", target);
         GAME_STATE.with(|cell| {
             if let Some(state) = cell.borrow_mut().as_mut() {
-                state.set_target(target);
+                state.set_target(target.clone());
+            } else {
+                panic!("can not get result");
+            }
+        });
+        TARGET.with(|cell| {
+            *cell.borrow_mut() = Some(CString::new(target).unwrap());
+        });
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[unsafe(no_mangle)]
+pub extern "C" fn get_target() -> *const c_char {
+    unsafe {
+        TARGET.with(|cell| {
+            if let Some(target) = cell.borrow_mut().as_mut() {
+                target.as_ptr()
             } else {
                 panic!("can not get result");
             }
@@ -92,6 +109,8 @@ impl GameState<StringEvolver> {
 
 thread_local! {
     static GAME_STATE: RefCell<Option<GameState<StringEvolver>>> = const { RefCell::new(None) };
+    #[cfg(target_arch = "wasm32")]
+    static TARGET: RefCell<Option<CString>> = const { RefCell::new(None) };
 }
 
 pub struct TargetString(pub String);
@@ -180,6 +199,9 @@ fn main() {
 
     #[cfg(target_arch = "wasm32")]
     {
+        TARGET.with(|cell| {
+            *cell.borrow_mut() = Some(CString::new(target).unwrap());
+        });
         unsafe {
             emscripten_set_main_loop_arg(main_loop_wrapper, std::ptr::null_mut(), 0, 1);
         }

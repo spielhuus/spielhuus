@@ -13,7 +13,7 @@ tags = ['ca']
 
 ## Links:
 - {{< link "wolfram" >}}.
-
+- {{< github "game_of_life" >}}.
 
 <script>
     let get_steps;
