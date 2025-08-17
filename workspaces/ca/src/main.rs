@@ -87,12 +87,11 @@ unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
 }
 fn main() {
     // initialize raylib
-    raylib::InitWindow(
-        SCREEN_WIDTH as i32,
-        SCREEN_HEIGHT as i32,
-        TITLE,
-        // CString::new(TITLE).expect("cstr").as_ptr(),
+    raylib::SetConfigFlags(
+        raylib::ConfigFlags::FLAG_MSAA_4X_HINT as u32
+            | raylib::ConfigFlags::FLAG_WINDOW_TRANSPARENT as u32,
     );
+    raylib::InitWindow(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, TITLE);
     raylib::SetTargetFPS(240);
 
     // initialize the maze
@@ -118,7 +117,7 @@ fn main() {
 
 fn update(state: &mut GameState) {
     raylib::BeginDrawing();
-    raylib::ClearBackground(Color::BLACK);
+    raylib::ClearBackground(Color::BLANK);
 
     for y in 0..state.height {
         for x in 0..state.width {
@@ -133,7 +132,7 @@ fn update(state: &mut GameState) {
                 if state.data[y as usize][x as usize] == 1 {
                     Color::GREEN
                 } else {
-                    Color::BLACK
+                    Color::BLANK
                 },
             );
         }

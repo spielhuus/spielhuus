@@ -1,4 +1,4 @@
-<h1><a href="{{ "/" | relURL }}" id="logo">{{ site.Title }}</a></h1>
+<h1><a href="{{ .Site.Home.RelPermalink }}" id="logo">{{ site.Title }}</a></h1>
 {{ partial "menu.html" (dict "menuID" "main" "page" .) }}
 <div class="arrows">
   <div class="arrow white"></div>

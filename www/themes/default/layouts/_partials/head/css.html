@@ -1,4 +1,4 @@
 {{ $css := resources.GetMatch "css/main.css.tpl"
 | resources.ExecuteAsTemplate "css/main.css" "nothing" }}
 
-<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+<link rel="stylesheet" href="{{ $css.RelPermalink }}"/>

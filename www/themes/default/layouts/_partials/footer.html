@@ -8,9 +8,9 @@
 <div class="footer">
   {{ $spielhuus := resources.Get "images/spielhuus.svg" }}
   {{ $github := resources.Get "images/github-mark.svg" }}
-  <a href="{{ "/" | absURL }}"><img src="{{ $spielhuus.RelPermalink }}" class="logo"></img></a>
+  <a href="{{ "/" | absURL }}"><img src="{{ $spielhuus.RelPermalink }}" class="logo"/></a>
   <span>&nbsp;&nbsp;&nbsp;</span>
-  <a href="https://github.com/spielhuus/"><img src="{{ $github.RelPermalink }}" class="logo" width="20%"></img></a>
+  <a href="https://github.com/spielhuus/"><img src="{{ $github.RelPermalink }}" class="logo" width="20%"/></a>
   <br/>
   <span>Copyright {{ now.Year }}. All rights reserved.</span>
 </div>

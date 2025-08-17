@@ -1,14 +1,14 @@
 +++
 title = 'Cellular automata'
 description = 'Draw a 1-dimensional cellular automaton for all rules.'
-date = 2023-01-15T09:00:00-07:00
-draft = true 
+date = 2025-08-14T19:35:00+02:00
+draft = false
 tags = ['ca']
 +++
 
 cellular automata rules
 
-<canvas id=canvas oncontextmenu=event.preventdefault()></canvas>
+<figure><canvas id=canvas oncontextmenu=event.preventdefault()></canvas></figure>
 
 ## Links:
 - {{< link "wolfram" >}}.
