@@ -57,6 +57,7 @@ jobs:
         env:
           HUGO_BASEURL: ${{ steps.pages.outputs.base_url }}
         run: |
+          echo $HUGO_BASEURL
           hugo --source www --minify --baseURL="$HUGO_BASEURL"
 
       - name: Upload artifact
