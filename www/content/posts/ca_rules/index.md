@@ -52,5 +52,5 @@ cellular automata rules
             // document.getElementById("solutions").innerHTML = "<table border='1'>" + table + "</table>";
     // } 
 </script>
-{{< wasm path="/ca.js" >}}
+{{< wasm path="ca.js" >}}
 <!-- script src="ca.js"></script -->
