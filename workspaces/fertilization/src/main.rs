@@ -273,6 +273,10 @@ unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
 }
 
 fn main() {
+    raylib::SetConfigFlags(
+        raylib::ConfigFlags::FLAG_MSAA_4X_HINT as u32
+            | raylib::ConfigFlags::FLAG_WINDOW_TRANSPARENT as u32,
+    );
     raylib::InitWindow(1280, 720, TITLE);
     let screen_width = 1280;
     let screen_height = 720;
@@ -314,7 +318,7 @@ fn update(state: &mut GameState) {
     let help_text = "(press <F> for toggle fast forward, <W> to show winner.)";
 
     raylib::BeginDrawing();
-    raylib::ClearBackground(Color::BLACK);
+    raylib::ClearBackground(Color::BLANK);
 
     raylib::DrawRectangleRec(state.board.walla, Color::WHITE);
     raylib::DrawRectangleRec(state.board.wallb, Color::WHITE);

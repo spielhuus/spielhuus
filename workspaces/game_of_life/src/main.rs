@@ -108,13 +108,12 @@ unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
 }
 fn main() {
     // initialize raylib
-    raylib::InitWindow(
-        SCREEN_WIDTH as i32,
-        SCREEN_HEIGHT as i32,
-        TITLE,
-        // CString::new(TITLE).expect("cstr").as_ptr(),
+    raylib::SetConfigFlags(
+        raylib::ConfigFlags::FLAG_MSAA_4X_HINT as u32
+            | raylib::ConfigFlags::FLAG_WINDOW_TRANSPARENT as u32,
     );
-    raylib::SetTargetFPS(120);
+    raylib::InitWindow(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, TITLE);
+    raylib::SetTargetFPS(60);
 
     // initialize the maze
     let mut game_state = GameState::new();
@@ -139,7 +138,7 @@ fn main() {
 
 fn update(state: &mut GameState) {
     raylib::BeginDrawing();
-    raylib::ClearBackground(Color::BLACK);
+    raylib::ClearBackground(Color::BLANK);
 
     for y in 0..state.height {
         for x in 0..state.width {
@@ -149,14 +148,9 @@ fn update(state: &mut GameState) {
                 width: (state.cell_size) as f32,
                 height: (state.cell_size) as f32,
             };
-            raylib::DrawRectangleRec(
-                cell,
-                if state.data[y as usize][x as usize] == 1 {
-                    Color::GREEN
-                } else {
-                    Color::BLACK
-                },
-            );
+            if state.data[y as usize][x as usize] == 1 {
+                raylib::DrawRectangleRec(cell, Color::GREEN);
+            }
         }
     }
 
@@ -174,37 +168,39 @@ fn update(state: &mut GameState) {
     }
     state.data = new_data;
 
-    let mut rule = state.rule;
-    let mut cell_size = state.cell_size;
-    let mut reload = false;
-    state.egui_raylib.draw(|egui_ctx| {
-        egui::Window::new("Configuration").show(egui_ctx, |ui| {
-            ui.label("Config:");
-            egui::Grid::new("edit_grid")
-                .num_columns(2)
-                .spacing([10.0, 4.0])
-                .show(ui, |ui| {
-                    ui.label("Rule:");
-                    if ui.add(egui::Slider::new(&mut rule, 0..=254)).changed() {
-                        reload = true;
-                    }
-                    ui.end_row();
-                    ui.label("Size:");
-                    if ui.add(egui::Slider::new(&mut cell_size, 1..=10)).changed() {
-                        reload = true;
-                    }
-                    ui.end_row();
-                });
-            ui.separator();
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let mut rule = state.rule;
+        let mut cell_size = state.cell_size;
+        let mut reload = false;
+        state.egui_raylib.draw(|egui_ctx| {
+            egui::Window::new("Configuration").show(egui_ctx, |ui| {
+                ui.label("Config:");
+                egui::Grid::new("edit_grid")
+                    .num_columns(2)
+                    .spacing([10.0, 4.0])
+                    .show(ui, |ui| {
+                        ui.label("Rule:");
+                        if ui.add(egui::Slider::new(&mut rule, 0..=254)).changed() {
+                            reload = true;
+                        }
+                        ui.end_row();
+                        ui.label("Size:");
+                        if ui.add(egui::Slider::new(&mut cell_size, 1..=10)).changed() {
+                            reload = true;
+                        }
+                        ui.end_row();
+                    });
+                ui.separator();
+            });
         });
-    });
 
-    if rule != state.rule {
-        state.set_rule(rule);
+        if rule != state.rule {
+            state.set_rule(rule);
+        }
+        if cell_size != state.cell_size {
+            state.set_cell_size(cell_size);
+        }
     }
-    if cell_size != state.cell_size {
-        state.set_cell_size(cell_size);
-    }
-
     raylib::EndDrawing();
 }

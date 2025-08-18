@@ -1,8 +1,8 @@
 +++
 title = "Conway's Game of Life"
 description = "Dive into the fascinating world of cellular automata with Conway's Game of Life! This classic simulation showcases emergent behavior from simple rules, making it a must-know for any aspiring developer. On this page, you'll find a comprehensive guide to programming the Game of Life, complete with pseudocode, algorithm explanations, and optimizations. Whether you're a seasoned coder or just starting out, you'll learn how to implement this iconic simulation in your favorite programming language. Get ready to bring digital life to your screen!"
-date = 2023-08-05T09:00:00-07:00
-draft = true
+date = 2025-08-16T19:35:00+02:00
+draft = false 
 tags = ['ca']
 +++
 
