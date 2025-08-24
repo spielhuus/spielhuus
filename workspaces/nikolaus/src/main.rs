@@ -9,7 +9,7 @@ use raylib_egui_rs::{color::Color, egui::EguiRaylib, math::Vector2, raylib};
 use std::cell::RefCell;
 
 #[cfg(target_arch = "wasm32")]
-use std::ffi::{CString, c_char, c_int, c_void};
+use std::ffi::{c_char, c_int, c_void};
 
 #[allow(static_mut_refs)]
 #[cfg(target_arch = "wasm32")]
@@ -26,7 +26,7 @@ unsafe extern "C" {
 }
 
 #[cfg(target_arch = "wasm32")]
-unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
+unsafe extern "C" fn main_loop_wrapper(_arg: *mut c_void) {
     GAME_STATE.with(|cell| {
         if let Some(game_state) = &mut *cell.borrow_mut() {
             update(game_state);
@@ -56,15 +56,19 @@ const STROKE: Color = Color {
 };
 const TITLE: &str = "Das kleine Haus des Nikolaus";
 const SPEED: f32 = 0.03;
-const X: f32 = 400.0;
-const Y: f32 = 20.0;
+#[cfg(not(target_arch = "wasm32"))]
 const SCALE: f32 = 2.0;
+#[cfg(not(target_arch = "wasm32"))]
+const X: f32 = 400.0;
+#[cfg(not(target_arch = "wasm32"))]
+const Y: f32 = 20.0;
 
 struct GameState {
     positions: [Vector2; 5],
     data: Result,
     start: usize,
     selected: usize,
+    #[cfg(not(target_arch = "wasm32"))]
     egui_raylib: EguiRaylib,
     step: usize,
     scale: f32,
@@ -92,6 +96,7 @@ impl GameState {
             data: Vec::new(),
             start: 0,
             selected: 0,
+            #[cfg(not(target_arch = "wasm32"))]
             egui_raylib: EguiRaylib::new(),
             step: 1,
             scale: 0.0,

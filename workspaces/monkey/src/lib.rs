@@ -94,7 +94,6 @@ pub async fn run_evolution_async(
     result_string: HtmlElement,
     count_string: HtmlElement,
 ) {
-    use log::info;
     use std::time::Duration;
     let mut game_state = GameState::new(target.to_string(), 500);
     let mut _max_fitness = 0.0;

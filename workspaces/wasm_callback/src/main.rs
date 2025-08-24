@@ -18,11 +18,11 @@ unsafe extern "C" {
 }
 
 #[cfg(target_arch = "wasm32")]
-unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
+unsafe extern "C" fn main_loop_wrapper(_arg: *mut c_void) {
     GAME_STATE.with(|cell| {
         if let Some(game_state) = &mut *cell.borrow_mut() {
             game_state.counter += 1;
-            update_counter(game_state.counter);
+            unsafe { update_counter(game_state.counter) };
         }
     });
 }

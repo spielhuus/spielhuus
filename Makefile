@@ -30,7 +30,6 @@ emscripten: $(EMSCRIPTEN_TARGETS)
 
 emscripten-%: target/emsdk
 	@echo "--- Building service: $* ---"
-	# . target/emsdk/emsdk_env.sh; cargo build -p $* --target wasm32-unknown-emscripten --release
 	(cd target/emsdk && . ./emsdk_env.sh && cd ../.. && cargo build -p $* --target wasm32-unknown-emscripten --release)
 	mkdir -p $(WWW_TARGET_DIR)/js/$*
 	cp $(WASM_TARGET_DIR)/$*.wasm $(WASM_TARGET_DIR)/$*.js $(WWW_TARGET_DIR)/js/$*
