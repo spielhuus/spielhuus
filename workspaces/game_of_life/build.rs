@@ -19,6 +19,8 @@ fn main() {
         "ABORTING_MALLOC=0",
         "-s",
         "WASM_BIGINT",
+        "-s",
+        "EXPORTED_FUNCTIONS=['_main', '_set_size', '_set_birth', _set_survive]",
     ];
 
     for flag in other_flags {

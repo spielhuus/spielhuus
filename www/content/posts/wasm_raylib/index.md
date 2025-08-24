@@ -161,7 +161,7 @@ start the game loop:
     };
 
 </script>
-{{< script "wasm_raylib.js" >}}
+{{< script "/js/wasm_raylib/wasm_raylib.js" >}}
 
 ## links
 

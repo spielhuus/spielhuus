@@ -13,6 +13,5 @@ theme = 'default'
     lineNoStart = 1
     lineNos = false
     lineNumbersInTable = true
-    noClasses = true
-    style = "paraiso-light"
+    noClasses = false
     tabWidth = 4

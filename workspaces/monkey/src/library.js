@@ -2,7 +2,7 @@ mergeInto(LibraryManager.library, {
   update: function (fittest_str, max_fitness, target_len) {
     const target = get_target();
     const fittest = UTF8ToString(fittest_str);
-    const container = document.getElementById("result");
+    const container = document.getElementById("result-string");
     container.innerHTML = "";
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < target.length; i++) {

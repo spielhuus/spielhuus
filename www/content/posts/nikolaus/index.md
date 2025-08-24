@@ -6,7 +6,7 @@ draft = false
 tags = ['graph']
 +++
 
-### "Das Kleine Haus des Nikolaus" Puzzle
+## "Das Kleine Haus des Nikolaus" Puzzle
 
 **"Das kleine Haus des Nikolaus"** is a popular children's puzzle where the
 objective is to draw a continuous line that traces eight segments without
@@ -94,7 +94,10 @@ fn extend_paths(current_paths: Result) -> Result {
 }
 ```
 
+## Result 
+
  E Voilà, we've collected all possible solutions, resulting in 
+
 **44 distinct Eulerian paths**
 
 <style>
@@ -115,7 +118,7 @@ fn extend_paths(current_paths: Result) -> Result {
 <div class="flex-container" id="solutions"></div>
 
 
-# links
+## links
 
 - {{< github "nikolaus" >}}
 
@@ -157,4 +160,4 @@ fn extend_paths(current_paths: Result) -> Result {
             document.getElementById("solutions").innerHTML = content;
     }
 </script>
-{{< wasm path="nikolaus.js" >}}
+{{< wasm path="/js/nikolaus/nikolaus.js" >}}

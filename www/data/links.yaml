@@ -29,3 +29,18 @@
   name: "raylib-egui-rs"
   url: "https://github.com/spielhuus/raylib-egui-rs"
   description: "Rust bindings for Raylib, mirroring the original API, with support for the egui backend."
+
+- id: "gameoflife"
+  name: "Game Of Life"
+  url: "https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
+  description: "Game of Life at Wikipedia"
+
+- id: "moore-neighborhood"
+  name: "Moore neighborhood"
+  url: "https://en.wikipedia.org/wiki/Moore_neighborhood"
+  description: "Moore neighborhood at Wikipedia"
+
+- id: "conwaylife"
+  name: "LifeWiki"
+  url: "https://conwaylife.com/wiki/"
+  description: "The wiki for Conway's Game of Life."

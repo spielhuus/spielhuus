@@ -32,26 +32,27 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-emscripten
+        # with:
+        #   targets: wasm32-unknown-emscripten
 
-      - name: Setup Emscripten SDK
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 'latest'
+      # - name: Setup Emscripten SDK
+      #   uses: mymindstorm/setup-emsdk@v14
+      #   with:
+      #     version: 'latest'
 
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
 
       - name: Build Rust Wasm artifacts
-        run: cargo build --workspace --target wasm32-unknown-emscripten --release
+        # run: cargo build --workspace --target wasm32-unknown-emscripten --release
+        run: make web
 
-      - name: Copy Wasm artifacts to static folder
-        run: |
-          mkdir -p www/static
-          cp target/wasm32-unknown-emscripten/release/*.js www/static/
-          cp target/wasm32-unknown-emscripten/release/*.wasm www/static/
+      # - name: Copy Wasm artifacts to static folder
+      #   run: |
+      #     mkdir -p www/static
+      #     cp target/wasm32-unknown-emscripten/release/*.js www/static/
+      #     cp target/wasm32-unknown-emscripten/release/*.wasm www/static/
 
       - name: Build Hugo site
         env:

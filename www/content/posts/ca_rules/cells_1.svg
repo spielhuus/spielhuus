@@ -19,9 +19,6 @@
     </style>
   </defs>
 
-  <!-- A light background for the canvas (optional) -->
-  <rect x="0" y="0" width="100%" height="100%" fill="#ffffff" />
-  
   <!-- The 10 cells, laid out in a row -->
   <!-- Cell size = 40x40, Gap = 5, Padding = 10 -->
   

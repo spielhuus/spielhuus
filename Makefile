@@ -6,43 +6,53 @@ WWW_TARGET_DIR := www/static
 BIN_SRC_FILES := $(shell find workspaces -type f -name main.rs)
 BIN_NAMES := $(patsubst workspaces/%/src/main.rs,%,$(BIN_SRC_FILES))
 
-BIN_TARGETS := $(addprefix $(TARGET_DIR)/, $(BIN_NAMES))
-WASM_FILES := $(addsuffix .wasm, $(addprefix $(WASM_TARGET_DIR)/, $(BIN_NAMES)))
-JS_FILES := $(addsuffix .js, $(addprefix $(WASM_TARGET_DIR)/, $(BIN_NAMES)))
+EMSCRIPTEN := wasm wasm_callback wasm_raylib nikolaus
+EMSCRIPTEN_TARGETS := $(foreach svc,$(EMSCRIPTEN),emscripten-$(svc))
 
-TARGET_WASM_FILES := $(addprefix $(WWW_TARGET_DIR)/, $(notdir $(WASM_FILES)))
-TARGET_JS_FILES := $(addprefix $(WWW_TARGET_DIR)/, $(notdir $(JS_FILES)))
+BINDGEN := monkey
+BINDGEN_TARGETS := $(foreach svc,$(BINDGEN),bindgen-$(svc))
 
-.PHONY: all build-native build-wasm copy-www clean
+WASM_PACK := $(HOME)/.cargo/bin/wasm-pack
 
-all: build-native build-wasm copy-www
+.PHONY: all emscripten bindgen build-native
+
+all: emscripten bindgen build-native
+
+$(WASM_PACK): 
+	cargo install wasm-pack
 
 target/emsdk: 
 	git clone --depth 1 https://github.com/emscripten-core/emsdk.git target/emsdk
 	cd target/emsdk && ./emsdk install latest
 	cd target/emsdk && ./emsdk activate latest
 
-# Native build
+emscripten: $(EMSCRIPTEN_TARGETS)
+
+emscripten-%: target/emsdk
+	@echo "--- Building service: $* ---"
+	. target/emsdk/emsdk_env.sh; cargo build -p $* --target wasm32-unknown-emscripten --release
+	mkdir -p $(WWW_TARGET_DIR)/js/$*
+	cp $(WASM_TARGET_DIR)/$*.wasm $(WASM_TARGET_DIR)/$*.js $(WWW_TARGET_DIR)/js/$*
+
+.PHONY: bindgen
+bindgen: $(BINDGEN_TARGETS)
+
+bindgen-%: $(WASM_PACK)
+	@echo "--- Building service: $* ---"
+	mkdir -p $(WWW_TARGET_DIR)/js/$* 
+	$(WASM_PACK) build workspaces/$* --target web --release -d ../../$(WWW_TARGET_DIR)/js/$*
+
 build-native: $(BIN_SRC_FILES)
 	cargo build --release
 
-# WASM build
-build-wasm: $(BIN_SRC_FILES) target/emsdk
-	. target/emsdk/emsdk_env.sh; cargo build --target wasm32-unknown-emscripten --release
-
-# Copy to target/www
-copy-www: build-wasm
-	mkdir -p $(WWW_TARGET_DIR)
-	cp $(WASM_FILES) $(JS_FILES) $(WWW_TARGET_DIR)
-
-web: copy-www
+web: emscripten bindgen
 	cd www && hugo build
 
-serve: copy-www
+serve: emscripten bindgen
 	hugo --source www serve
 
 clean:
 	rm -rf target
-	rm -f $(TARGET_WASM_FILES) $(TARGET_JS_FILES)
+	rm -f www/static/*.js www/static/*.wasm
 	rm -rf www/public
 	rm -rf www/resources/

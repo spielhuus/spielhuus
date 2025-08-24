@@ -13,7 +13,7 @@ infinite time, more than the monkey's lifespan.
 
 By using a generative algorithm, the process can be accelerated significantly.
 
-# Steps of the Generative Algorithm
+## Steps of the Generative Algorithm
 
 1. **Create an Initial Population**
 - Generate a population of solutions (Phenotypes) using random characters.
@@ -38,79 +38,45 @@ Using these refined steps, we can effectively simulate an approach that would
 be practically feasible even if the theorem in its raw form is impractically
 endless.
 
-<figure>
-<div id="result"> </div>
+## Result
+
+
+<div>
+<div id="result-string"> </div>
 <div>MaxFitness: <span id="maxFitness"></span></div>
 <div>Round: <span id="round"></span></div>
-<div id="log"> </div>
-<div id="log"> </div>
+<div>Generation: <span id="count-string"></span></div>
 
 <label for="targetInput">Text to write:</label>
-<input type="text" id="target" value="All the world's a stage, and all the men and women merely players." onsubmit="start()">
-<input type="submit" id="targetSubmit" value="Submit" onsubmit="start()">
-</figure>
+<input type="text" id="target">
+<input type="submit" id="targetSubmit" value="Submit">
+</div>
 
 Yes, this is a somewhat silly example. But it's purely reliant on genetic
 evolution to find a solution. The algorithm does not inherently "know" 
 the path to the solution. Perhaps, we can discover better applications 
 for this methodology.
 
-# links
+## links
 
 - {{< link "infinite_monkey" >}}
 - {{< github "monkey" >}}
 
 <style>
-    .good {
-        color: green;
-        font-size: 18;
-        width: 8em;
-    }
-    .bad {
-        color: red;
-        font-size: 18;
-        width: 8em;
-    }
+  .letter {
+    font-family: monospace;
+    font-size: 2em;
+    font-weight: light;
+    display: inline-block;
+    width: 1em;
+  }
+  .letter-good {
+    font-family: monospace;
+    font-size: 2em;
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+  }
 </style>
 
-<script>
-    let set_target;
-    let get_target;
-    function on_load() {
-        const dpr = window.devicePixelRatio;
-        let canvas = document.getElementById('canvas');
-
-        set_target = Module.cwrap(
-            "set_target",
-            null,
-            ["string"]
-        );
-        get_target = Module.cwrap(
-            "get_target",
-            "string",
-            []
-        );
-    }
-
-    var Module = {
-        postRun: [ on_load ],
-        canvas: document.getElementById('canvas'),
-    };
-
-    function start() {
-        let target = document.getElementById('target');
-        console.log("New Target: '" + target.value +  "'")
-    }
-
-    document.getElementById('target').addEventListener('keydown', function(event) {
-      if (event.key === 'Enter') {
-        const inputValue = event.target.value;
-        set_target(inputValue);
-      }
-    });
-    document.getElementById('targetSubmit').addEventListener('click', function(event) {
-        const inputValue = document.getElementById('target'); 
-        set_target(inputValue.value);
-    });
-</script>
-{{< wasm path="monkey.js" >}}
+{{< bindgen path="/js/monkey/monkey.js" >}}

@@ -2,7 +2,7 @@
 title = 'Cellular automata'
 description = 'Draw a 1-dimensional cellular automaton for all rules.'
 date = 2025-08-14T19:35:00+02:00
-draft = false
+draft = true
 tags = ['ca']
 +++
 
@@ -47,7 +47,7 @@ the last one, and the neighbor for the last cell is the first one in the grid.
     <label class="h2" form="rules">Rule:</label>
     <input type="number" value="90" name="rule" id="rule" min="0" max="255" required>
     <br>
-    <label class="h2" form="rules">Size:</label>
+    <label class="h2" form="rules">size:</label>
     <input type="range" min="1" max="10" value="4" id="size"/>
     <br>
     <label class="h2" form="rules">Initial State:</label>
