@@ -40,6 +40,26 @@
   url: "https://en.wikipedia.org/wiki/Moore_neighborhood"
   description: "Moore neighborhood at Wikipedia"
 
+- id: "wgpu"
+  name: "wgpu"
+  url: "https://wgpu.rs/"
+  description: "wgpu is a safe and portable graphics library for Rust based on the WebGPU API. It is suitable for general purpose graphics and compute on the GPU."
+
+- id: "learn-wgpu"
+  name: "Learn Wgpu"
+  url: "https://sotrh.github.io/learn-wgpu/"
+  description: "Beginners guide for wgpu"
+
+- id: "webgpu"
+  name: "WebGPU"
+  url: "https://www.w3.org/TR/webgpu/"
+  description: "W3C Candidate Recommendation Draft"
+
+- id: "webgpu-fundamentals"
+  name: "WebGPU Fundamentals"
+  url: "https://webgpufundamentals.org/"
+  description: "A set of articles to help learn WebGPU"
+
 - id: "conwaylife"
   name: "LifeWiki"
   url: "https://conwaylife.com/wiki/"
