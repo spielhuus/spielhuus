@@ -33,11 +33,17 @@ unsafe extern "C" {
     fn update_counter(index: i32);
 }
 
-struct GameState {}
+struct GameState {
+    #[cfg(target_arch = "wasm32")]
+    counter: i32,
+}
 
 impl GameState {
     fn new() -> Self {
-        Self {}
+        Self {
+            #[cfg(target_arch = "wasm32")]
+            counter: 1,
+        }
     }
 }
 
