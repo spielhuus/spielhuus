@@ -176,7 +176,7 @@ fn main() {
 <script> 
     var Module = { }; 
 </script> 
-{{< wasm path="/js/wasm_callback/wasm_callback.js" >}}
+{{< wasm path="js/wasm_callback/wasm_callback.js" >}}
 
 <figure> 
  <p>Counter <span id="counter">0</span></p> 

@@ -79,4 +79,4 @@ for this methodology.
   }
 </style>
 
-{{< bindgen path="/js/monkey/monkey.js" >}}
+{{< bindgen path="js/monkey/monkey.js" >}}
