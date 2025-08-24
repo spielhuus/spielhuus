@@ -32,8 +32,8 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        # with:
-        #   targets: wasm32-unknown-emscripten
+        with:
+          targets: wasm32-unknown-emscripten
 
       # - name: Setup Emscripten SDK
       #   uses: mymindstorm/setup-emsdk@v14
