@@ -5,7 +5,7 @@ members = [
   "workspaces/wasm",
   "workspaces/wasm_callback",
   "workspaces/wasm_raylib",
-  "workspaces/wasm_test_bindgen",
+  # "workspaces/wasm_test_bindgen",
   "workspaces/worm",
   "workspaces/nikolaus",
   "workspaces/monkey",
@@ -13,8 +13,8 @@ members = [
   "workspaces/ca",
   "workspaces/maze",
   "workspaces/game_of_life",
-  "workspaces/mandelbrot",
-  "workspaces/wgpu_tutor",
+  # "workspaces/mandelbrot",
+  # "workspaces/wgpu_tutor",
 ]
 
 [workspace.dependencies]
