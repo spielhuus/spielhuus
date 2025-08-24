@@ -3,7 +3,7 @@ title = 'Ahoi WebGPU!'
 description = 'A dynamic, full-screen shader demonstration using Rust and WebGPU.'
 date = 2025-08-24T13:35:00+02:00
 draft = false
-tags = ['Rust', 'WebGPU', 'wgpu', 'Wasm', 'Graphics']
+tags = ['WebGPU']
 +++
 
 This project is a "Hello World" for modern graphics programming, demonstrating how to create a dynamic, 
