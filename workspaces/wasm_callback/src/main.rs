@@ -33,13 +33,11 @@ unsafe extern "C" {
     fn update_counter(index: i32);
 }
 
-struct GameState {
-    counter: i32,
-}
+struct GameState {}
 
 impl GameState {
     fn new() -> Self {
-        Self { counter: 1 }
+        Self {}
     }
 }
 

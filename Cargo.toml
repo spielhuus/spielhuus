@@ -15,6 +15,7 @@ members = [
   "workspaces/game_of_life",
   # "workspaces/mandelbrot",
   # "workspaces/wgpu_tutor",
+  "workspaces/ahoi_wgpu"
 ]
 
 [workspace.dependencies]

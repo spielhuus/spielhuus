@@ -1,4 +1,4 @@
-use monkey_bindgen::{GameState, TARGET};
+use monkey::{GameState, TARGET};
 
 pub fn main() {
     println!("Target: \"{TARGET}\"");
