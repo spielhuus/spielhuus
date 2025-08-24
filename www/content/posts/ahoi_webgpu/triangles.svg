@@ -1,0 +1,46 @@
+<svg width="400" height="400" viewBox="-140 -130 280 260" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="10">
+  <defs>
+    <style>
+      .bg { fill: transparent; }
+      .triangle1 { fill: #d1e7dd; stroke: #333; stroke-width: 1; }
+      .triangle2 { fill: #f8d7da; stroke: #333; stroke-width: 1; }
+      .label { fill: #111; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <title>Two Triangles Forming a Full-Screen Rectangle</title>
+
+  <!-- Background Rect (now transparent) -->
+  <rect x="-130" y="-130" width="260" height="260" class="bg" />
+
+  <!-- 
+    The Y-axis in SVG is inverted (positive is down).
+    Coordinates are scaled by 100.
+    (-1, 1) -> SVG point (-100, -100)
+    (1, -1) -> SVG point (100, 100)
+  -->
+
+  <!-- Triangle 1: Top-Left, Bottom-Left, Bottom-Right -->
+  <path d="M -100 -100 L -100 100 L 100 100 Z" class="triangle1" />
+  
+  <!-- Triangle 2: Top-Left, Top-Right, Bottom-Right -->
+  <path d="M -100 -100 L 100 -100 L 100 100 Z" class="triangle2" />
+  
+  <!-- Coordinate Labels -->
+  <!-- Top-Left Label -->
+  <text x="-115" y="-108" class="label">(-1, 1)</text>
+  <circle cx="-100" cy="-100" r="2" fill="#333" />
+  
+  <!-- Top-Right Label -->
+  <text x="115" y="-108" class="label">(1, 1)</text>
+  <circle cx="100" cy="-100" r="2" fill="#333" />
+  
+  <!-- Bottom-Left Label -->
+  <text x="-115" y="115" class="label">(-1, -1)</text>
+  <circle cx="-100" cy="100" r="2" fill="#333" />
+  
+  <!-- Bottom-Right Label -->
+  <text x="115" y="115" class="label">(1, -1)</text>
+  <circle cx="100" cy="100" r="2" fill="#333" />
+
+</svg>
