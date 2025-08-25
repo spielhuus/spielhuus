@@ -4,7 +4,11 @@ mod nikolaus;
 use egui::ScrollArea;
 
 use nikolaus::Result;
-use raylib_egui_rs::{color::Color, egui::EguiRaylib, math::Vector2, raylib};
+
+#[cfg(not(target_arch = "wasm32"))]
+use raylib_egui_rs::egui::EguiRaylib;
+
+use raylib_egui_rs::{color::Color, math::Vector2, raylib};
 
 use std::cell::RefCell;
 
@@ -26,7 +30,7 @@ unsafe extern "C" {
 }
 
 #[cfg(target_arch = "wasm32")]
-unsafe extern "C" fn main_loop_wrapper(arg: *mut c_void) {
+unsafe extern "C" fn main_loop_wrapper(_arg: *mut c_void) {
     GAME_STATE.with(|cell| {
         if let Some(game_state) = &mut *cell.borrow_mut() {
             update(game_state);
@@ -56,8 +60,11 @@ const STROKE: Color = Color {
 };
 const TITLE: &str = "Das kleine Haus des Nikolaus";
 const SPEED: f32 = 0.03;
+#[cfg(not(target_arch = "wasm32"))]
 const X: f32 = 400.0;
+#[cfg(not(target_arch = "wasm32"))]
 const Y: f32 = 20.0;
+#[cfg(not(target_arch = "wasm32"))]
 const SCALE: f32 = 2.0;
 
 struct GameState {
@@ -65,13 +72,15 @@ struct GameState {
     data: Result,
     start: usize,
     selected: usize,
-    egui_raylib: EguiRaylib,
     step: usize,
     scale: f32,
+    #[cfg(not(target_arch = "wasm32"))]
+    egui_raylib: EguiRaylib,
 }
 
 impl GameState {
     fn new() -> Self {
+        #[allow(unused_mut)]
         let mut positions: [Vector2; 5] = [
             Vector2 { x: 1.0, y: 150.0 },
             Vector2 { x: 1.0, y: 50.0 },
@@ -92,9 +101,10 @@ impl GameState {
             data: Vec::new(),
             start: 0,
             selected: 0,
-            egui_raylib: EguiRaylib::new(),
             step: 1,
             scale: 0.0,
+            #[cfg(not(target_arch = "wasm32"))]
+            egui_raylib: EguiRaylib::new(),
         }
     }
     fn set_data(&mut self, data: Result) {
@@ -104,7 +114,8 @@ impl GameState {
 
 thread_local! {
     static GAME_STATE: RefCell<Option<GameState>> = const { RefCell::new(None) };
-    static JSON_BUFFER: RefCell<Option<String>> = const { RefCell::new(None) };
+    #[cfg(target_arch = "wasm32")]
+    static JSON_BUFFER: RefCell<Option<CString>> = const { RefCell::new(None) };
 }
 
 #[unsafe(no_mangle)]
@@ -123,7 +134,6 @@ pub extern "C" fn solutions() -> i32 {
 pub extern "C" fn get_steps() -> *const c_char {
     GAME_STATE.with(|cell| {
         if let Some(state) = cell.borrow().as_ref() {
-            println!("get steps: {}", state.data.len());
             let data = &state.data;
             let mut json = String::from("[");
             for (i, path) in data.iter().enumerate() {
@@ -142,7 +152,7 @@ pub extern "C" fn get_steps() -> *const c_char {
             json.push(']');
 
             JSON_BUFFER.with(|buf| {
-                *buf.borrow_mut() = Some(json);
+                *buf.borrow_mut() = Some(CString::new(json).unwrap());
                 buf.borrow().as_ref().unwrap().as_ptr()
             }) as *const c_char
         } else {
