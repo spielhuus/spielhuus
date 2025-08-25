@@ -33,23 +33,6 @@ fn rotate(p: vec2<f32>, a: f32) -> vec2<f32> {
                    p.x * sin(a) + p.y * cos(a));
 }
 
-// @fragment
-// fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-//   var p = in.model_pos;
-// 
-//   let aspect = uniforms.resolution.x / uniforms.resolution.y;
-//   p.x = p.x * aspect;
-// 
-//   // The length will now correctly be 0.0 at the center.
-//   // We can scale it down if the gradient is too harsh.
-//   var x = length(p) * 0.7;
-// 
-//   // You can also add the time uniform for an animation!
-//   x = sin(x * 20.0 - uniforms.time) * 0.5 + 0.5; // Creates moving rings
-// 
-//   return vec4<f32>(x, 0.0, 0.0, 1.0);
-// }
-
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   var p = in.model_pos * 0.2;
