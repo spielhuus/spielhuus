@@ -1,5 +1,5 @@
 [package]
-name = "ahoi_wgpu"
+name = "cube"
 version = "0.1.0"
 edition = "2024"
 
@@ -16,6 +16,7 @@ winit = { version = "0.30" }
 log = "0.4"
 wgpu = "26.0.1"
 pollster = "0.4"
+glam = { version = "0.30", features = ["bytemuck"] }
 bytemuck = { version = "1.23", features = [ "derive" ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

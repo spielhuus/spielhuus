@@ -6,17 +6,26 @@ members = [
   "workspaces/wasm_callback",
   "workspaces/wasm_raylib",
   # "workspaces/wasm_test_bindgen",
+  "workspaces/cube",
   "workspaces/worm",
   "workspaces/nikolaus",
   "workspaces/monkey",
   "workspaces/fertilization",
   "workspaces/ca",
+  "workspaces/ca_gpu",
   "workspaces/maze",
   "workspaces/game_of_life",
-  # "workspaces/mandelbrot",
+  "workspaces/mandelbrot",
   # "workspaces/wgpu_tutor",
-  "workspaces/ahoi_wgpu"
+  "workspaces/ahoi_wgpu",
+  "workspaces/rubik",
+  "workspaces/worm2",
+  "workspaces/worm_shape",
+  "workspaces/gpu_lines",
 ]
+
+[profile.release]
+lto = true
 
 [workspace.dependencies]
 raylib-egui-rs = { git = "https://github.com/spielhuus/raylib-egui-rs.git" }

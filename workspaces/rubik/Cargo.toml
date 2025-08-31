@@ -1,0 +1,15 @@
+[package]
+name = "rubik"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+winit = "0.30"
+env_logger = "0.11"
+log = "0.4"
+pollster = "0.4"
+wgpu = "26.0.1"
+cgmath = "0.18" # For matrix and vector math
+softbuffer = "0.4"
+raw-window-handle = "0.6"
+glam = "0.30"

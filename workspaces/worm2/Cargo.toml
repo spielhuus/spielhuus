@@ -1,13 +1,13 @@
 [package]
-name = "ahoi_wgpu"
+name = "worm2"
 version = "0.1.0"
 edition = "2024"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
+# [lib]
+# crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "wgpu_tutor"
+name = "worm2"
 path = "src/main.rs"
 
 [dependencies]
@@ -17,6 +17,10 @@ log = "0.4"
 wgpu = "26.0.1"
 pollster = "0.4"
 bytemuck = { version = "1.23", features = [ "derive" ] }
+instant = "0.1"
+# lyon = "1.0"
+nalgebra = "0.34"
+rand.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger = "0.11"

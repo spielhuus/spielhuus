@@ -2,7 +2,7 @@
 title = 'Cellular automata'
 description = 'Draw a 1-dimensional cellular automaton for all rules.'
 date = 2025-08-14T19:35:00+02:00
-draft = true
+draft = false
 tags = ['ca']
 +++
 
