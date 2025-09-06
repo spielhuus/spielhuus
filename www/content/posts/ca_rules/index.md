@@ -1,7 +1,7 @@
 +++
 title = 'Cellular automata'
 description = 'Draw a 1-dimensional cellular automaton for all rules.'
-date = 2025-08-14T19:35:00+02:00
+date = 2025-09-05T19:35:00+02:00
 draft = false
 tags = ['ca']
 +++
@@ -42,7 +42,7 @@ issue is to wrap around the cells such that the neighbor for the first cell is
 the last one, and the neighbor for the last cell is the first one in the grid.
 
 <figure>
-<canvas id=canvas oncontextmenu=event.preventdefault()></canvas>
+<canvas width=1280 height=860 id="shader"></canvas>
 <form action="#" id="rules">
     <label class="h2" form="rules">Rule:</label>
     <input type="number" value="90" name="rule" id="rule" min="0" max="255" required>
@@ -57,10 +57,8 @@ the last one, and the neighbor for the last cell is the first one in the grid.
       <option value="3">Right</option>
       <option value="4">Random</option>
     </select>
-</select>
 </form>
 </figure>
-
 
 Another crucial aspect is defining the initial state of the cells. Commonly,
 the central cell of the row is selected as the initial active cell. Alternative
@@ -68,59 +66,18 @@ possibilities include initiating the activity at the left or right side of the
 row, choosing random initial active cells, or selecting multiple active cells 
 as per the specific requirements or conditions of the simulation.
 
+## Implementation Overview
+
+This Rust implementation leverages `wgpu` for GPU-accelerated computation and rendering of the cellular automaton.
+It uses a compute shader to calculate the next generation of cells based on the defined rule and a render pipeline
+to visualize the grid on the screen. The core components include storage textures to hold the automaton's state,
+uniform buffers to pass parameters like the rule number and grid dimensions to the shaders, and bind groups to
+manage the resources bound to the compute and render pipelines.  The `State` struct encapsulates the `wgpu`
+context and resources, while the `App` struct manages the application lifecycle and user interactions,
+enabling dynamic modification of simulation parameters such as the rule, cell size, and initial state. 
+
 ## Links:
 - {{< link "wolfram" >}}.
 - {{< github "ca_rules" >}}.
 
-<script>
-    let set_rule;
-    let set_size;
-    let set_initial;
-
-    function on_load() {
-        const dpr = window.devicePixelRatio;
-        let canvas = document.getElementById('canvas');
-
-        set_rule = Module.cwrap(
-            "set_rule",
-            null,
-            ["number"]
-        );
-        set_size = Module.cwrap(
-            "set_size",
-            null,
-            ["number"]
-        );
-        set_initial = Module.cwrap(
-            "set_initial",
-            null,
-            ["number"]
-        );
-    }
-    var Module = {
-        postRun: [ on_load ],
-        canvas: document.getElementById('canvas'),
-    };
-
-    const ruleInput = document.querySelector('#rule');
-    function handleRuleChange(event) {
-        const newValue = event.target.value;
-        set_rule(newValue);
-    }
-    ruleInput.addEventListener('input', handleRuleChange);
-
-    const sizeInput = document.querySelector('#size');
-    function handleSizeChange(event) {
-        const newValue = event.target.value;
-        set_size(newValue);
-    }
-    sizeInput.addEventListener('input', handleSizeChange);
-
-    const initialInput = document.querySelector('#initial');
-    function handleInitChange(event) {
-        const newValue = event.target.value;
-        set_initial(newValue);
-    }
-    initialInput.addEventListener('input', handleInitChange);
-</script>
-{{< wasm path="ca.js" >}}
+{{< bindgen path="js/ca/ca.js" >}}

@@ -1,23 +1,14 @@
-// Uniforms that will be the same for all shader invocations.
 @group(0) @binding(0) var<uniform> u_params: Params;
-
-// The previous generation's state (read-only).
-// We use a texture_storage_2d because we need integer coordinates and no filtering.
 @group(0) @binding(1) var source_texture: texture_storage_2d<r32uint, read>;
-
-// The new generation's state (write-only).
 @group(0) @binding(2) var dest_texture: texture_storage_2d<r32uint, write>;
-
-// For the render pipeline
-@group(0) @binding(3) var display_texture: texture_2d<u32>;
-
+@group(0) @binding(1) var display_texture: texture_2d<u32>;
 
 struct Params {
     // The ECA rule, from 0 to 255.
     rule: u32,
-    // The width and height of our automaton grid.
     width: u32,
     height: u32,
+    size: u32,
     current_generation: u32, 
 };
 
@@ -85,38 +76,23 @@ struct VertexOutput {
     @location(0) tex_coords: vec2<f32>,
 };
 
-// A simple vertex shader that creates a full-screen triangle.
-// This is more efficient than a quad as it uses 3 vertices instead of 4/6.
 @vertex
 fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
     var out: VertexOutput;
-    // Map vertex index to a full-screen triangle
     let x = f32(in_vertex_index / 2u) * 4.0 - 1.0;
     let y = f32(in_vertex_index % 2u) * 4.0 - 1.0;
     out.clip_position = vec4<f32>(x, y, 0.0, 1.0);
     out.tex_coords = vec2<f32>(
         (out.clip_position.x + 1.0) / 2.0,
-        1.0 - (out.clip_position.y + 1.0) / 2.0 // Flip Y
+        1.0 - (out.clip_position.y + 1.0) / 2.0
     );
     return out;
 }
 
 @fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    // Get the dimensions of the texture so we can map our
-    // normalized (0.0-1.0) tex_coords to integer pixel coordinates.
-    let dims = textureDimensions(display_texture);
-
-    // Calculate the integer coordinates.
-    let coords = vec2<i32>(floor(in.tex_coords * vec2<f32>(dims)));
-
-    // FIX: Use textureLoad to fetch the exact integer value from the texture.
-    // The second argument to textureLoad is the integer coordinate, the third is the mip level (0 for us).
-    let int_color = textureLoad(display_texture, coords, 0).r;
-
-    // Cast the u32 value (0 or 1) to an f32 (0.0 or 1.0).
+fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
+    let texel_coords = vec2<i32>(frag_coord.xy / f32(u_params.size));
+    let int_color = textureLoad(display_texture, texel_coords, 0).r;
     let color = f32(int_color);
-
-    // Now construct the final f32 color for output.
-    return vec4<f32>(color, color, color, 1.0);
+    return vec4<f32>(0.9 * color, 0.0, 0.0, color);
 }

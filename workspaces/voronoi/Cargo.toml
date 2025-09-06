@@ -1,0 +1,30 @@
+[package]
+name = "voronoi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+winit = "0.30"
+env_logger = "0.11"
+log = "0.4"
+softbuffer = "0.4"
+raw-window-handle = "0.6"
+rand.workspace = true
+mint = "0.5"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+console_error_panic_hook = "0.1.7"
+console_log = "1.0"
+# wgpu = { version = "26.0.1", features = ["webgl"]}
+wasm-bindgen = "0.2"
+# wasm-bindgen-futures = "0.4.50"
+web-sys = { version = "0.3.77", features = [
+    "Document",
+    "Window",
+    "Element",
+    "HtmlCanvasElement",
+]}

@@ -441,21 +441,6 @@ impl ApplicationHandler<State> for App {
         let mut window_attributes = Window::default_attributes();
 
         #[cfg(target_arch = "wasm32")]
-        {
-            use wasm_bindgen::JsCast;
-            use winit::platform::web::WindowAttributesExtWebSys;
-
-            const CANVAS_ID: &str = "shader";
-
-            let window = wgpu::web_sys::window().unwrap_throw();
-            println!("got document");
-            let document = window.document().unwrap_throw();
-            let canvas = document.get_element_by_id(CANVAS_ID).unwrap_throw();
-            let html_canvas_element = canvas.unchecked_into();
-            window_attributes = window_attributes.with_canvas(Some(html_canvas_element));
-        }
-
-        #[cfg(target_arch = "wasm32")]
         let canvas = {
             // Use a block to scope variables
             use wasm_bindgen::JsCast;

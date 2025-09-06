@@ -336,15 +336,26 @@ pre::after {
 }
 
 canvas {
+  width: 100%;
   max-width: 100%;
+  height: auto;
 }
 
 @media (min-width: 768px) {
   canvas {
-    max-width: 60%;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    height: auto;
   }
+}
+
+.content > figure {
+  grid-column: 1 / -1;
+  text-align: center;
+
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* PreWrapper */

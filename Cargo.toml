@@ -12,7 +12,6 @@ members = [
   "workspaces/monkey",
   "workspaces/fertilization",
   "workspaces/ca",
-  "workspaces/ca_gpu",
   "workspaces/maze",
   "workspaces/game_of_life",
   "workspaces/mandelbrot",
@@ -22,6 +21,7 @@ members = [
   "workspaces/worm2",
   "workspaces/worm_shape",
   "workspaces/gpu_lines",
+  "workspaces/voronoi",
 ]
 
 [profile.release]
@@ -30,3 +30,9 @@ lto = true
 [workspace.dependencies]
 raylib-egui-rs = { git = "https://github.com/spielhuus/raylib-egui-rs.git" }
 rand = "0.9"
+winit = { version = "0.30" }
+log = "0.4"
+wgpu = "26.0.1"
+pollster = "0.4"
+bytemuck = { version = "1.23", features = [ "derive" ] }
+env_logger = "0.11"

@@ -143,7 +143,7 @@ fn main() -> Result<(), JsValue> {
     let document = window.document().expect("should have a document on window");
     let body = document.body().expect("document should have a body");
 
-    // // Manufacture the element we're gonna append
+    // Manufacture the element we're gonna append
     let val = document.create_element("p")?;
     val.set_inner_html("Ahoi Saylor!");
 
@@ -180,9 +180,6 @@ fn main() -> Result<(), JsValue> {
     let on_click_callback = Closure::wrap(Box::new(move |_event: web_sys::MouseEvent| {
         let value = text_input.value();
         info!("The input value is: '{}'", value);
-
-        // let button_clone = button.clone();
-        // button_clone.set_disabled(true);
 
         let max_fitness_clone = max_fitness.clone();
         let result_string_clone = result_string.clone();

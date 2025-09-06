@@ -6,10 +6,10 @@ WWW_TARGET_DIR := www/static
 BIN_SRC_FILES := $(shell find workspaces -type f -name main.rs)
 BIN_NAMES := $(patsubst workspaces/%/src/main.rs,%,$(BIN_SRC_FILES))
 
-EMSCRIPTEN := wasm wasm_callback wasm_raylib nikolaus ca
+EMSCRIPTEN := wasm wasm_callback wasm_raylib nikolaus
 EMSCRIPTEN_TARGETS := $(foreach svc,$(EMSCRIPTEN),emscripten-$(svc))
 
-BINDGEN := monkey ahoi_wgpu
+BINDGEN := monkey ahoi_wgpu ca voronoi
 BINDGEN_TARGETS := $(foreach svc,$(BINDGEN),bindgen-$(svc))
 
 WASM_PACK := $(HOME)/.cargo/bin/wasm-pack

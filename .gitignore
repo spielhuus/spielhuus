@@ -1,4 +1,4 @@
 target/
 www/public
-www/static/*.js
-www/static/*.wasm
+www/static/js/*.js
+www/static/js/*.wasm
