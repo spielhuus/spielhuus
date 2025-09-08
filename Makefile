@@ -9,7 +9,7 @@ BIN_NAMES := $(patsubst workspaces/%/src/main.rs,%,$(BIN_SRC_FILES))
 EMSCRIPTEN := wasm wasm_callback wasm_raylib nikolaus
 EMSCRIPTEN_TARGETS := $(foreach svc,$(EMSCRIPTEN),emscripten-$(svc))
 
-BINDGEN := monkey ahoi_wgpu ca voronoi
+BINDGEN := monkey ahoi_wgpu ca game_of_life #voronoi 
 BINDGEN_TARGETS := $(foreach svc,$(BINDGEN),bindgen-$(svc))
 
 WASM_PACK := $(HOME)/.cargo/bin/wasm-pack

@@ -6,10 +6,6 @@ edition = "2024"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[[bin]]
-name = "wgpu_tutor"
-path = "src/main.rs"
-
 [dependencies]
 anyhow = "1.0"
 winit = { version = "0.30" }
