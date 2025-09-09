@@ -6,13 +6,11 @@ struct Uniforms {
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
-    @builtin(instance_index) instance: u32,
 };
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
-    @location(0) cell: vec2f,
-    @location(1) state: f32,
+    @location(0) uv: vec2f,
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -21,15 +19,19 @@ struct VertexOutput {
 
 
 fn cellIndex(cell: vec2u) -> u32 {
-   return (cell.y % u32(uniforms.grid_size.y)) * u32(uniforms.grid_size.x) +
-           (cell.x % u32(uniforms.grid_size.x));
- }
+   let clamped_cell = min(cell, vec2u(uniforms.grid_size) - vec2u(1,1));
+   return clamped_cell.y * u32(uniforms.grid_size.x) + clamped_cell.x;
+}
 
 fn cellActive(x: u32, y: u32) -> u32 {
-   if (cellStateIn[cellIndex(vec2(x, y))] > 0u) {
+   let wrapped_x = (x + u32(uniforms.grid_size.x)) % u32(uniforms.grid_size.x);
+   let wrapped_y = (y + u32(uniforms.grid_size.y)) % u32(uniforms.grid_size.y);
+   
+   if (cellStateIn[cellIndex(vec2(wrapped_x, wrapped_y))] > 0u) {
      return 1u;
    }
-   return 0u;}
+   return 0u;
+}
 
 @compute @workgroup_size(8, 8)
 fn compute_main(@builtin(global_invocation_id) cell: vec3u) {
@@ -83,50 +85,36 @@ fn compute_main(@builtin(global_invocation_id) cell: vec3u) {
 
 @vertex
 fn vs_main(
-    model: VertexInput,
+    vert: VertexInput,
 ) -> VertexOutput {
-
-    let i = f32(model.instance);
-
-    let cell = vec2<f32>(i % uniforms.grid_size.x, floor(i / uniforms.grid_size.x));
-    let state = f32(cellStateIn[model.instance]); 
-    let is_alive = select(0.0, 1.0, state > 0.0);
-
-    let cell_offset = cell / uniforms.grid_size * 2.0;
-    let gridPos = (model.position.xy * is_alive) / uniforms.grid_size - 1.0 + cell_offset;
-
     var output: VertexOutput;
-    output.position = vec4f(gridPos, 0, 1);
-    output.cell = cell;
-    output.state = state;
+    // Map vertex positions from [-1, 1] to UV coords [0, 1]
+    output.uv = vert.position.xy * 0.5 + 0.5;
+    output.position = vec4f(vert.position, 1.0);
     return output;
 }
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    //return vec4<f32>(in.cell/uniforms.grid_size, 0, in.state);
-    // return vec4<f32>(vec3<f32>(1.0, 0.0, 0.0) / in.state, in.state);
+   // Calculate which cell this pixel belongs to.
+    let cell = vec2u(floor(in.uv * uniforms.grid_size));
+    
+    // Find the index of that cell and get its state.
+    let state = f32(cellStateIn[cellIndex(cell)]);
 
-    // If the state is 0, the cell is dead, so we make it transparent.
-    // The vertex shader already shrinks it to a point, but this is good practice.
-    if (in.state < 1.0) {
-        return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+    // The rest of the coloring logic is the same as before.
+    if (state < 1.0) {
+        // Discarding is an option, but returning transparent black is fine.
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0); // Return black for dead cells
     }
 
-    let max_age = 20.0; // The age at which the color stops changing.
+    let max_age = 20.0;
+    let t = clamp(state / max_age, 0.0, 1.0);
 
-    // Normalize the age to a 0.0 - 1.0 range.
-    // clamp() ensures the value doesn't go above 1.0.
-    let t = clamp(in.state / max_age, 0.0, 1.0);
-
-    // Define the start and end colors for our gradient.
-    let color_young = vec3<f32>(1.0, 0.0, 0.0); // Bright Yellow
+    let color_young = vec3<f32>(1.0, 0.0, 0.0); // Red
     let color_old = vec3<f32>(0.4, 0.0, 0.8);   // Dark Purple
 
-    // Interpolate between the two colors based on the normalized age.
     let final_color = mix(color_young, color_old, t);
-
-    // Return the final color with full opacity (alpha = 1.0).
     return vec4<f32>(final_color, 1.0);
 }
  

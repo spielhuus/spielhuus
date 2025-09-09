@@ -19,7 +19,7 @@ use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use web_sys::HtmlCanvasElement;
 
-const GRID_SIZE: f32 = 128.0;
+const GRID_SIZE: f32 = 256.0;
 const WORKGROUP_SIZE: u32 = 8;
 
 #[repr(C)]
@@ -225,7 +225,7 @@ impl State {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::FRAGMENT, // TODO remove fragment
+                        visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -235,7 +235,7 @@ impl State {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::COMPUTE,
+                        visibility: wgpu::ShaderStages::FRAGMENT| wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Storage { read_only: true },
                             has_dynamic_offset: false,
@@ -475,11 +475,11 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
                 time: elapsed,
                 _padding: 0,
             };
-            // self.queue.write_buffer(
-            //     &self.uniform_buffer,
-            //     0,
-            //     bytemuck::cast_slice(&[updated_uniforms]),
-            // );
+            self.queue.write_buffer(
+                &self.uniform_buffer,
+                0,
+                bytemuck::cast_slice(&[updated_uniforms]),
+            );
 
             
             render_pass.set_pipeline(&self.render_pipeline);
@@ -488,7 +488,7 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
             render_pass.set_bind_group(0, &self.uniform_bind_group[self.step%2], &[]);
 
 
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..(GRID_SIZE * GRID_SIZE) as u32);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
             self.step += 1;
         }
 
