@@ -19,8 +19,19 @@ use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use web_sys::HtmlCanvasElement;
 
-const GRID_SIZE: f32 = 256.0;
+const CELL_SIZE: f32 = 10.0;
 const WORKGROUP_SIZE: u32 = 8;
+const BOOL_RAND: f64 = 0.6;
+const CANVAS_ID: &str = "shader";
+
+#[derive(Debug)]
+pub enum UserEvent {
+    BirthChanged(u32),
+    SurviveChanged(u32),
+    SizeChanged(u32),
+    // CodeChanged(String),
+    State(Box<State>),
+}
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -28,6 +39,8 @@ struct Uniforms {
     resolution: [f32; 2],
     grid_size: [f32; 2],
     time: f32,
+    birth_rule: u32,
+    survive_rule: u32, 
     _padding: u32,
 }
 
@@ -83,7 +96,26 @@ const VERTICES: &[Vertex] = &[
 
 const INDICES: &[u16] = &[1, 0, 3, 0, 2, 3];
 
+fn rule_bitmask(rule_num: u32) -> u32 {
+    let mut mask = 0u32;
+    let mut n = rule_num;
+    if n == 0 {
+        mask |= 1 << 0;
+        return mask;
+    }
+    while n > 0 {
+        let digit = n % 10;
+        // Game of Life only considers up to 8 neighbors
+        if digit <= 8 {
+            mask |= 1 << digit;
+        }
+        n /= 10;
+    }
+    mask
+}
+
 // This will store the state of our game
+#[derive(Debug)]
 pub struct State {
     surface: wgpu::Surface<'static>,
     device: wgpu::Device,
@@ -94,33 +126,23 @@ pub struct State {
     simulation_pipeline: wgpu::ComputePipeline,
     window: Arc<Window>,
     uniform_buffer: wgpu::Buffer,
+    uniform_bind_group_layout: wgpu::BindGroupLayout,
     uniform_bind_group: [wgpu::BindGroup; 2],
+    cell_state_buffer: [wgpu::Buffer; 2],
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
-    #[cfg(not(target_arch = "wasm32"))]
-    start_time: std::time::Instant,
-    #[cfg(target_arch = "wasm32")]
-    start_time: f64,
     #[cfg(target_arch = "wasm32")]
     canvas: HtmlCanvasElement,
     step: usize,
+    cell_size: [f32; 2],
+    grid_size: [f32; 2],
+    birth_rule: u32,
+    survive_rule: u32,
 }
 
 impl State {
-    async fn new(
-        window: Arc<Window>,
-        #[cfg(target_arch = "wasm32")] canvas: HtmlCanvasElement,
-    ) -> anyhow::Result<State> {
-        #[cfg(not(target_arch = "wasm32"))]
-        let start_time = std::time::Instant::now();
-
-        #[cfg(target_arch = "wasm32")]
-        let start_time = {
-            use web_sys::window;
-            window().unwrap().performance().unwrap().now()
-        };
-
+    async fn new(window: Arc<Window>) -> anyhow::Result<State> {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -146,7 +168,7 @@ impl State {
             .request_device(&wgpu::DeviceDescriptor {
                 label: None,
                 required_features: wgpu::Features::empty(),
-                 required_limits: wgpu::Limits::default(),
+                required_limits: wgpu::Limits::default(),
                 memory_hints: Default::default(),
                 trace: wgpu::Trace::Off,
             })
@@ -156,9 +178,6 @@ impl State {
 
         info!("SurfaceCapabillities: {:#?}", surface_caps);
 
-        // Shader code in this tutorial assumes an sRGB surface texture. Using a different
-        // one will result in all the colors coming out darker. If you want to support non
-        // sRGB surfaces, you'll need to account for that when drawing to the frame.
         let surface_format = surface_caps
             .formats
             .iter()
@@ -184,12 +203,23 @@ impl State {
 
         //storage buffer
 
+        let cell_size = [CELL_SIZE, CELL_SIZE];
+        let grid_size = [
+            size.width as f32 / cell_size[0],
+            size.height as f32 / cell_size[1],
+        ];
+        let cells = grid_size[0] * grid_size[1];
+        println!("screen size: {}x{}", size.width, size.height);
+        println!("cell size: {}x{}", cell_size[0], cell_size[1]);
+        println!("grid_size: {}x{}", grid_size[0], grid_size[1]);
+        println!("cells: {}", cells);
+
         let mut rng = rand::rng();
-        let cell_state_array_a: Vec<u32> = (0..(GRID_SIZE * GRID_SIZE) as usize)
-            .map(|_| if rng.random_bool(0.5) { 1 } else { 0 })
+        let cell_state_array_a: Vec<u32> = (0..cells as usize)
+            .map(|_| if rng.random_bool(BOOL_RAND) { 1 } else { 0 })
             .collect();
-        let cell_state_array_b: Vec<u32> = (0..(GRID_SIZE * GRID_SIZE) as usize)
-            .map(|_| if rng.random_bool(0.5) { 1 } else { 0 })
+        let cell_state_array_b: Vec<u32> = (0..cells as usize)
+            .map(|_| if rng.random_bool(BOOL_RAND) { 1 } else { 0 })
             .collect();
 
         let cell_state_buffer = [
@@ -207,9 +237,14 @@ impl State {
 
         // create the uniform
         let uniforms = Uniforms {
-            resolution: [0.0, 0.0],
-            grid_size: [GRID_SIZE, GRID_SIZE],
+            resolution: [size.width as f32, size.height as f32],
+            grid_size: [
+                size.width as f32 / cell_size[0],
+                size.height as f32 / cell_size[1],
+            ],
             time: 0.0,
+            birth_rule: rule_bitmask(3),
+            survive_rule: rule_bitmask(23),
             _padding: 0,
         };
 
@@ -235,7 +270,7 @@ impl State {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT| wgpu::ShaderStages::COMPUTE,
+                        visibility: wgpu::ShaderStages::FRAGMENT | wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Storage { read_only: true },
                             has_dynamic_offset: false,
@@ -258,42 +293,41 @@ impl State {
 
         let uniform_bind_group = [
             device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Uniform Bind Group A"),
-            layout: &uniform_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: uniform_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: cell_state_buffer[0].as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: cell_state_buffer[1].as_entire_binding(),
-                },
-            ],
-        }),
+                label: Some("Uniform Bind Group A"),
+                layout: &uniform_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: uniform_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: cell_state_buffer[0].as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: cell_state_buffer[1].as_entire_binding(),
+                    },
+                ],
+            }),
             device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Uniform Bind Group B"),
-            layout: &uniform_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: uniform_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: cell_state_buffer[1].as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: cell_state_buffer[0].as_entire_binding(),
-                },
-            ],
-        }),
-
+                label: Some("Uniform Bind Group B"),
+                layout: &uniform_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: uniform_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: cell_state_buffer[1].as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: cell_state_buffer[0].as_entire_binding(),
+                    },
+                ],
+            }),
         ];
 
         //create the pipeline
@@ -343,15 +377,15 @@ impl State {
             cache: None,
         });
 
-
-let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-    label: Some("Simulation pipeline"),
-    layout: Some(&render_pipeline_layout),
-    module: &shader,
-    entry_point: Some("compute_main"),
-            cache: None,
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
-});
+        let simulation_pipeline =
+            device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                label: Some("Simulation pipeline"),
+                layout: Some(&render_pipeline_layout),
+                module: &shader,
+                entry_point: Some("compute_main"),
+                cache: None,
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            });
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(VERTICES),
@@ -365,25 +399,124 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
         });
         let num_indices = INDICES.len() as u32;
 
+        surface.configure(&device, &config);
+
+        #[cfg(target_arch = "wasm32")]
+        let canvas = {
+            use wasm_bindgen::JsCast;
+
+            const CANVAS_ID: &str = "shader";
+
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+            let canvas = document.get_element_by_id(CANVAS_ID).unwrap();
+            let canvas: HtmlCanvasElement = canvas.dyn_into::<HtmlCanvasElement>().unwrap();
+            canvas
+        };
+
         Ok(Self {
-            start_time,
+            // start_time,
             surface,
             device,
             queue,
             config,
-            is_surface_configured: false,
+            is_surface_configured: true,
             render_pipeline,
             simulation_pipeline,
             window,
             vertex_buffer,
+            uniform_bind_group_layout,
             uniform_buffer,
             uniform_bind_group,
+            cell_state_buffer,
             index_buffer,
             num_indices,
             #[cfg(target_arch = "wasm32")]
             canvas,
             step: 0,
+            cell_size,
+            grid_size,
+            birth_rule: rule_bitmask(3),
+            survive_rule: rule_bitmask(23),
         })
+    }
+
+    fn recreate_simulation(&mut self) {
+        let size = self.window.inner_size();
+        self.grid_size = [
+            (size.width as f32 / self.cell_size[0]).ceil(),
+            (size.height as f32 / self.cell_size[1]).ceil(),
+        ];
+        let cells = (self.grid_size[0] * self.grid_size[1]) as usize;
+
+        info!(
+            "Recreating simulation with grid size: {}x{}",
+            self.grid_size[0], self.grid_size[1]
+        );
+
+        // Re-create the cell data and buffers
+        let mut rng = rand::rng();
+        let cell_state_array_a: Vec<u32> = (0..cells)
+            .map(|_| if rng.random_bool(BOOL_RAND) { 1 } else { 0 })
+            .collect();
+        let cell_state_array_b: Vec<u32> = (0..cells)
+            .map(|_| if rng.random_bool(BOOL_RAND) { 1 } else { 0 })
+            .collect();
+
+        self.cell_state_buffer = [
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Cell State Storage A"),
+                    contents: bytemuck::cast_slice(&cell_state_array_a),
+                    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+                }),
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Cell State Storage B"),
+                    contents: bytemuck::cast_slice(&cell_state_array_b),
+                    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+                }),
+        ];
+
+        // Re-create the bind groups with the new buffers
+        self.uniform_bind_group = [
+            self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Uniform Bind Group A"),
+                layout: &self.uniform_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: self.uniform_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: self.cell_state_buffer[0].as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: self.cell_state_buffer[1].as_entire_binding(),
+                    },
+                ],
+            }),
+            self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Uniform Bind Group B"),
+                layout: &self.uniform_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: self.uniform_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: self.cell_state_buffer[1].as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: self.cell_state_buffer[0].as_entire_binding(),
+                    },
+                ],
+            }),
+        ];
     }
 
     fn handle_key(&self, event_loop: &ActiveEventLoop, code: KeyCode, is_pressed: bool) {
@@ -393,12 +526,17 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        if width > 0 && height > 0 {
-            self.config.width = width;
-            self.config.height = height;
-            self.surface.configure(&self.device, &self.config);
-            self.is_surface_configured = true;
+        info!("resize window: {width}x{height}");
+        if width == 0 || height == 0 {
+            self.is_surface_configured = false; // can't render when minimized/zero
+            return;
         }
+        self.config.width = width;
+        self.config.height = height;
+        self.surface.configure(&self.device, &self.config);
+        self.recreate_simulation();
+        self.is_surface_configured = true;
+        self.window.request_redraw();
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -406,10 +544,12 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
 
         // We can't render unless the surface is configured
         if !self.is_surface_configured {
+            info!("render: surface not configured");
             return Ok(());
         }
 
-        let output = self.surface.get_current_texture()?;
+        let output = self.surface.get_current_texture().unwrap();
+
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -420,18 +560,22 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
                 label: Some("Render Encoder"),
             });
 
-            {
-                let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                    label: Some("Cellular Automaton Compute Pass"),
-                    timestamp_writes: None,
-                });
+        {
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("Cellular Automaton Compute Pass"),
+                timestamp_writes: None,
+            });
 
-                compute_pass.set_pipeline(&self.simulation_pipeline);
-                compute_pass.set_bind_group(0, &self.uniform_bind_group[self.step % 2], &[]);
-                // let workgroup_count_x = self.grid_width.div_ceil(64);
-             let workgroup_count = (GRID_SIZE as u32 + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
-             compute_pass.dispatch_workgroups(workgroup_count, workgroup_count, 1);
-            }
+            compute_pass.set_pipeline(&self.simulation_pipeline);
+            compute_pass.set_bind_group(0, &self.uniform_bind_group[self.step % 2], &[]);
+            // let workgroup_count_x = self.grid_width.div_ceil(64);
+            //
+            let workgroup_count_x =
+                (self.grid_size[0] as u32 + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
+            let workgroup_count_y =
+                (self.grid_size[1] as u32 + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
+            compute_pass.dispatch_workgroups(workgroup_count_x, workgroup_count_y, 1);
+        }
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -455,24 +599,15 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
                 timestamp_writes: None,
             });
 
-            #[cfg(not(target_arch = "wasm32"))]
-            let elapsed = self.start_time.elapsed().as_secs_f32();
-
-            #[cfg(target_arch = "wasm32")]
-            let elapsed = {
-                use web_sys::window;
-                let now = window().unwrap().performance().unwrap().now();
-                // Calculate elapsed milliseconds and convert to seconds
-                (now - self.start_time) as f32 / 1000.0
-            };
-
             let updated_uniforms = Uniforms {
                 resolution: [
                     self.window.inner_size().width as f32,
                     self.window.inner_size().height as f32,
                 ],
-                grid_size: [GRID_SIZE, GRID_SIZE],
-                time: elapsed,
+                grid_size: self.grid_size,
+                time: 0.0, // TODO
+                birth_rule: self.birth_rule,
+                survive_rule: self.survive_rule,
                 _padding: 0,
             };
             self.queue.write_buffer(
@@ -481,12 +616,10 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
                 bytemuck::cast_slice(&[updated_uniforms]),
             );
 
-            
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.set_bind_group(0, &self.uniform_bind_group[self.step%2], &[]);
-
+            render_pass.set_bind_group(0, &self.uniform_bind_group[self.step % 2], &[]);
 
             render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
             self.step += 1;
@@ -522,80 +655,223 @@ let simulation_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineD
 
 pub struct App {
     #[cfg(target_arch = "wasm32")]
-    proxy: Option<winit::event_loop::EventLoopProxy<State>>,
-    state: Option<State>,
+    proxy: winit::event_loop::EventLoopProxy<UserEvent>,
+    state: Option<Box<State>>,
+    #[cfg(target_arch = "wasm32")]
+    _event_closures: Vec<Closure<dyn FnMut(web_sys::Event)>>,
 }
 
+#[allow(clippy::new_without_default)]
 impl App {
-    pub fn new(#[cfg(target_arch = "wasm32")] event_loop: &EventLoop<State>) -> Self {
+    pub fn new(#[cfg(target_arch = "wasm32")] event_loop: &EventLoop<UserEvent>) -> Self {
         #[cfg(target_arch = "wasm32")]
-        let proxy = Some(event_loop.create_proxy());
+        let proxy = event_loop.create_proxy();
         Self {
             state: None,
             #[cfg(target_arch = "wasm32")]
             proxy,
+            #[cfg(target_arch = "wasm32")]
+            _event_closures: Vec::new(),
         }
     }
 }
 
-impl ApplicationHandler<State> for App {
+impl ApplicationHandler<UserEvent> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         #[allow(unused_mut)]
         let mut window_attributes = Window::default_attributes();
 
         #[cfg(target_arch = "wasm32")]
-        let canvas = {
+        {
+            // let canvas = {
             // Use a block to scope variables
             use wasm_bindgen::JsCast;
+            use web_sys::HtmlInputElement;
             use winit::platform::web::WindowAttributesExtWebSys;
 
-            const CANVAS_ID: &str = "shader";
+            let proxy = self.proxy.clone();
+            let on_birth_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
+                    let value_str = input_element.value();
+                    if let Ok(birth) = value_str.parse::<u32>() {
+                        proxy.send_event(UserEvent::BirthChanged(birth)).unwrap();
+                    }
+                }
+            });
+
+            let proxy = self.proxy.clone();
+            let on_survive_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
+                    let value_str = input_element.value();
+                    if let Ok(survive) = value_str.parse::<u32>() {
+                        proxy
+                            .send_event(UserEvent::SurviveChanged(survive))
+                            .unwrap();
+                    }
+                }
+            });
+
+            let proxy = self.proxy.clone();
+            let on_size_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
+                    let value_str = input_element.value();
+                    if let Ok(size) = value_str.parse::<u32>() {
+                        proxy.send_event(UserEvent::SizeChanged(size)).unwrap();
+                    }
+                }
+            });
+
+            // let proxy = self.proxy.clone();
+            // let on_code_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+            //     let target = event.target().expect("Event should have a target");
+            //     if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
+            //         let value_str = input_element.value();
+            //         proxy.send_event(UserEvent::CodeChanged(value_str)).unwrap();
+            //     }
+            // });
+            
+            let window = web_sys::window().expect("no global `window` exists");
+            let document = window.document().expect("should have a document on window");
+
+            let birth_input = document
+                .get_element_by_id("birth")
+                .expect("should have an input with id 'birth'");
+            let birth_input: HtmlInputElement = birth_input.dyn_into().map_err(|_| ()).unwrap();
+            birth_input
+                .add_event_listener_with_callback(
+                    "input",
+                    on_birth_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_birth_callback);
+
+            let survive_input = document
+                .get_element_by_id("survive")
+                .expect("should have an input with id 'survive'");
+            let survive_input: HtmlInputElement = survive_input.dyn_into().map_err(|_| ()).unwrap();
+            survive_input
+                .add_event_listener_with_callback(
+                    "input",
+                    on_survive_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_survive_callback);
+
+            let size_input = document
+                .get_element_by_id("size")
+                .expect("should have an input with id 'size'");
+            let size_input: HtmlInputElement = size_input.dyn_into().map_err(|_| ()).unwrap();
+            size_input
+                .add_event_listener_with_callback(
+                    "input",
+                    on_size_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_size_callback);
+
+            // let code_input = document
+            //     .get_element_by_id("code")
+            //     .expect("should have an input with id 'code'");
+            // let code_input: HtmlInputElement = code_input.dyn_into().map_err(|_| ()).unwrap();
+            // code_input
+            //     .add_event_listener_with_callback(
+            //         "input",
+            //         on_code_callback.as_ref().unchecked_ref(),
+            //     )
+            //     .unwrap();
+            // self._event_closures.push(on_code_callback);
 
             let window = web_sys::window().unwrap();
             let document = window.document().unwrap();
-            let canvas = document.get_element_by_id(CANVAS_ID).unwrap();
-            let canvas: HtmlCanvasElement = canvas.dyn_into::<HtmlCanvasElement>().unwrap();
+            let canvas = document.get_element_by_id("shader").unwrap();
+            let canvas: web_sys::HtmlCanvasElement =
+                canvas.dyn_into::<web_sys::HtmlCanvasElement>().unwrap();
 
-            window_attributes = window_attributes.with_canvas(Some(canvas.clone()));
-            canvas
+            let attributes = Window::default_attributes().with_canvas(Some(canvas));
+
+            let window = Arc::new(event_loop.create_window(attributes).unwrap());
+            let proxy = self.proxy.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                assert!(
+                    proxy
+                        .send_event(UserEvent::State(Box::new(
+                            State::new(window)
+                                .await
+                                .expect("Unable to create canvas!!!")
+                        )))
+                        .is_ok()
+                )
+            });
         };
 
         let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            self.state = Some(pollster::block_on(State::new(window)).unwrap());
-        }
-
-        #[cfg(target_arch = "wasm32")]
-        {
-            if let Some(proxy) = self.proxy.take() {
-                wasm_bindgen_futures::spawn_local(async move {
-                    assert!(
-                        proxy
-                            .send_event(
-                                State::new(window, canvas)
-                                    .await
-                                    .expect("Unable to create canvas!!!")
-                            )
-                            .is_ok()
-                    )
-                });
-            }
+            self.state = Some(Box::new(pollster::block_on(State::new(window)).unwrap()));
         }
     }
 
     #[allow(unused_mut)]
-    fn user_event(&mut self, _event_loop: &ActiveEventLoop, mut event: State) {
-        #[cfg(target_arch = "wasm32")]
-        {
-            event.window.request_redraw();
-            event.resize(
-                event.window.inner_size().width,
-                event.window.inner_size().height,
-            );
+    fn user_event(&mut self, _event_loop: &ActiveEventLoop, mut event: UserEvent) {
+        match event {
+            UserEvent::BirthChanged(new_birth) => {
+                info!("Handling BirthChanged event. New birth: {}", new_birth);
+                if let Some(state) = &mut self.state {
+                    state.birth_rule = rule_bitmask(new_birth);
+                    state.recreate_simulation();
+                }
+            }
+            UserEvent::SurviveChanged(new_survive) => {
+                info!(
+                    "Handling SurviveChanged event. New survive: {}",
+                    new_survive
+                );
+                if let Some(state) = &mut self.state {
+                    state.survive_rule = rule_bitmask(new_survive);
+                    state.recreate_simulation();
+                }
+            },
+            UserEvent::SizeChanged(new_size) => {
+                info!(
+                    "Handling SizeChanged event. New size: {}",
+                    new_size
+                );
+                if let Some(state) = &mut self.state {
+                    state.cell_size = [new_size as f32, new_size as f32];
+                    state.recreate_simulation();
+                }
+            },
+            // UserEvent::CodeChanged(new_code) => {
+            //     info!(
+            //         "Handling CodeChanged event. New script: {}",
+            //         new_code
+            //     );
+            //     let result = run_scheme(&new_code);
+            //     info!("scheme result: {:?}", result);
+            // }
+
+            #[cfg(target_arch = "wasm32")]
+            UserEvent::State(mut state) => {
+                info!("Handling StateCreated event.");
+                {
+                    let size = state.window.inner_size();
+                    info!("Resizing surface to {}x{}", size.width, size.height);
+                    state.resize(size.width, size.height);
+
+                    self.state = Some(state);
+                    if let Some(s) = &self.state {
+                        info!("set state");
+                        s.window.request_redraw();
+                    }
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            _ => {}
         }
-        self.state = Some(event);
     }
 
     fn window_event(

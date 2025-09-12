@@ -2,6 +2,8 @@ struct Uniforms {
   resolution: vec2<f32>,
   grid_size: vec2<f32>,
   time: f32,
+  birth_rule: u32,
+  survive_rule: u32,
 };
 
 struct VertexInput {
@@ -33,6 +35,13 @@ fn cellActive(x: u32, y: u32) -> u32 {
    return 0u;
 }
 
+fn is_in_rule(neighbors: u32, rule_mask: u32) -> bool {
+    // e.g., if neighbors is 3 and mask is for B3 (..001000),
+    // (mask >> 3) is (..000001).
+    // (..000001) & 1u is 1u, so it returns true.
+    return ((rule_mask >> neighbors) & 1u) == 1u;
+}
+
 @compute @workgroup_size(8, 8)
 fn compute_main(@builtin(global_invocation_id) cell: vec3u) {
    // Determine how many active neighbors this cell has.
@@ -62,9 +71,29 @@ fn compute_main(@builtin(global_invocation_id) cell: vec3u) {
 
   let state = cellStateIn[i];
  // Correct Conway's game of life rules with aging:
+//    if (state > 0u) { // If the cell is ALIVE
+//      // A living cell survives if it has 2 or 3 neighbors.
+//      if (activeNeighbors == 2u || activeNeighbors == 3u) {
+//        // It survives, so increment its age.
+//        cellStateOut[i] = state + 1u;
+//      } else {
+//        // It dies from over/underpopulation.
+//        cellStateOut[i] = 0u;
+//      }
+//    } else { // If the cell is DEAD
+//      // A dead cell is born if it has exactly 3 neighbors.
+//      if (activeNeighbors == 3u) {
+//        // It's born! Start its age at 1.
+//        cellStateOut[i] = 1u;
+//      } else {
+//        // It stays dead.
+//        cellStateOut[i] = 0u;
+//      }
+//    }
+
    if (state > 0u) { // If the cell is ALIVE
-     // A living cell survives if it has 2 or 3 neighbors.
-     if (activeNeighbors == 2u || activeNeighbors == 3u) {
+     // A living cell survives if the number of neighbors is in the survive rule.
+     if (is_in_rule(activeNeighbors, uniforms.survive_rule)) {
        // It survives, so increment its age.
        cellStateOut[i] = state + 1u;
      } else {
@@ -72,8 +101,8 @@ fn compute_main(@builtin(global_invocation_id) cell: vec3u) {
        cellStateOut[i] = 0u;
      }
    } else { // If the cell is DEAD
-     // A dead cell is born if it has exactly 3 neighbors.
-     if (activeNeighbors == 3u) {
+     // A dead cell is born if the number of neighbors is in the birth rule.
+     if (is_in_rule(activeNeighbors, uniforms.birth_rule)) {
        // It's born! Start its age at 1.
        cellStateOut[i] = 1u;
      } else {

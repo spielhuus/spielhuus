@@ -40,7 +40,7 @@ bindgen: $(BINDGEN_TARGETS)
 bindgen-%: $(WASM_PACK)
 	@echo "--- Building service: $* ---"
 	mkdir -p $(WWW_TARGET_DIR)/js/$* 
-	$(WASM_PACK) build workspaces/$* --target web --release -d ../../$(WWW_TARGET_DIR)/js/$*
+	$(WASM_PACK) build workspaces/$* --target web --dev -d ../../$(WWW_TARGET_DIR)/js/$*
 
 build-native: $(BIN_SRC_FILES)
 	cargo build --release

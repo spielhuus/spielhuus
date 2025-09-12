@@ -1,7 +1,7 @@
 +++
 title = "Conway's Game of Life"
 description = "Dive into the fascinating world of cellular automata with Conway's Game of Life! This classic simulation showcases emergent behavior from simple rules, making it a must-know for any aspiring developer. On this page, you'll find a comprehensive guide to programming the Game of Life, complete with pseudocode, algorithm explanations, and optimizations. Whether you're a seasoned coder or just starting out, you'll learn how to implement this iconic simulation in your favorite programming language. Get ready to bring digital life to your screen!"
-date = 2025-08-16T19:35:00+02:00
+date = 2025-09-12T19:35:00+02:00
 draft = false
 tags = ['ca']
 +++
@@ -32,9 +32,7 @@ these rules can also be written as B2S23  ("B" for birth, "S" for survival).
 **S23**  Any live cell with two or three neighbours survives
          Any Other cell will result in a dead cell.
 
-
 https://conwaylife.com/wiki/List_of_Generations_rules
-
 
 <figure>
   <canvas id="shader" oncontextmenu=event.preventdefault()></canvas>
@@ -61,67 +59,5 @@ There are some
 - {{< link "conwaylife" >}}.
 - {{< github "game_of_life" >}}.
 
-<!-- <script> -->
-<!--     let set_size; -->
-<!--     let set_birth; -->
-<!--     let set_survive; -->
-<!---->
-<!--     function on_load() { -->
-<!--         const dpr = window.devicePixelRatio; -->
-<!--         let canvas = document.getElementById('canvas'); -->
-<!---->
-<!--         set_size = Module.cwrap( -->
-<!--             "set_size", -->
-<!--             null, -->
-<!--             ["number"] -->
-<!--         ); -->
-<!--         set_birth = Module.cwrap( -->
-<!--             "set_birth", -->
-<!--             null, -->
-<!--             ["string"] -->
-<!--         ); -->
-<!--         set_survive = Module.cwrap( -->
-<!--             "set_survive", -->
-<!--             null, -->
-<!--             ["string"] -->
-<!--         ); -->
-<!---->
-<!--     } -->
-<!--     var Module = { -->
-<!--         postRun: [ on_load ], -->
-<!--         canvas: document.getElementById('canvas'), -->
-<!--         // doNotCaptureKeyboard: true, -->
-<!--     }; -->
-<!---->
-<!---->
-<!--     document.getElementById('birth').addEventListener('keydown', function(event) { -->
-<!--       console.log("set new birth: ", event.target.value); -->
-<!--       if (event.key === 'Enter') { -->
-<!--         const inputValue = event.target.value; -->
-<!--         set_birth(inputValue); -->
-<!--       } -->
-<!--     }); -->
-<!--     document.getElementById('survive').addEventListener('keydown', function(event) { -->
-<!--         const inputValue = event.target.value; -->
-<!--         set_survive(inputValue); -->
-<!--     }); -->
-<!--     const sizeInput = document.querySelector('#size'); -->
-<!--     function handleSizeChange(event) { -->
-<!--         const newValue = event.target.value; -->
-<!--         set_size(newValue); -->
-<!--     } -->
-<!--     sizeInput.addEventListener('input', handleSizeChange); -->
-<!---->
-<!--     window.addEventListener('keydown', function(event) { -->
-<!--       if (event.keyCode === 8 || event.keyCode === 9) { -->
-<!--           // event.stopPropagation();  -->
-<!--         event.stopImmediatePropagation();  -->
-<!--       } -->
-<!--     }, true); -->
-<!--     window.addEventListener('keyup', function(event) { -->
-<!--         event.stopImmediatePropagation();  -->
-<!--     }, true); -->
-<!---->
-<!-- </script> -->
 {{< bindgen path="js/game_of_life/game_of_life.js" >}}
 
