@@ -1,9 +1,0 @@
-[package]
-name = "fertilization"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-raylib-egui-rs = { workspace = true }
-rand = { workspace = true } 
-genetic = { path = "../genetic" }

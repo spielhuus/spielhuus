@@ -1,0 +1,52 @@
+{{ define "main" }}
+  <h1>{{ .Title }}</h1>
+  {{ $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" }}
+  {{ $dateHuman := .Date | time.Format ":date_long" }}
+  <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time>
+  {{ .Content }}
+  <h2>links</h2>
+  <ul>
+    {{ range .Params.links}}
+      {{- $foundLinks := where $.Site.Data.links "id" . -}}
+      {{- if eq (len $foundLinks) 0 -}}
+        {{- errorf "Could not find a link with ID '%s' in data/links.yaml. File: %s" . .Page.Path -}}
+      {{- else -}}
+        {{- $linkData := index $foundLinks 0 -}}
+        {{- $url := $linkData.url -}}
+        {{- $text := $linkData.name -}}
+        {{- $description := $linkData.description -}}
+        {{- $isExternal := strings.HasPrefix $url "http" -}}
+        <li><a href="{{ if $isExternal }}{{ $url | safeURL }}{{ else }}{{ relref $.Page $url }}{{ end }}"
+           {{- with $description }} title="{{ . }}"{{ end -}}
+           {{- if $isExternal }} target="_blank" rel="noopener noreferrer"{{ end -}}
+        >{{- $text | markdownify -}}</a> {{ $description }}</li>
+      {{- end -}}
+    {{ end }}
+    {{ $pathParts := split .File.Dir "/" }}
+    {{ $topLevelDir := index $pathParts 0 }}
+    <li><a href="https://github.com/spielhuus/spielhuus/tree/main/workspaces/{{ $topLevelDir }}" target="_blank">Source code on github.</a></li>
+  </ul>
+  {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
+  {{ with .Params.script }}
+    {{ $scriptPath := . }}
+    {{ $pathParts := split $scriptPath "/" }}
+    {{ $moduleName := index $pathParts 0 }}
+    {{ $fileDir := path.Dir $scriptPath }}
+    {{ $wasmFileName := printf "%s/%s_bg.wasm" $moduleName $moduleName }}
+    {{ $wasmResourcePath := path.Join $fileDir $wasmFileName }}
+    {{ $mainJS := resources.Get $scriptPath }}
+    {{ $wasm := resources.Get $wasmResourcePath }}
+    {{ if $mainJS }}
+      {{ $isProduction := eq hugo.Environment "production" }}
+      {{ $opts := dict "minify" $isProduction "target" "es2020" }}
+      {{ $transpiled := $mainJS | js.Build $opts }}
+      {{ $attrs := dict "src" $transpiled.RelPermalink "defer" true }}
+      {{ if $wasm }}
+        {{ $attrs = merge $attrs (dict "data-wasm-url" $wasm.RelPermalink) }}
+      {{ end }}
+      <script {{ range $key, $val := $attrs }}{{ printf " %s" $key | safeHTMLAttr }}{{ with $val }}{{ printf "=\"%s\"" . | safeHTMLAttr }}{{ end }}{{ end }}></script>
+    {{ else }}
+      {{ warnf "WASM dynamic path error. Could not find script at '%s' or derived wasm file at '%s'" $scriptPath $wasmResourcePath }}
+    {{ end }}
+  {{ end }}
+{{ end }}

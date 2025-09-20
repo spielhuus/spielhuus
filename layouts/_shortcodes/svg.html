@@ -1,0 +1,20 @@
+{{/*
+  Shortcode for inlining an SVG icon from assets.
+  Parameters:
+    - src (required): Path to the SVG file (e.g., "icons/my-icon.svg").
+    - class (optional): A CSS class to add to the wrapper.
+    - alt (optional): An accessible label for the icon.
+*/}}
+
+{{ with .Get "src" }}
+  {{ with resources.Get . }}
+    <span class="svg-icon {{ with $.Get "class" }}{{ . }}{{ end }}"
+          {{ with $.Get "alt" }} role="img" aria-label="{{ . }}"{{ end }}>
+      {{ .Content | safeHTML }}
+    </span>
+  {{ else }}
+    {{ warnf "Shortcode 'svg': Could not find icon '%s'." . }}
+  {{ end }}
+{{ else }}
+  {{ warnf "Shortcode 'svg': Missing 'src' parameter." }}
+{{ end }}

@@ -1,6 +1,4 @@
+.hugo_build.lock
+public/
 target/
-www/public
-www/static/js
-www/static/js/*.js
-www/static/js/*.wasm
-www/.hugo_build.lock
+resources/_gen

@@ -1,38 +1,16 @@
-SRC_DIR := src/bin
-TARGET_DIR := target/release
-WASM_TARGET_DIR := target/wasm32-unknown-emscripten/release
-WWW_TARGET_DIR := www/static
-
-BIN_SRC_FILES := $(shell find workspaces -type f -name main.rs)
-BIN_NAMES := $(patsubst workspaces/%/src/main.rs,%,$(BIN_SRC_FILES))
-
-EMSCRIPTEN := wasm wasm_callback wasm_raylib nikolaus
-EMSCRIPTEN_TARGETS := $(foreach svc,$(EMSCRIPTEN),emscripten-$(svc))
-
-BINDGEN := monkey ahoi_wgpu ca game_of_life #voronoi 
+WWW_TARGET_DIR := target/wasm
+BINDGEN := monkey ahoi_wgpu ca voronoi game_of_life
 BINDGEN_TARGETS := $(foreach svc,$(BINDGEN),bindgen-$(svc))
+CLEAN_BINDGEN_TARGETS := $(foreach svc,$(BINDGEN),clean_bindgen-$(svc))
 
 WASM_PACK := $(HOME)/.cargo/bin/wasm-pack
 
-.PHONY: all emscripten bindgen build-native
+.PHONY: all web serve bindgen clean
+all: web
 
-all: emscripten bindgen build-native
-
-$(WASM_PACK): 
+$(WASM_PACK):
+	@echo "--- Installing wasm-pack ---"
 	cargo install wasm-pack
-
-target/emsdk: 
-	git clone --depth 1 https://github.com/emscripten-core/emsdk.git target/emsdk
-	cd target/emsdk && ./emsdk install latest
-	cd target/emsdk && ./emsdk activate latest
-
-emscripten: $(EMSCRIPTEN_TARGETS)
-
-emscripten-%: target/emsdk
-	@echo "--- Building service: $* ---"
-	(cd target/emsdk && . ./emsdk_env.sh && cd ../.. && cargo build -p $* --target wasm32-unknown-emscripten --release)
-	mkdir -p $(WWW_TARGET_DIR)/js/$*
-	cp $(WASM_TARGET_DIR)/$*.wasm $(WASM_TARGET_DIR)/$*.js $(WWW_TARGET_DIR)/js/$*
 
 .PHONY: bindgen
 bindgen: $(BINDGEN_TARGETS)
@@ -40,19 +18,23 @@ bindgen: $(BINDGEN_TARGETS)
 bindgen-%: $(WASM_PACK)
 	@echo "--- Building service: $* ---"
 	mkdir -p $(WWW_TARGET_DIR)/js/$* 
-	$(WASM_PACK) build workspaces/$* --target web --dev -d ../../$(WWW_TARGET_DIR)/js/$*
+	$(WASM_PACK) build src/$* --target web --release -d js/$*
 
-build-native: $(BIN_SRC_FILES)
-	cargo build --release
+clean_bindgen-%:
+	@echo "--- Removing generated files for: $* ---"
+	rm -rf src/$*/js/$*
 
-web: emscripten bindgen
-	cd www && hugo build
+web: bindgen
+	@echo "--- Building Hugo site ---"
+	hugo build --gc --minify
 
-serve: emscripten bindgen
-	hugo --source www serve
+serve: bindgen
+	@echo "--- Run Hugo server ---"
+	hugo serve -D
 
-clean:
+clean: $(CLEAN_BINDGEN_TARGETS)
+	@echo "--- cleanup files ---"
 	rm -rf target
-	rm -f www/static/*.js www/static/*.wasm
-	rm -rf www/public
-	rm -rf www/resources/
+	rm -rf public
+	rm -rf .hugo_build.lock
+	rm -rf resources
