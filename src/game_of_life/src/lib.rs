@@ -22,6 +22,7 @@ use web_sys::HtmlCanvasElement;
 const CELL_SIZE: f32 = 10.0;
 const WORKGROUP_SIZE: u32 = 8;
 const BOOL_RAND: f64 = 0.6;
+#[cfg(target_arch = "wasm32")]
 const CANVAS_ID: &str = "shader";
 
 #[derive(Debug)]
