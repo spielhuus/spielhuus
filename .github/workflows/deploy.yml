@@ -30,10 +30,10 @@ jobs:
           hugo-version: 'latest'
           extended: true
 
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-emscripten
+      # - name: Setup Rust toolchain
+      #   uses: dtolnay/rust-toolchain@stable
+      #   with:
+      #     targets: wasm32-unknown-emscripten
 
       # - name: Setup Emscripten SDK
       #   uses: mymindstorm/setup-emsdk@v14
@@ -59,12 +59,12 @@ jobs:
           HUGO_BASEURL: ${{ steps.pages.outputs.base_url }}
         run: |
           echo $HUGO_BASEURL
-          hugo --source www --minify --baseURL="$HUGO_BASEURL"
+          hugo --gc --minify --baseURL="$HUGO_BASEURL"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./www/public
+          path: ./public
 
   deploy:
     environment:
