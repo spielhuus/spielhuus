@@ -405,8 +405,6 @@ impl State {
         let canvas = {
             use wasm_bindgen::JsCast;
 
-            const CANVAS_ID: &str = "shader";
-
             let window = web_sys::window().unwrap();
             let document = window.document().unwrap();
             let canvas = document.get_element_by_id(CANVAS_ID).unwrap();
