@@ -24,7 +24,7 @@
     {{ end }}
     {{ $pathParts := split .File.Dir "/" }}
     {{ $topLevelDir := index $pathParts 0 }}
-    <li><a href="https://github.com/spielhuus/spielhuus/tree/main/workspaces/{{ $topLevelDir }}" target="_blank">Source code on github.</a></li>
+    <li><a href="https://github.com/spielhuus/spielhuus/tree/main/src/{{ $topLevelDir }}" target="_blank">Source code on github.</a></li>
   </ul>
   {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
   {{ with .Params.script }}

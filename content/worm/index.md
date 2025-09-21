@@ -188,7 +188,3 @@ fn main() {
 </p> 
 </figure> 
 
-## links
-
-- {{< link "emscripten" >}}.
-- {{< github "worm" >}}.

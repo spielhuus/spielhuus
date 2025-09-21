@@ -15,12 +15,6 @@ Drawing Voronoi diagrams is very simle.
 1) assign the color of this point to this pixel
 
 <figure>
-<canvas width=1280 height=860 id="shader"></canvas>
+  <canvas width=1280 height=860 id="shader"></canvas>
 </figure>
 
-
-## Links:
-- {{< link "wolfram" >}}.
-- {{< github "ca_rules" >}}.
-
-{{< bindgen path="js/voronoi/voronoi.js" >}}

@@ -1,8 +1,0 @@
-
-{{$path := .Get "path"  }}
-<script type="module">
-  import init from "{{ $path | absURL }}";
-  init().then(() => {
-      console.log("WASM Loaded");
-  });
-</script>

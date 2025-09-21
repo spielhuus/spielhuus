@@ -1,3 +1,0 @@
-{{ $css := resources.GetMatch "css/main.css"
-| resources.ExecuteAsTemplate "css/main.css" "nothing" }}
-<link rel="stylesheet" href="{{ $css.RelPermalink }}"/>
