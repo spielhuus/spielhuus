@@ -2,7 +2,7 @@
 title = 'Raycasting'
 description = 'The small house of Nikolaus is a drawing puzzle for children. The house must be drawn in a single stroke using eight lines without tracing any line twice. To do this, one says, “Das klei-ne Haus des Ni-ko-laus.”'
 date = 2025-09-16T18:35:00+02:00
-draft = false
+draft = true
 tags = ['graph']
 script = "raycasting/js/main.ts"
 +++

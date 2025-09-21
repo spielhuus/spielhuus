@@ -1,28 +1,22 @@
 [workspace]
 resolver = "3"
 members = [
+  "src/genetic",
   "src/monkey",
   "src/ahoi_wgpu",
   "src/ca",
   "src/voronoi",
   "src/game_of_life",
-  # "workspaces/genetic",
-  # "workspaces/wasm",
-  # "workspaces/wasm_callback",
-  # "workspaces/wasm_raylib",
-  # "workspaces/wasm_test_bindgen",
-  # "workspaces/cube",
-  # "workspaces/worm",
-  # "workspaces/nikolaus",
-  # "workspaces/fertilization",
-  # "workspaces/maze",
-  # "workspaces/mandelbrot",
-  # "workspaces/wgpu_tutor",
-  # "workspaces/rubik",
-  # "workspaces/worm2",
-  # "workspaces/worm_shape",
-  # "workspaces/gpu_lines",
-  # "workspaces/raycasting",
+  "src/fertilization",
+  "src/mandelbrot",
+  "src/worm_shape",
+  "src/cube",
+  "src/worm",
+  "src/maze",
+  "src/raytracing",
+  "src/worm2",
+  "src/gpu_lines",
+  #"src/raycasting",
 ]
 
 [profile.release]
@@ -30,6 +24,7 @@ lto = true
 
 [workspace.dependencies]
 raylib-egui-rs = { git = "https://github.com/spielhuus/raylib-egui-rs.git" }
+anyhow = "1.0"
 rand = "0.9"
 winit = { version = "0.30" }
 log = "0.4"

@@ -34,6 +34,7 @@ pub trait Phenotype {
     fn reset(&mut self);
 }
 
+#[derive(Debug)]
 pub struct Population<E: Phenotype> {
     genotype_arena: Vec<E::Gene>,
     next_gen_arena: Vec<E::Gene>,

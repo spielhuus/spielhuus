@@ -870,6 +870,7 @@ impl ApplicationHandler<UserEvent> for App {
     }
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
+        info!("event: {:?}", event);
         match event {
             UserEvent::RuleChanged(new_rule) => {
                 info!("Handling RuleChanged event. New rule: {}", new_rule);

@@ -1,0 +1,14 @@
+[package]
+name = "maze"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+genetic = { path = "../genetic" }
+raylib-egui-rs = { workspace = true }
+rand = { workspace = true }
+disjoint = "0.8"
+
+# [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+egui = "0.32.0"
+egui_extras = { version = "0.32.0", features = ["default", "image"] }
