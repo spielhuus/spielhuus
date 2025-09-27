@@ -1,7 +1,7 @@
 <div class="arrows">
-  <div class="arrow white"></div>
-  <div class="arrow orange-light"></div>
+  <div class="arrow background"></div>
   <div class="arrow orange"></div>
+  <div class="arrow darkorange"></div>
   <div class="arrow red"></div>
   <div class="arrow purple"></div>
 </div>
@@ -13,3 +13,40 @@
   <br/>
   <span>Copyright {{ now.Year }}. All rights reserved.</span>
 </div>
+
+<script>
+  // control the light/dark theme
+  const themeToggleButton = document.getElementById('theme-toggle');
+  const docElement = document.documentElement;
+
+  const setTheme = (theme) => {
+    docElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      themeToggleButton.textContent = '🌙';
+    } else {
+      themeToggleButton.textContent = '☀️';
+    }
+  };
+
+  themeToggleButton.addEventListener('click', () => {
+    const currentTheme = docElement.getAttribute('data-theme');
+    if (currentTheme === 'dark') {
+      setTheme('light');
+    } else {
+      setTheme('dark');
+    }
+  });
+
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    setTheme(savedTheme);
+  } else {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+      setTheme('dark');
+    } else {
+      setTheme('light');
+    }
+  }
+</script>

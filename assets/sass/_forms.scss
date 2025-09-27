@@ -1,0 +1,47 @@
+@use 'themes';
+
+input,
+textarea,
+select,
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--background);
+  color: var(--text);
+  border: 1px solid var(--form-border);
+  padding: 4px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &[type="checkbox"],
+  &[type="radio"] {
+    background-color: var(--background);
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    border: 1px solid var(--form-border);
+    margin: 0;
+    display: inline-grid;
+    place-content: center;
+    margin-right: 8px; 
+  }
+  &::before {
+      content: '';
+      width: 1em;
+      height: 1em;
+      border-radius: 50%;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      background-color: var(--form-accent); 
+    }
+  &:focus {
+    outline: none;
+    border-color: var(--form-focus-border);
+    box-shadow: 0 0 5px var(--form-focus-border);
+  }
+    &:checked::before {
+      transform: scale(1);
+    }
+}

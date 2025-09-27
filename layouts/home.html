@@ -1,6 +1,6 @@
 {{ define "main" }}
   {{ .Content }}
-  {{ range site.RegularPages }}
+  {{ range .Paginator.Pages }}
     <h1><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h1>
     <div class="description">
     	{{ if isset .Params "description" }}

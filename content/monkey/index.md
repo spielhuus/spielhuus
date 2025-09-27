@@ -45,18 +45,20 @@ endless.
 
 <style>
   .letter {
-    font-family: monospace;
+    font-family: 'cmunss', monospace;
     font-size: 2em;
     font-weight: light;
     display: inline-block;
     width: 1em;
+    text-align: center;
   }
   .letter-good {
-    font-family: monospace;
+    font-family: 'cmunss', monospace;
     font-size: 2em;
     font-weight: bold;
     display: inline-block;
     width: 1em;
+    text-align: center;
   }
 </style>
 

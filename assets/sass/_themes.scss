@@ -1,0 +1,64 @@
+@use "sass:map";
+$light-theme-colors: (
+  "text":        rgb(35, 35, 51),
+  "background":  rgb(255, 255, 255),
+  "paper-white": rgb(251, 248, 228),
+  "main-color":  rgb(10, 49, 68),
+  "icon-color":  rgb(35, 35, 51),
+  "darkblue":    rgb(10 49 68),
+  "blue":        rgb(3 83 99),
+  "lightblue":   rgb(12 105 121),
+  "purple":      rgb(142 96 117),
+  "pink":        rgb(191 85 105),
+  "red":         rgb(206, 87, 44),
+  "orange":      rgb(238, 191, 111),
+  "darkorange":  rgb(223, 135, 46),
+  "yellow":      rgb(247 240 194),
+  "white":       rgb(255 255 255),
+  "green":       rgb(131, 123, 76),
+  "black":       rgb(0, 0, 0),
+  "form-border": rgb(0,0,0),
+  "form-focus-border": rgb(0, 123, 255),
+  "form-accent": rgb(238, 191, 111),
+);
+
+$dark-theme-colors: (
+  "text":        rgb(220, 220, 220),
+  "background":  rgb(20, 23, 39),
+  "paper-white": rgb(30, 32, 48),
+  "main-color":  rgb(139, 213, 227),
+  "icon-color":  rgb(220, 220, 220),
+  "darkblue":    rgb(10 49 68),
+  "blue":        rgb(12 105 121),
+  "lightblue":   rgb(139, 213, 227),
+  "purple":      rgb(198, 160, 181),
+  "pink":        rgb(244, 137, 161),
+  "red":         rgb(237, 135, 150),
+  "orange":      rgb(250, 189, 134),
+  "darkorange":  rgb(245, 169, 127),
+  "yellow":      rgb(247 240 194),
+  "white":       rgb(0,0,0),
+  "black":       rgb(255 255 255),
+  "green":       rgb(166, 218, 149),
+  "form-border": rgb(200,200,200),
+  "form-focus-border": rgb(0, 123, 255),
+  "form-accent": rgb(238, 191, 111),
+);
+
+$themes: (
+  light: $light-theme-colors,
+  dark: $dark-theme-colors
+);
+
+:root {
+  @each $name, $color in map.get($themes, light) {
+    --#{$name}: #{$color};
+  }
+  --base: 0.8rem;
+  --width: 960px;
+  --width: 960px;
+  --arrow-height: calc(2 * var(--base));
+  --grid-gutter: var(--base);
+  --grid-height: calc(2 * var(--base));
+  --arrow-file: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 128' preserveAspectRatio='none'%3e%3cpath d='M0 0l500 64 500-64v64l-500 64L0 64z'/%3e%3c/svg%3e");
+}

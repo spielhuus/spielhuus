@@ -1,29 +1,42 @@
-$colors: (
-  "darkblue":    rgb(10 49 68),
-  "blue":        rgb(3 83 99),
-  "lightblue":   rgb(12 105 121),
-  "purple":      rgb(142 96 117),
-  "pink":        rgb(191 85 105),
-  "red":         rgb(218 59 59),
-  "orange":      rgb(207 121 100),
-  "yellow":      rgb(247 240 194),
-  "white":       rgb(255 255 255),
-  "paper-white": rgb(251 248 228),
-  "green":       hsl(79deg 100% 50%)
-);
+@use "sass:map";
+@use 'themes';
+@use 'forms';
 
-:root {
-  @each $name, $color in $colors {
+$link-color-default: #ff73e8;
+$link-color-visited: #ff3ab2;
+$link-color-hover:   #ff59c1;
+$link-color-active:  #ff3025;
+
+$link-focus-outline-color: #1a73e8;
+$link-transition: all 0.2s ease-in-out;
+
+
+[data-theme="dark"] {
+  @each $name, $color in map.get(themes.$themes, dark) {
     --#{$name}: #{$color};
   }
-  --base: 0.8rem;
-  --width: 960px;
-  --arrow-height: calc(2 * var(--base));
-  --grid-gutter: var(--base);
-  --grid-height: calc(2 * var(--base));
-  --arrow-file: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 128' preserveAspectRatio='none'%3e%3cpath d='M0 0l500 64 500-64v64l-500 64L0 64z'/%3e%3c/svg%3e");
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    @each $name, $color in map.get(themes.$themes, dark) {
+      --#{$name}: #{$color};
+    }
+  }
+}
+
+@font-face {
+  font-family: 'cmunss';
+  src: url('../fonts/cmunss-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'SourceCodePro-Regular';
+  src: url('../fonts/SourceCodePro-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 @font-face {
   font-family: 'C64_Pro-STYLE';
   src: url(../fonts/C64_Pro-STYLE.woff2) format('woff2');
@@ -41,7 +54,8 @@ $colors: (
 }
 
 html {
-  color: #232333;
+  background: var(--background);
+  color: var(--text);
   font-family: "Roboto Mono", monospace;
   font-size: 93.75%;
   line-height: 1.6em;
@@ -72,6 +86,35 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 2em;
 }
 
+a {
+  color: $link-color-default;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: $link-transition;
+  outline: none;
+
+  &:visited {
+    color: $link-color-visited;
+  }
+
+  &:hover {
+    color: $link-color-hover;
+    text-decoration: none;
+  }
+
+  &:focus {
+    color: $link-color-hover;
+    outline: 2px solid $link-focus-outline-color;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  &:active {
+    color: $link-color-active;
+  }
+}
+
 :not(pre) > code {
   color: var(--blue);
   white-space: nowrap;
@@ -90,16 +133,31 @@ h1, h2, h3, h4, h5, h6 {
   > figure {
     grid-column: 1 / -1;
     text-align: center;
-    width: 100%;
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
+
+    > canvas {
+      max-width: 1280px;
+      display: block;
+      margin: 0 auto;
+    }
+  }
+}
+
+.fullwidth {
+  width: 100%;
+  height: auto;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  @media (min-width: 1281px) {
+    width: 1280px;
+    height: 800px;
   }
 }
 
 header,
 footer {
   overflow-x: hidden;
+  margin: 0;
 }
 
 header {
@@ -120,18 +178,37 @@ header {
       text-decoration: none;
       font-family: "C64_Pro-STYLE";
       font-size: 3em;
-      color: var(--orange);
+      color: var(--darkorange);
 
-      &:hover {
+      &:visited,
+      &:active {
+        color: var(--darkorange); 
+      }
+      
+      &:hover,
+      &:focus {
         color: var(--yellow);
+        text-decoration: none;
+        outline: none;
       }
     }
+  }
+
+  > button {
+    background: var(--background);
+    border: none;
+    position: absolute;
+    top: 1.5rem;
+    right: 2rem;
+    z-index: 20;
+    font-size: 1.5em;
   }
 
   > .arrows {
     margin-bottom: var(--grid-height);
   }
 }
+
 
 .footer {
   margin: 4em 0 2em;
@@ -164,18 +241,12 @@ header {
     }
   }
   
-  $arrow-color-names: "darkblue", "blue", "lightblue", "purple", "pink", "yellow", "white";
+  $arrow-color-names: "background", "darkblue", "blue", "lightblue", "purple", "pink", "yellow", "white", "orange", "darkorange", "red";
   @each $name in $arrow-color-names {
     &.#{$name} {
       --color: var(--#{$name});
     }
   }
-  // TODO define them in map
-  // Manual overrides for colors not in the map
-  &.red { --color: hsl(15.9deg 64.8% 49%); }
-  &.orange-light { --color: hsl(37.8deg 78.9% 68.4%); }
-  &.orange { --color: hsl(30.2deg 73.4% 52.7%); }
-  &.green { --color: hsl(51.3deg 26.6% 40.6%); }
 }
 
 header > .arrows,
@@ -195,76 +266,63 @@ footer > .arrows {
   @extend .icon;
   width: 48px;
   height: 47px;
-  background-image: url("data:image/svg+xml,%3csvg width='98' height='96' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill-rule='evenodd' clip-rule='evenodd' d='M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z' fill='%2324292f'/%3e%3c/svg%3e");
+  // Use background-color with our new CSS variable
+  background-color: var(--icon-color); 
+  // The SVG data URL now only contains the shape, which acts as a mask.
+  $github-mask: url("data:image/svg+xml,%3csvg width='98' height='96' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z'/%3e%3c/svg%3e");
+  -webkit-mask-image: $github-mask;
+  mask-image: $github-mask;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: contain;
   -webkit-mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  mask-position: center;
 }
 
 .icon-spielhuus {
-  @extend .icon;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 270'%3e%3cpolygon points='0,70 100,0 200,70' fill='%23d9655b'/%3e%3crect y='70' width='100' height='100' fill='%23c8c1e3'/%3e%3crect x='100' y='70' width='100' height='100' fill='%23a0bce1'/%3e%3crect y='170' width='100' height='100' fill='%233c5ba3'/%3e%3crect x='100' y='170' width='100' height='100' fill='%23e1b9d3'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-size: contain;
   width: 48px;
   height: 47px;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3e%3ccircle cx='12' cy='12' r='12' fill='orange'/%3e%3cpath d='M4 21 L4 10 L20 10 L20 21 Z M4 10 L12 3 L20 10 M4 10 L20 21 M20 10 L4 21' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
 }
 
-pre,
-.codestyle {
+pre, 
+pre code {
   grid-column: 2;
   background-color: var(--paper-white);
+  font-family: "SourceCodePro-Regular", sens;
+  font-size: 0.9em;
 }
 
-$chroma-styles: (
-  "err": (color: #ed8796),
-  "hl":  (background-color: #494d64),
-  "ln":  (color: #8087a2),
-  "k":   (color: #c6a0f6),
-  "kc":  (color: #f5a97f),
-  "kd":  (color: #ed8796),
-  "kn":  (color: #8bd5ca),
-  "kt":  (color: #ed8796),
-  "na":  (color: #8aadf4),
-  "nc":  (color: #eed49f),
-  "no":  (color: #eed49f),
-  "nd":  (color: #8aadf4, font-weight: bold),
-  "ni":  (color: #8bd5ca),
-  "ne":  (color: #f5a97f),
-  "nl":  (color: #91d7e3),
-  "nn":  (color: #f5a97f),
-  "nt":  (color: #c6a0f6),
-  "nb":  (color: #91d7e3),
-  "nv":  (color: #f4dbd6),
-  "nf":  (color: #8aadf4),
-  "s":   (color: #a6da95),
-  "dl":  (color: #8aadf4),
-  "sd":  (color: #6e738d),
-  "se":  (color: #8aadf4),
-  "sr":  (color: #8bd5ca),
-  "m":   (color: #f5a97f),
-  "o":   (color: #91d7e3, font-weight: bold),
-  "ow":  (color: #91d7e3, font-weight: bold),
-  "c":   (color: #6e738d, font-style: italic),
-  "gd":  (color: #ed8796, background-color: #363a4f),
-  "ge":  (font-style: italic),
-  "gh":  (color: #f5a97f, font-weight: bold),
-  "gi":  (color: #a6da95, background-color: #363a4f),
-  "gs":  (font-weight: bold),
-  "gu":  (color: #f5a97f, font-weight: bold),
-  "gt":  (color: #ed8796),
-  "gl":  (text-decoration: underline)
+math {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  font-family: "cmunss", sens;
+  font-size: 1.8em;
+}
+
+$chroma-light: (
+  "err": (color: #ed8796), "hl": (background-color: #494d64), "ln": (color: #8087a2), "k": (color: #c6a0f6), "kc": (color: #f5a97f), "kd": (color: #ed8796), "kn": (color: #8bd5ca), "kt": (color: #ed8796), "na": (color: #8aadf4), "nc": (color: #eed49f), "no": (color: #eed49f), "nd": (color: #8aadf4, font-weight: bold), "ni": (color: #8bd5ca), "ne": (color: #f5a97f), "nl": (color: #91d7e3), "nn": (color: #f5a97f), "nt": (color: #c6a0f6), "nb": (color: #91d7e3), "nv": (color: #f4dbd6), "nf": (color: #8aadf4), "s": (color: #a6da95), "dl": (color: #8aadf4), "sd": (color: #6e738d), "se": (color: #8aadf4), "sr": (color: #8bd5ca), "m": (color: #f5a97f), "o": (color: #91d7e3, font-weight: bold), "ow": (color: #91d7e3, font-weight: bold), "c": (color: #6e738d, font-style: italic), "gd": (color: #ed8796, background-color: #363a4f), "ge": (font-style: italic), "gh": (color: #f5a97f, font-weight: bold), "gi": (color: #a6da95, background-color: #363a4f), "gs": (font-weight: bold), "gu": (color: #f5a97f, font-weight: bold), "gt": (color: #ed8796), "gl": (text-decoration: underline)
 );
 
-.chroma {
-  // Loop through the map to generate all the rules
-  @each $class, $properties in $chroma-styles {
+$chroma-dark: (
+  "err": (color: #f38ba8), "hl": (background-color: #313244), "ln": (color: #7f849c), "k": (color: #cba6f7), "kc": (color: #fab387), "kd": (color: #f38ba8), "kn": (color: #94e2d5), "kt": (color: #f38ba8), "na": (color: #89b4fa), "nc": (color: #f9e2af), "no": (color: #f9e2af), "nd": (color: #89b4fa, font-weight: bold), "ni": (color: #94e2d5), "ne": (color: #fab387), "nl": (color: #89dceb), "nn": (color: #fab387), "nt": (color: #cba6f7), "nb": (color: #89dceb), "nv": (color: #cdd6f4), "nf": (color: #89b4fa), "s": (color: #a6e3a1), "dl": (color: #89b4fa), "sd": (color: #6c7086), "se": (color: #89b4fa), "sr": (color: #94e2d5), "m": (color: #fab387), "o": (color: #89dceb, font-weight: bold), "ow": (color: #89dceb, font-weight: bold), "c": (color: #6c7086, font-style: italic), "gd": (color: #f38ba8, background-color: #313244), "ge": (font-style: italic), "gh": (color: #fab387, font-weight: bold), "gi": (color: #a6e3a1, background-color: #313244), "gs": (font-weight: bold), "gu": (color: #fab387, font-weight: bold), "gt": (color: #f38ba8), "gl": (text-decoration: underline)
+);
+
+@mixin generate-chroma-styles($palette) {
+  @each $class, $properties in $palette {
     .#{$class} {
       @each $property, $value in $properties {
         #{$property}: #{$value};
       }
     }
   }
+}
 
-  // Handle manually the ones that share a style
+.chroma {
+  @include generate-chroma-styles($chroma-light);
   .lnt, .ln {
     white-space: pre;
     user-select: none;
@@ -272,5 +330,9 @@ $chroma-styles: (
     padding: 0 0.4em;
   }
   .line { display: flex; }
+}
+
+[data-theme="dark"] .chroma {
+  @include generate-chroma-styles($chroma-dark);
 }
 
