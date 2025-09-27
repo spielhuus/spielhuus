@@ -97,8 +97,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
 ## Result
 
-<figure>
-  <canvas width=1280 height=860 id="shader"></canvas>
+<figure class='fullwidth'>
+  <canvas width=1280 height=860 id="shader" class='fullwidth'></canvas>
   <p>press `F11` for fullscreen</p>
 </figure>
 

@@ -43,9 +43,11 @@ essential, as they only have a single neighbor. A common method to resolve this
 issue is to wrap around the cells such that the neighbor for the first cell is
 the last one, and the neighbor for the last cell is the first one in the grid.
 
-<figure>
-<canvas width=1280 height=860 id="shader"></canvas>
-<form action="#" id="rules">
+<figure class="fullwidth">
+    <canvas id="shader" class='fullwidth'></canvas>
+</figure>
+
+<div><form action="#" id="rules">
     <label class="h2" form="rules">Rule:</label>
     <input type="number" value="90" name="rule" id="rule" min="0" max="255" required>
     <br>
@@ -59,8 +61,7 @@ the last one, and the neighbor for the last cell is the first one in the grid.
       <option value="3">Right</option>
       <option value="4">Random</option>
     </select>
-</form>
-</figure>
+</form></div>
 
 Another crucial aspect is defining the initial state of the cells. Commonly,
 the central cell of the row is selected as the initial active cell. Alternative

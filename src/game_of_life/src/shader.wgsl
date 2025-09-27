@@ -56,57 +56,17 @@ fn compute_main(@builtin(global_invocation_id) cell: vec3u) {
 
    let i = cellIndex(cell.xy);
 
-   // Conway's game of life rules:
-//   switch activeNeighbors {
-//     case 2: {
-//       cellStateOut[i] = cellStateIn[i] + 1;
-//     }
-//     case 3: {
-//       cellStateOut[i] = 1;
-//     }
-//     default: {
-//       cellStateOut[i] = 0;
-//     }
-//   }
-
   let state = cellStateIn[i];
- // Correct Conway's game of life rules with aging:
-//    if (state > 0u) { // If the cell is ALIVE
-//      // A living cell survives if it has 2 or 3 neighbors.
-//      if (activeNeighbors == 2u || activeNeighbors == 3u) {
-//        // It survives, so increment its age.
-//        cellStateOut[i] = state + 1u;
-//      } else {
-//        // It dies from over/underpopulation.
-//        cellStateOut[i] = 0u;
-//      }
-//    } else { // If the cell is DEAD
-//      // A dead cell is born if it has exactly 3 neighbors.
-//      if (activeNeighbors == 3u) {
-//        // It's born! Start its age at 1.
-//        cellStateOut[i] = 1u;
-//      } else {
-//        // It stays dead.
-//        cellStateOut[i] = 0u;
-//      }
-//    }
-
    if (state > 0u) { // If the cell is ALIVE
-     // A living cell survives if the number of neighbors is in the survive rule.
      if (is_in_rule(activeNeighbors, uniforms.survive_rule)) {
-       // It survives, so increment its age.
        cellStateOut[i] = state + 1u;
      } else {
-       // It dies from over/underpopulation.
        cellStateOut[i] = 0u;
      }
    } else { // If the cell is DEAD
-     // A dead cell is born if the number of neighbors is in the birth rule.
      if (is_in_rule(activeNeighbors, uniforms.birth_rule)) {
-       // It's born! Start its age at 1.
        cellStateOut[i] = 1u;
      } else {
-       // It stays dead.
        cellStateOut[i] = 0u;
      }
    }
@@ -117,7 +77,6 @@ fn vs_main(
     vert: VertexInput,
 ) -> VertexOutput {
     var output: VertexOutput;
-    // Map vertex positions from [-1, 1] to UV coords [0, 1]
     output.uv = vert.position.xy * 0.5 + 0.5;
     output.position = vec4f(vert.position, 1.0);
     return output;
@@ -134,7 +93,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // The rest of the coloring logic is the same as before.
     if (state < 1.0) {
         // Discarding is an option, but returning transparent black is fine.
-        return vec4<f32>(0.0, 0.0, 0.0, 1.0); // Return black for dead cells
+        return vec4<f32>(0.0, 0.0, 0.0, 0.0); // Return black for dead cells
     }
 
     let max_age = 20.0;

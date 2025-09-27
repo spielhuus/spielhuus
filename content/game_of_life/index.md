@@ -35,8 +35,8 @@ these rules can also be written as B2S23  ("B" for birth, "S" for survival).
 
 https://conwaylife.com/wiki/List_of_Generations_rules
 
-<figure>
-  <canvas width=1280 height=860 id="shader"></canvas>
+<figure class="fullwidth">
+  <canvas id="shader" class="fullwidth"></canvas>
 </figure>
 
 <label for="targetInput">B:</label>
