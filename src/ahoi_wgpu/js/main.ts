@@ -7,7 +7,7 @@ async function run() {
     console.error("The data-wasm-url attribute is missing on the script tag.");
     return;
   }
-  await init(wasmUrl);
+  await init({module_or_path: wasmUrl});
 }
 
 run();

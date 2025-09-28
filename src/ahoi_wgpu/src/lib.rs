@@ -8,7 +8,7 @@ use winit::{
     window::Window,
 };
 
-use log::info;
+// use log::info;
 
 use wgpu::util::DeviceExt;
 
@@ -126,8 +126,6 @@ impl State {
             ..Default::default()
         });
 
-        info!("InstanceDescriptor: {:#?}", instance);
-
         let surface = instance.create_surface(window.clone()).unwrap();
 
         let adapter = instance
@@ -137,8 +135,6 @@ impl State {
                 force_fallback_adapter: false,
             })
             .await?;
-
-        info!("AdapterDescriptor: {:#?}", adapter);
 
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
@@ -157,8 +153,6 @@ impl State {
             .await?;
 
         let surface_caps = surface.get_capabilities(&adapter);
-
-        info!("SurfaceCapabillities: {:#?}", surface_caps);
 
         // Shader code in this tutorial assumes an sRGB surface texture. Using a different
         // one will result in all the colors coming out darker. If you want to support non
@@ -454,6 +448,7 @@ impl ApplicationHandler<State> for App {
             let canvas: HtmlCanvasElement = canvas.dyn_into::<HtmlCanvasElement>().unwrap();
 
             window_attributes = window_attributes.with_canvas(Some(canvas.clone()));
+            window_attributes.active = false;
             canvas
         };
 
@@ -533,7 +528,6 @@ impl ApplicationHandler<State> for App {
 }
 
 pub fn run() -> anyhow::Result<()> {
-    info!("run");
     #[cfg(target_arch = "wasm32")]
     {
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));

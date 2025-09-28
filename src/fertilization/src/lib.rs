@@ -933,7 +933,8 @@ impl ApplicationHandler<UserEvent> for App {
             let canvas: web_sys::HtmlCanvasElement =
                 canvas.dyn_into::<web_sys::HtmlCanvasElement>().unwrap();
 
-            let attributes = Window::default_attributes().with_canvas(Some(canvas));
+            let mut attributes = Window::default_attributes().with_canvas(Some(canvas));
+            attributes.active = false;
 
             let window = Arc::new(event_loop.create_window(attributes).unwrap());
             let proxy = self.proxy.clone();

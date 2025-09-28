@@ -1,9 +1,10 @@
 import { Vector2 } from '../../js/vector';
 
-const WALLS_COUNT = 5;
-const RAYS_COUNT = 360;
+const WALLS_COUNT = 10;
+const RAYS_COUNT = 720;
 const TRANSPARENT = "#00000000";
 const WALL_THICKNESS = 8.0;
+const RAY_ALPHA = 0.15;
 const WIDTH = 1280;
 const HEIGHT = 860;
 const CIRCLE_DISTANCE = 80;
@@ -393,6 +394,7 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
     const dy = endPoint.y - this.position.y;
     const angle = Math.atan2(dy, dx);
     this.moverCtx.save();
+    this.moverCtx.strokeStyle = this.orange;
     this.moverCtx.translate(this.position.x, this.position.y);
     this.moverCtx.rotate(angle);
     this.moverCtx.lineWidth = 4;
@@ -401,9 +403,6 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
     this.moverCtx.lineTo(-size, width / 2);
     this.moverCtx.lineTo(-size, -width / 2);
     this.moverCtx.closePath();
-    this.moverCtx.strokeStyle = this.orange;
-    // this.moverCtx.fillStyle = this.orange;
-    this.moverCtx.fill();
     this.moverCtx.stroke();
     this.moverCtx.restore();
 
@@ -433,14 +432,17 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
   drawWalls() {
     this.wallCtx.clearRect(0, 0, this.wallCanvas.width, this.wallCanvas.height);
     for (let line of this.walls) {
-      this.wallCtx.strokeStyle = line.color;
-      this.wallCtx.lineCap = 'round';
-      this.wallCtx.lineJoin = 'round';
-      this.wallCtx.lineWidth = WALL_THICKNESS;
-      this.wallCtx.beginPath();
-      this.wallCtx.moveTo(line.start.x, line.start.y);
-      this.wallCtx.lineTo(line.end.x, line.end.y);
-      this.wallCtx.stroke();
+
+      if (line.color != TRANSPARENT) {
+        this.wallCtx.strokeStyle = this.black;
+        this.wallCtx.lineCap = 'round';
+        this.wallCtx.lineJoin = 'round';
+        this.wallCtx.lineWidth = WALL_THICKNESS;
+        this.wallCtx.beginPath();
+        this.wallCtx.moveTo(line.start.x, line.start.y);
+        this.wallCtx.lineTo(line.end.x, line.end.y);
+        this.wallCtx.stroke();
+      }
     }
   }
 
@@ -535,7 +537,7 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
 
   private getColors(): Float32Array {
     const wallColor = this.parseColor(this.darkorange, 1.0);
-    const rayColor = this.parseColor(this.black, 0.2);
+    const rayColor = this.parseColor(this.black, RAY_ALPHA);
     const colorData = new Float32Array(8);
     colorData.set(wallColor, 0);
     colorData.set(rayColor, 4);

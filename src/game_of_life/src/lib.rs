@@ -723,15 +723,6 @@ impl ApplicationHandler<UserEvent> for App {
                 }
             });
 
-            // let proxy = self.proxy.clone();
-            // let on_code_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
-            //     let target = event.target().expect("Event should have a target");
-            //     if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
-            //         let value_str = input_element.value();
-            //         proxy.send_event(UserEvent::CodeChanged(value_str)).unwrap();
-            //     }
-            // });
-            
             let window = web_sys::window().expect("no global `window` exists");
             let document = window.document().expect("should have a document on window");
 
@@ -789,7 +780,8 @@ impl ApplicationHandler<UserEvent> for App {
             let canvas: web_sys::HtmlCanvasElement =
                 canvas.dyn_into::<web_sys::HtmlCanvasElement>().unwrap();
 
-            let attributes = Window::default_attributes().with_canvas(Some(canvas));
+            let mut attributes = Window::default_attributes().with_canvas(Some(canvas));
+            attributes.active = false;
 
             let window = Arc::new(event_loop.create_window(attributes).unwrap());
             let proxy = self.proxy.clone();
