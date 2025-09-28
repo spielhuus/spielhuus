@@ -1,10 +1,11 @@
 +++
 title = 'Raycasting'
 description = 'The small house of Nikolaus is a drawing puzzle for children. The house must be drawn in a single stroke using eight lines without tracing any line twice. To do this, one says, “Das klei-ne Haus des Ni-ko-laus.”'
-date = 2025-09-16T18:35:00+02:00
+date = 2025-09-27T18:35:00+02:00
 draft = true
 tags = ['graph']
 script = "raycasting/js/main.ts"
+links = [ 'Digital_differential_analyzer', 'lode_raycasting', 'playfuljs_raycasting' ]
 +++
 
 ## Digital Differential Analyzer (DDA) algorithm
@@ -35,9 +36,3 @@ difference between the x-coordinates and y-coordinates of the two endpoints to p
 ## Raycasting with DDA
 
 <canvas id="view-canvas"></canvas>
-
-<h2>References</h2>
-<ul>
-        <li><a href="https://en.wikipedia.org/wiki/Digital_differential_analyzer">Digital differential analyzer</a></li>
-        <li><a href="https://lodev.org/cgtutor/raycasting.html">Lode's Computer Graphics Tutorial: Raycasting</a></li>
-</ul>

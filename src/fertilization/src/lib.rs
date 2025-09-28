@@ -19,8 +19,6 @@ use web_sys::HtmlCanvasElement;
 
 #[derive(Debug)]
 pub enum UserEvent {
-    // TODO
-    RuleChanged(u32),
     SizeChanged(u32),
     State(Box<State>),
 }
@@ -59,12 +57,6 @@ struct Color {
 }
 
 impl Color {
-    const BLANK: Color = Color {
-        r: 0.0,
-        g: 0.0,
-        b: 0.0,
-        a: 0.0,
-    };
     const WHITE: Color = Color {
         r: 1.0,
         g: 1.0,
@@ -248,7 +240,7 @@ impl Phenotype for SpermEvolver {
         Self {
             index,
             calc_fitness: 0.0,
-            pos: Rectangle::new(20.0, 360.0 - 50.0, ROCKET_WIDTH, ROCKET_HEIGHT), //TODO: Hardcoded height for now
+            pos: Rectangle::new(0.0, 0.0, ROCKET_WIDTH, ROCKET_HEIGHT),
             step: 0,
             winner: false,
             dead: false,
@@ -311,7 +303,6 @@ impl Phenotype for SpermEvolver {
         self.dead = false;
         self.collision_count = 0;
         self.steps_to_goal = 0;
-        self.pos = Rectangle::new(20.0, 360.0 - 50.0, ROCKET_WIDTH, ROCKET_HEIGHT); //TODO: Hardcoded height
     }
 }
 
@@ -461,7 +452,7 @@ pub struct State {
     // population relevant props
     max_instances: usize,
     board: Board,
-    population: Population<SpermEvolver>,
+    population: Option<Population<SpermEvolver>>,
     loops: i32,
     round: i32,
     winners: i32,
@@ -470,7 +461,7 @@ pub struct State {
 }
 
 impl State {
-    async fn new(window: Arc<Window>, max_instances: usize) -> anyhow::Result<State> {
+    async fn new(window: Arc<Window>) -> anyhow::Result<State> {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
             ..Default::default()
@@ -538,7 +529,7 @@ impl State {
 
         let instance_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Instance Buffer"),
-            size: (std::mem::size_of::<InstanceRaw>() * max_instances) as u64,
+            size: (std::mem::size_of::<InstanceRaw>() * 1) as u64, // TODO: was max instances
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -640,17 +631,7 @@ impl State {
             canvas
         };
 
-        let screen_width = 1280.0;
-        let screen_height = 720.0;
-        let path_len = (screen_width / 3.0) as i32;
-
-        // Fix initial positions to account for screen size
-        let mut population = Population::<SpermEvolver>::new(POPULATION_SIZE, path_len as usize);
-        population.get_phenotypes_mut().iter_mut().for_each(|p| {
-            p.pos.y = screen_height / 2.0 - 50.0;
-        });
-
-        Ok(Self {
+        let mut state = Self {
             surface,
             window,
             device,
@@ -658,7 +639,7 @@ impl State {
             config,
             index_buffer,
             instance_buffer,
-            max_instances,
+            max_instances: 1,
             num_indices,
             projection_bind_group,
             projection_buffer,
@@ -668,20 +649,26 @@ impl State {
             #[cfg(target_arch = "wasm32")]
             canvas,
             // population specific props
-            board: Board::new(screen_width, screen_height, path_len),
-            population,
+            board: Board::new(0.0, 0.0, 0),
+            population: None,
             fast: false,
             loops: 0,
             round: 0,
             show_winner_path: false,
-            screen_height,
+            screen_height: 0.0,
             winners: 0,
-        })
+        };
+        state.recreate_simulation_state();
+        Ok(state)
     }
 
-    fn handle_key(&self, event_loop: &ActiveEventLoop, code: KeyCode, is_pressed: bool) {
+    fn handle_key(&mut self, event_loop: &ActiveEventLoop, code: KeyCode, is_pressed: bool) {
         if let (KeyCode::Escape, true) = (code, is_pressed) {
             event_loop.exit()
+        } else if code == KeyCode::KeyW {
+            self.show_winner_path = is_pressed;
+        } else if code == KeyCode::KeyF {
+            self.fast = is_pressed;
         }
     }
 
@@ -700,52 +687,91 @@ impl State {
                 0,
                 bytemuck::cast_slice(&[new_projection]),
             );
+            self.recreate_simulation_state();
         }
     }
 
-    fn evolve_population(&mut self) {
-        self.population.evolve(&self.board);
-        self.winners = self
-            .population
-            .get_phenotypes()
-            .iter()
-            .filter(|g| g.winner)
-            .count() as i32;
-        self.population
-            .get_phenotypes_mut()
-            .iter_mut()
-            .for_each(|p| p.reset());
-        self.round = 0;
-        self.loops += 1;
+    fn recreate_simulation_state(&mut self) {
+        let width = self.config.width as f32;
+        let height = self.config.height as f32;
+        let path_len = (width / 3.0) as i32;
 
-        // Print info to console instead of drawing text
-        debug!(
-            "Generation: {:04}, Winners: {}, Max Fitness: {:.2}",
-            self.loops,
-            self.winners,
-            self.population.max_fitness()
-        );
+        let max_instances = POPULATION_SIZE + path_len as usize + 10;
+        self.max_instances = max_instances;
+
+        self.instance_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Instance Buffer"),
+            size: (std::mem::size_of::<InstanceRaw>() * self.max_instances) as u64,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        // Recreate the board with the new dimensions
+        self.board = Board::new(width, height, path_len);
+
+        // Update the stored screen_height (or better, remove it and always use self.config.height)
+        self.screen_height = height;
+
+        // Reset the entire population for the new board dimensions
+        let mut population = Population::<SpermEvolver>::new(POPULATION_SIZE, path_len as usize);
+        population.get_phenotypes_mut().iter_mut().for_each(|p| {
+            // Use the new height for initial positioning
+            p.pos.y = height / 2.0 - 50.0;
+        });
+        self.population = Some(population);
+
+        // Reset counters
+        self.loops = 0;
+        self.round = 0;
+    }
+
+    fn evolve_population(&mut self) {
+        if let Some(population) = &mut self.population {
+            population.evolve(&self.board);
+            self.winners = population
+                .get_phenotypes()
+                .iter()
+                .filter(|g| g.winner)
+                .count() as i32;
+            let start_y = self.config.height as f32 / 2.0 - 50.0;
+            population
+                .get_phenotypes_mut()
+                .iter_mut()
+                .for_each(|p| {p.reset(); p.pos.x = 20.0; p.pos.y = start_y });
+            self.round = 0;
+            self.loops += 1;
+
+            // Print info to console instead of drawing text
+            debug!(
+                "Generation: {:04}, Winners: {}, Max Fitness: {:.2}",
+                self.loops,
+                self.winners,
+                population.max_fitness()
+            );
+        }
     }
 
     fn update(&mut self) {
-        if self.fast {
-            // Run a full generation
-            while self.round < (self.board.path_len - 1) {
-                self.population.for_each_phenotype_mut(|p, genotype| {
+        if let Some(population) = &mut self.population {
+            if self.fast {
+                // Run a full generation
+                while self.round < (self.board.path_len - 1) {
+                    population.for_each_phenotype_mut(|p, genotype| {
+                        p.update(&self.board, genotype);
+                    });
+                    self.round += 1;
+                }
+                self.evolve_population();
+            } else if self.round < self.board.path_len - 1 {
+                // Run one step
+                population.for_each_phenotype_mut(|p, genotype| {
                     p.update(&self.board, genotype);
                 });
                 self.round += 1;
+            } else {
+                // End of round, evolve
+                self.evolve_population();
             }
-            self.evolve_population();
-        } else if self.round < self.board.path_len - 1 {
-            // Run one step
-            self.population.for_each_phenotype_mut(|p, genotype| {
-                p.update(&self.board, genotype);
-            });
-            self.round += 1;
-        } else {
-            // End of round, evolve
-            self.evolve_population();
         }
     }
 
@@ -860,39 +886,41 @@ impl State {
 
         // Population
         if self.show_winner_path {
-            if let Some(winner) = self
-                .population
-                .get_phenotypes()
-                .iter()
-                .max_by(|a, b| a.get_fitness().partial_cmp(&b.get_fitness()).unwrap())
-            {
-                let genotype = self.population.get_genotype(winner);
-                draw_infos.extend(SpermEvolver::get_winner_path_draw_info(
-                    self.screen_height,
-                    genotype,
-                ));
-            }
-        } else {
-            self.population.for_each_phenotype_mut(|p, genotype| {
-                if let Some(info) = p.get_draw_info(&genotype[self.round as usize]) {
-                    if p.index() % 10 == 0 || self.fast {
-                        // Don't draw all 1000 unless in fast mode
-                        draw_infos.push(info);
-                    }
-                }
-            });
-            if self.fast {
-                if let Some(winner) = self
-                    .population
+            if let Some(population) = &self.population {
+                if let Some(winner) = population
                     .get_phenotypes()
                     .iter()
                     .max_by(|a, b| a.get_fitness().partial_cmp(&b.get_fitness()).unwrap())
                 {
-                    let genotype = self.population.get_genotype(winner);
+                    let genotype = population.get_genotype(winner);
                     draw_infos.extend(SpermEvolver::get_winner_path_draw_info(
                         self.screen_height,
                         genotype,
                     ));
+                }
+            }
+        } else {
+            if let Some(population) = &mut self.population {
+                population.for_each_phenotype_mut(|p, genotype| {
+                    if let Some(info) = p.get_draw_info(&genotype[self.round as usize]) {
+                        if p.index() % 10 == 0 || self.fast {
+                            // Don't draw all 1000 unless in fast mode
+                            draw_infos.push(info);
+                        }
+                    }
+                });
+                if self.fast {
+                    if let Some(winner) = population
+                        .get_phenotypes()
+                        .iter()
+                        .max_by(|a, b| a.get_fitness().partial_cmp(&b.get_fitness()).unwrap())
+                    {
+                        let genotype = population.get_genotype(winner);
+                        draw_infos.extend(SpermEvolver::get_winner_path_draw_info(
+                            self.screen_height,
+                            genotype,
+                        ));
+                    }
                 }
             }
         }
@@ -939,14 +967,11 @@ impl ApplicationHandler<UserEvent> for App {
             let window = Arc::new(event_loop.create_window(attributes).unwrap());
             let proxy = self.proxy.clone();
 
-            let screen_width = 1280.0; // Or get this from window/canvas if dynamic
-            let path_len = (screen_width / 3.0) as usize;
-            let max_drawable_objects = POPULATION_SIZE + path_len + 10;
             wasm_bindgen_futures::spawn_local(async move {
                 assert!(
                     proxy
                         .send_event(UserEvent::State(Box::new(
-                            State::new(window, max_drawable_objects)
+                            State::new(window)
                                 .await
                                 .expect("Unable to create canvas!!!")
                         )))
@@ -957,13 +982,10 @@ impl ApplicationHandler<UserEvent> for App {
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let screen_width = 1280.0;
-            let path_len = (screen_width / 3.0) as usize;
-            let max_drawable_objects = POPULATION_SIZE + path_len + 10;
             let window_attributes = Window::default_attributes();
             let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
             self.state = Some(Box::new(
-                pollster::block_on(State::new(window, max_drawable_objects)).unwrap(),
+                pollster::block_on(State::new(window)).unwrap(),
             ));
         }
     }
@@ -972,18 +994,18 @@ impl ApplicationHandler<UserEvent> for App {
         match event {
             #[cfg(target_arch = "wasm32")]
             UserEvent::State(mut state) => {
-                {
-                    let size = state.window.inner_size();
-                    info!("Resizing surface to {}x{}", size.width, size.height);
-                    state.resize(size);
+                let size = state.window.inner_size();
+                info!("Resizing surface to {}x{}", size.width, size.height);
+                state.resize(size);
 
-                    self.state = Some(state);
-                    if let Some(s) = &self.state {
-                        s.window.request_redraw();
-                    }
+                self.state = Some(state);
+                if let Some(s) = &self.state {
+                    s.window.request_redraw();
                 }
             }
-            _ => {}
+            _ => {
+                log::warn!("Unhandled User event: {:?}", event);
+            }
         }
     }
 

@@ -69,3 +69,18 @@
   name: "Line-Line intersection"
   url: "https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection"
   description: "description at wikipedia"
+
+- id: "Digital_differential_analyzer"
+  name: "Digital differential analyzer"
+  url: "https://en.wikipedia.org/wiki/Digital_differential_analyzer"
+  description: "description at wikipedia"
+
+- id: "lode_raycasting"
+  name: "Lode's Computer Graphics Tutorial"
+  url: "https://lodev.org/cgtutor/raycasting.html"
+  description: "Raycasting"
+
+- id: "playfuljs_raycasting"
+  name: "playfuljs"
+  url: "https://web.archive.org/web/20240427095647/http://www.playfuljs.com/a-first-person-engine-in-265-lines/"
+  description: "A first-person engine in 265 lines"

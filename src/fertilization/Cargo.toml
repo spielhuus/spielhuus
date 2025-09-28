@@ -13,7 +13,7 @@ anyhow = { workspace = true }
 rand = { workspace = true } 
 log.workspace = true
 wgpu ={ workspace = true } 
-winit ={ workspace = true } 
+winit = { workspace = true }
 bytemuck.workspace = true
 pollster ={ workspace = true } 
 
