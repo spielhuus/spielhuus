@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "sass-migrator": "^2.4.2"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.65"
+  }
+}
