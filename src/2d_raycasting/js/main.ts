@@ -1,6 +1,6 @@
 import { Vector2 } from '../../js/vector';
 
-const WALLS_COUNT = 10;
+const WALLS_COUNT = 6;
 const RAYS_COUNT = 720;
 const TRANSPARENT = "#00000000";
 const WALL_THICKNESS = 8.0;
@@ -536,7 +536,7 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
   }
 
   private getColors(): Float32Array {
-    const wallColor = this.parseColor(this.darkorange, 1.0);
+    const wallColor = this.parseColor(this.black, 1.0);
     const rayColor = this.parseColor(this.black, RAY_ALPHA);
     const colorData = new Float32Array(8);
     colorData.set(wallColor, 0);

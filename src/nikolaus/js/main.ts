@@ -201,7 +201,7 @@ function drawStaticHouse(ctx: CanvasRenderingContext2D) {
   ctx.strokeText("4", 162, 185);
 }
 
-async function draw() {
+async function main() {
   if (!ctx1 || !canvas1 || !ctx2 || !canvas2) {
     throw new Error("canvas or context is null");
   }
@@ -213,5 +213,5 @@ async function draw() {
   animator.updateAndDraw();
 }
 
-draw();
+main();
 

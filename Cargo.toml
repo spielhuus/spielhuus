@@ -9,14 +9,9 @@ members = [
   "src/game_of_life",
   "src/fertilization",
   "src/mandelbrot",
-  "src/worm_shape",
   "src/cube",
-  "src/worm",
   "src/maze",
   "src/raytracing",
-  "src/worm2",
-  "src/gpu_lines",
-  #"src/raycasting",
 ]
 
 [profile.release]

@@ -1,7 +1,7 @@
 +++
 title = 'Voronoi'
 description = 'drawing voronoi diagrams'
-date = 2025-09-06T11:35:00+02:00
+date = 2025-09-28T11:35:00+02:00
 draft = true
 tags = ['ca']
 script = "voronoi/js/main.ts"

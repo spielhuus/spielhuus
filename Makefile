@@ -30,7 +30,7 @@ web: bindgen
 
 serve: bindgen
 	@echo "--- Run Hugo server ---"
-	hugo serve -D
+	hugo serve --buildDrafts --buildFuture
 
 clean: $(CLEAN_BINDGEN_TARGETS)
 	@echo "--- cleanup files ---"
