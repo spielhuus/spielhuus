@@ -57,6 +57,7 @@ export class Canvas3 {
     // draw the direction arrow
     const dir = this.player.dir.clone().norm();
     const plane = new Vector2(-dir.y, dir.x).mulScalar(0.66);
+
     for (let x = 0; x < SCREEN_WIDTH; x++) {
       //calculate ray position and direction
       let cameraX = 2 * x / SCREEN_WIDTH - 1; //x-coordinate in camera space
@@ -184,11 +185,16 @@ export class Canvas3 {
           if (side === 1) {
             brightness *= 0.7; // Make N/S walls 30% darker
           }
+
+           if (side === 1) {
+            brightness *= 0.7; // Make N/S walls 30% darker
+            }
+
           const shadedColor = [
             Math.floor(color[0] * brightness),
             Math.floor(color[1] * brightness),
             Math.floor(color[2] * brightness),
-            color[3] // Keep alpha the same
+            color[3]
           ];
 
           for (let y = wallStart; y < wallEnd; y++) {
