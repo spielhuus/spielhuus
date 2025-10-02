@@ -30,7 +30,7 @@ export class Canvas3 {
   keyPressed: string | undefined;
   lastTime = 0;
   maxVisibleDistance = 10.0;
-  minBrightness = 2.0;
+  minBrightness = 0.1;
   constructor(private canvas: HTMLCanvasElement, private ctx: CanvasRenderingContext2D, private options: DrawOptions) {
     canvas.addEventListener('keydown', (event: KeyboardEvent) => {
       this.keyPressed = event.code;
