@@ -1,95 +1,132 @@
 import type { DrawOptions } from './utils';
-import { Vector2, lerp } from './utils';
+import { Map } from './maps';
+import { Vector2 } from '../../js/vector';
+import { Player } from './player';
 
-export function drawViewRaycast(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, mouseX: number, mouseY: number, options: DrawOptions) {
-for (let x = 0; x < canvas.width; x ++) {
-  let cameraX = lerp(-1.0, 1.0, x / canvas.width);
-  let rayDirX = dirX + planeX * cameraX;
-   let rayDirY = dirY + planeY * cameraX;
+export class Canvas2 {
+  map = new Map([
+    [0, 0, 1, 0, 0, 0, 0, 2, 2, 0],
+    [0, 0, 0, 1, 1, 1, 2, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 1, 1, 0, 0, 0, 0, 1],
+    [0, 0, 1, 0, 0, 1, 1, 1, 0, 0],
+  ]);
+  player = new Player(7.5, 5.5, new Vector2(1.0, 1.0).norm());
 
-}
+  constructor() { }
+
+  public draw(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, mousePos: Vector2, options: DrawOptions) {
+
+    //prepare the map
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // drawGrid(canvas, ctx, this.map, options);
+    this.map.draw(canvas, ctx, options);
+
+    let cellSize = this.map.cellSize(canvas.width, canvas.height);
+    let dir = mousePos.clone().sub(this.player.pos.clone().mul(cellSize));
+    if (dir.length() === 0) return;
+
+    // draw the direction arrow
+    dir = dir.clone().norm();
 
 
-  // const gridSize = options.gridSize ?? 20;
-  // const playerPos = new Vector2(canvas.width / 2, canvas.height / 2);
-  // const mousePos = new Vector2(mouseX, mouseY);
-  //
-  // const rayDir = mousePos.sub(playerPos);
-  // if (rayDir.length() === 0) return;
-  //
-  // const normRayDir = rayDir.norm();
-  //
-  // let mapPos = playerPos.mapPos(gridSize);
-  // console.log(`GridSize: ${gridSize}, MapPos: ${mapPos.x} x ${mapPos.y}`);
-  //
-  // // length of ray from one x or y-side to next x or y-side
-  // const deltaDistX = (normRayDir.x === 0) ? Infinity : Math.abs(gridSize.x / normRayDir.x);
-  // const deltaDistY = (normRayDir.y === 0) ? Infinity : Math.abs(gridSize.y / normRayDir.y);
-  //
-  // let stepX: number;
-  // let stepY: number;
-  // let sideDistX: number;
-  // let sideDistY: number;
-  //
-  // // calculate step and initial sideDist
-  // if (normRayDir.x < 0) {
-  //   stepX = -1;
-  //   sideDistX = (playerPos.x - mapPos.x * gridSize.x) / gridSize.x * deltaDistX;
-  // } else {
-  //   stepX = 1;
-  //   sideDistX = ((mapPos.x + 1.0) * gridSize.x - playerPos.x) / gridSize.x * deltaDistX;
-  // }
-  // if (normRayDir.y < 0) {
-  //   stepY = -1;
-  //   sideDistY = (playerPos.y - mapPos.y * gridSize.y) / gridSize.y * deltaDistY;
-  // } else {
-  //   stepY = 1;
-  //   sideDistY = ((mapPos.y + 1.0) * gridSize.y - playerPos.y) / gridSize.y * deltaDistY;
-  // }
-  //
-  // ctx.strokeStyle = 'red';
-  // ctx.lineWidth = options.lineWidth ?? 1;
-  // ctx.beginPath();
-  // ctx.moveTo(playerPos.x, playerPos.y);
-  // ctx.lineTo(mouseX, mouseY);
-  // ctx.stroke();
-  //
-  // ctx.fillStyle = 'red';
-  // ctx.beginPath();
-  // ctx.arc(playerPos.x, playerPos.y, options.circle_radius ?? 4, 0, Math.PI * 2);
-  // ctx.fill();
-  //
-  // let side = 0;
-  // const maxSteps = 50;
-  // for (let i = 0; i < maxSteps; i++) {
-  //   // jump to next map square, either in x-direction, or in y-direction
-  //   if (sideDistX < sideDistY) {
-  //     sideDistX += deltaDistX;
-  //     mapPos.x += stepX;
-  //     side = 0; // hit a vertical line
-  //   } else {
-  //     sideDistY += deltaDistY;
-  //     mapPos.y += stepY;
-  //     side = 1; // hit a horizontal line
-  //   }
-  //
-  //   let perpWallDist;
-  //   if (side === 0) {
-  //     perpWallDist = (sideDistX - deltaDistX);
-  //   } else {
-  //     perpWallDist = (sideDistY - deltaDistY);
-  //   }
-  //
-  //   const intersectionX = playerPos.x + perpWallDist * normRayDir.x;
-  //   const intersectionY = playerPos.y + perpWallDist * normRayDir.y;
-  //
-  //   ctx.fillStyle = 'orange';
-  //   ctx.beginPath();
-  //   ctx.arc(intersectionX, intersectionY, options.circle_radius ?? 4, 0, Math.PI * 2);
-  //   ctx.fill();
-  //
-  //   if (intersectionX < 0 || intersectionX > canvas.width || intersectionY < 0 || intersectionY > canvas.height) {
-  //     break;
-  //   }
-  //}
+    let plane = new Vector2(-dir.y, dir.x).mulScalar(0.66);
+    const WIDTH = 800; //example screen width
+    for (let x = 0; x < WIDTH; x++) {
+      //calculate ray position and direction
+      let cameraX = 2 * x / WIDTH - 1; //x-coordinate in camera space
+      let rayDir = new Vector2(
+        dir.x + plane.x * cameraX,
+        dir.y + plane.y * cameraX,
+      );
+      const pStart = this.player.pos.clone().mul(cellSize);
+      const pEnd = this.player.pos.clone().add(rayDir.mulScalar(100)).mul(cellSize);
+
+      let mapPos = new Vector2(Math.floor(this.player.pos.x), Math.floor(this.player.pos.y));
+
+      ctx.strokeStyle = "#aaaaaa11";
+      ctx.lineWidth = 4;
+
+      ctx.beginPath();
+      ctx.moveTo(pStart.x, pStart.y);
+      ctx.lineTo(pEnd.x, pEnd.y);
+      ctx.stroke();
+
+      //draw the player
+      ctx.fillStyle = 'red';
+      ctx.strokeStyle = 'red';
+      ctx.beginPath();
+      ctx.arc(this.player.pos.x * cellSize.x, this.player.pos.y * cellSize.y, options.circle_radius ?? 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      let deltaDist = new Vector2(
+        (rayDir.x == 0) ? 1e30 : Math.abs(1 / rayDir.x),
+        (rayDir.y == 0) ? 1e30 : Math.abs(1 / rayDir.y),
+      );
+
+      let sideDist = new Vector2();
+      let step = new Vector2();
+
+      //calculate step and initial sideDist
+      if (rayDir.x < 0) {
+        step.x = -1;
+        sideDist.x = (this.player.pos.x - mapPos.x) * deltaDist.x;
+      }
+      else {
+        step.x = 1;
+        sideDist.x = (mapPos.x + 1.0 - this.player.pos.x) * deltaDist.x;
+      }
+      if (rayDir.y < 0) {
+        step.y = -1;
+        sideDist.y = (this.player.pos.y - mapPos.y) * deltaDist.y;
+      }
+      else {
+        step.y = 1;
+        sideDist.y = (mapPos.y + 1.0 - this.player.pos.y) * deltaDist.y;
+      }
+
+      let hit = false;
+      let side = 0;
+
+      //perform DDA
+      while (!hit) {
+
+        let target;
+        if (sideDist.x <= sideDist.y) {
+          target = rayDir.clone().mulScalar(sideDist.x);
+          sideDist.x += deltaDist.x;
+          mapPos.x += step.x;
+          side = 0;
+        }
+        else {
+          target = rayDir.clone().mulScalar(sideDist.y);
+          sideDist.y += deltaDist.y;
+          mapPos.y += step.y;
+          side = 1;
+        }
+
+        if (mapPos.x < 0 || mapPos.y < 0 || mapPos.x >= this.map.height || mapPos.y >= this.map.height) {
+          break;
+        }
+
+        //Check if ray has hit a wall
+        if (this.map.data[mapPos.y][mapPos.x] > 0) {
+          ctx.strokeStyle = 'white';
+          ctx.fillStyle = 'white';
+          ctx.beginPath();
+          ctx.arc(...this.player.pos.clone().add(target).mul(cellSize).array(), 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          hit = true;
+        }
+      }
+    }
+  }
 }

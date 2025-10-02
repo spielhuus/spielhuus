@@ -1,0 +1,113 @@
+<svg width="800" height="417" viewBox="-50 -50 1250 650" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .grid-line { stroke: rgba(50, 50, 200, 0.7); stroke-width: 1; }
+      .wall { fill: rgba(50, 50, 200, 0.7); }
+      .player { fill: #007bff; }
+      .label, .title {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        fill: #555555;
+        text-anchor: middle;
+      }
+      .label { font-size: 20px; dominant-baseline: middle; }
+      .title { font-size: 24px; font-weight: bold; }
+      .coord-label { font-size: 16px; }
+      .ray { stroke: #ff4136; stroke-width: 3; }
+      .hit-point { fill: #ff4136; stroke: #ffffff; stroke-width: 2; }
+      .target-marker { stroke: #555555; stroke-width: 2; opacity: 0.7; }
+
+      /* New styles for distance visualization */
+      .dist-line { stroke-width: 2.5; stroke-dasharray: 5 3; fill: none; }
+      .side-dist-x { stroke: #800080; /* Purple */ }
+      .side-dist-y { stroke: #008080; /* Teal */ }
+      .delta-dist-x { stroke: #800080; }
+      .delta-dist-y { stroke: #008080; }
+      .dist-label { font-size: 18px; font-style: italic; }
+    </style>
+
+    <!-- Arrowhead marker definition -->
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#800080" />
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#008080" />
+    </marker>
+
+    <!-- Define the BASE grid visualization as a reusable component -->
+    <g id="dda-grid-base">
+      <rect x="0" y="0" width="500" height="500" fill="transparent" stroke="#333" stroke-width="2"/>
+      <g class="grid-line">
+        <line x1="100" y1="0" x2="100" y2="500" /><line x1="200" y1="0" x2="200" y2="500" />
+        <line x1="300" y1="0" x2="300" y2="500" /><line x1="400" y1="0" x2="400" y2="500" />
+        <line x1="0" y1="100" x2="500" y2="100" /><line x1="0" y1="200" x2="500" y2="200" />
+        <line x1="0" y1="300" x2="500" y2="300" /><line x1="0" y1="400" x2="500" y2="400" />
+      </g>
+      <g class="wall">
+        <rect x="0" y="0" width="100" height="100" /><rect x="100" y="0" width="100" height="100" />
+        <rect x="200" y="0" width="100" height="100" /><rect x="300" y="0" width="100" height="100" />
+        <rect x="400" y="0" width="100" height="100" /><rect x="400" y="100" width="100" height="100" />
+        <rect x="400" y="200" width="100" height="100" /><rect x="400" y="300" width="100" height="100" />
+        <rect x="400" y="400" width="100" height="100" />
+      </g>
+      <g transform="translate(150, 350)">
+        <circle cx="0" cy="0" r="12" class="player" />
+        <text x="0" y="35" class="label coord-label">(1.5, 3.5)</text>
+      </g>
+      <g class="label">
+        <text x="50" y="-25">0</text><text x="150" y="-25">1</text><text x="250" y="-25">2</text>
+        <text x="350" y="-25">3</text><text x="450" y="-25">4</text><text x="-25" y="50">0</text>
+        <text x="-25" y="150">1</text><text x="-25" y="250">2</text><text x="-25" y="350">3</text>
+        <text x="-25" y="450">4</text>
+      </g>
+    </g>
+  </defs>
+
+  <!-- GRID 1: Visualization of Initial Distances -->
+  <g id="grid-1-distances">
+    <text class="title" x="250" y="550">1. Initial Calculation</text>
+    <use href="#dda-grid-base" x="0" y="0" />
+    
+    <!-- Ray and Target -->
+    <line class="ray" x1="150" y1="350" x2="450" y2="0" stroke-dasharray="5 5" opacity="0.5"/>
+    <g class="target-marker" transform="translate(450, 0)">
+       <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
+    </g>
+
+    <!-- sideDist visualization -->
+    <g id="sidedist-viz">
+      <!-- sideDist.x -->
+      <polyline class="dist-line side-dist-x" points="150,350 200,350 200,291.7" />
+      <text class="dist-label" fill="#800080" x="180" y="370">sideDist.x</text>
+      <!-- sideDist.y -->
+      <polyline class="dist-line side-dist-y" points="150,350 150,300 192.8,300" />
+      <text class="dist-label" fill="#008080" x="110" y="325">sideDist.y</text>
+    </g>
+
+    <!-- deltaDist visualization -->
+    <g id="deltadist-viz">
+      <!-- deltaDist.x -->
+      <line class="dist-line delta-dist-x" x1="200" y1="291.7" x2="300" y2="175" marker-end="url(#arrow-purple)"/>
+      <text class="dist-label" fill="#800080" x="275" y="245">deltaDist.x</text>
+      <!-- deltaDist.y -->
+      <line class="dist-line delta-dist-y" x1="192.8" y1="300" x2="278.6" y2="200" marker-end="url(#arrow-teal)"/>
+      <text class="dist-label" fill="#008080" x="210" y="260">deltaDist.y</text>
+    </g>
+  </g>
+
+  <!-- GRID 2: The DDA Loop in Action -->
+  <g id="grid-2-loop" transform="translate(600, 0)">
+    <text class="title" x="250" y="550">2. DDA Step-by-Step</text>
+    <use href="#dda-grid-base" x="0" y="0" />
+    
+    <!-- Show the ray stepping through grid lines until it hits -->
+    <polyline class="ray" fill="none" points="150,350 192.8,300 200,291.7 278.6,200 300,175 364.3,100" />
+    <circle class="hit-point" cx="364.3" cy="100" r="8"/>
+
+    <!-- Dots at each intersection -->
+    <circle fill="#ff4136" cx="192.8" cy="300" r="4"/>
+    <circle fill="#ff4136" cx="200" cy="291.7" r="4"/>
+    <circle fill="#ff4136" cx="278.6" cy="200" r="4"/>
+    <circle fill="#ff4136" cx="300" cy="175" r="4"/>
+  </g>
+
+</svg>

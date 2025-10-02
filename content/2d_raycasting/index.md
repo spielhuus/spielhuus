@@ -1,5 +1,5 @@
 +++
-title = '2D Raycasting with WebGPU'
+title = '2D Raycasting'
 description = 'A creative coding exercise demonstrating 2D raycasting from a moving particle, with calculations offloaded to the GPU using the WebGPU API.'
 date = 2025-09-21T12:35:00+02:00
 draft = false

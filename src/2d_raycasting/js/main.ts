@@ -13,12 +13,12 @@ const CIRCLE_RADIUS = 30;
 class WebGPURaycaster {
   walls: { start: Vector2, end: Vector2, color: string }[];
   position: Vector2;
-  acceleration = new Vector2(0, 0);
+  acceleration = new Vector2();
   velocity: Vector2;
   theta = 0;
   maxSpeed = 2;
-  circleCenter = new Vector2(0, 0);
-  target = new Vector2(0, 0);
+  circleCenter = new Vector2();
+  target = new Vector2();
   black: string;
   orange: string;
   yellow: string;
@@ -102,14 +102,14 @@ class WebGPURaycaster {
       if (wall.color != TRANSPARENT) {
         const p1 = wall.start;
         const p2 = wall.end;
-        const direction = p2.sub(p1).norm();
+        const direction = p2.clone().sub(p1).norm();
         const normal = new Vector2(-direction.y, direction.x);
-        const thicknessVector = normal.mul_scalar(WALL_THICKNESS / 2.0);
+        const thicknessVector = normal.mulScalar(WALL_THICKNESS / 2.0);
 
-        const v1 = p1.add(thicknessVector); // Top-left
-        const v2 = p2.add(thicknessVector); // Top-right
-        const v3 = p1.sub(thicknessVector); // Bottom-left
-        const v4 = p2.sub(thicknessVector); // Bottom-right
+        const v1 = p1.clone().add(thicknessVector); // Top-left
+        const v2 = p2.clone().add(thicknessVector); // Top-right
+        const v3 = p1.clone().sub(thicknessVector); // Bottom-left
+        const v4 = p2.clone().sub(thicknessVector); // Bottom-right
 
         wallVertices[offset++] = v3.x;
         wallVertices[offset++] = v3.y;
@@ -360,7 +360,7 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
   private calculateForce() {
 
     this.circleCenter = this.velocity.length() > 0
-      ? this.velocity.norm().mul_scalar(CIRCLE_DISTANCE)
+      ? this.velocity.norm().mulScalar(CIRCLE_DISTANCE)
       : new Vector2(CIRCLE_DISTANCE, 0);
     this.theta += (Math.random() * 2 - 1) * 0.3;
     this.target = new Vector2(
@@ -371,10 +371,10 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
   private move() {
     const wanderForce = this.circleCenter.add(this.target);
     this.acceleration = this.acceleration.add(wanderForce);
-    this.velocity = this.velocity.add(this.acceleration);
-    this.velocity = this.velocity.limit(this.maxSpeed);
-    this.position = this.position.add(this.velocity);
-    this.acceleration = this.acceleration.mul_scalar(0);
+    this.velocity.add(this.acceleration);
+    this.velocity.limit(this.maxSpeed);
+    this.position.add(this.velocity);
+    this.acceleration = this.acceleration.clone().mulScalar(0);
 
     if (this.position.x > WIDTH) this.position.x = 0;
     if (this.position.x < 0) this.position.x = WIDTH;
@@ -389,7 +389,7 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
     this.moverCtx.clearRect(0, 0, this.moverCanvas.width, this.moverCanvas.height);
     // draw the mover
     this.moverCtx.moveTo(...this.position.array());
-    const endPoint = this.position.add(this.circleCenter);
+    const endPoint = this.position.clone().add(this.circleCenter);
     const dx = endPoint.x - this.position.x;
     const dy = endPoint.y - this.position.y;
     const angle = Math.atan2(dy, dx);
@@ -410,20 +410,20 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
     this.moverCtx.lineWidth = 2;
     this.moverCtx.beginPath();
     this.moverCtx.moveTo(...this.position.array());
-    this.moverCtx.lineTo(...this.position.add(this.circleCenter).array());
+    this.moverCtx.lineTo(...this.position.clone().add(this.circleCenter).array());
     this.moverCtx.stroke();
 
     this.moverCtx.strokeStyle = this.darkorange;
     this.moverCtx.lineWidth = 1;
     this.moverCtx.beginPath();
-    this.moverCtx.arc(...this.position.add(this.circleCenter).array(), CIRCLE_RADIUS, 0, Math.PI * 2);
+    this.moverCtx.arc(...this.position.clone().add(this.circleCenter).array(), CIRCLE_RADIUS, 0, Math.PI * 2);
     this.moverCtx.stroke();
 
     this.moverCtx.fillStyle = this.yellow;
     this.moverCtx.strokeStyle = this.yellow;
     this.moverCtx.lineWidth = 1;
     this.moverCtx.beginPath();
-    this.moverCtx.arc(...this.position.add(this.circleCenter).add(this.target).array(), 4, 0, Math.PI * 2);
+    this.moverCtx.arc(...this.position.clone().add(this.circleCenter).add(this.target).array(), 4, 0, Math.PI * 2);
     this.moverCtx.fill();
     this.moverCtx.stroke();
     this.moverCtx.restore();
@@ -432,7 +432,6 @@ fn fs_rays_main() -> @location(0) vec4<f32> {
   drawWalls() {
     this.wallCtx.clearRect(0, 0, this.wallCanvas.width, this.wallCanvas.height);
     for (let line of this.walls) {
-
       if (line.color != TRANSPARENT) {
         this.wallCtx.strokeStyle = this.black;
         this.wallCtx.lineCap = 'round';
