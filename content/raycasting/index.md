@@ -172,3 +172,11 @@ Now we can draw the 3d scene.
   <canvas id="wall-canvas" tabindex="0"></canvas>
 </figure>
 
+## Add Textures to the walls
+
+Now we can draw the 3d scene. 
+
+<figure>
+  <canvas id="final-canvas" tabindex="0"></canvas>
+</figure>
+

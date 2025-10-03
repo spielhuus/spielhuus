@@ -9,6 +9,16 @@ export class Vector2 {
   public static max(): Vector2 {
     return new Vector2(Number.MAX_VALUE, Number.MAX_VALUE);
   }
+  copy(other: Vector2): this {
+    this.x = other.x;
+    this.y = other.y;
+    return this;
+  }
+  set(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+    return this;
+  }
   add(that: Vector2): Vector2 {
     this.x += that.x;
     this.y += that.y;
@@ -46,7 +56,7 @@ export class Vector2 {
     return this;
   }
   norm(): Vector2 {
-    return this.divScalar( this.length() || 1 );
+    return this.divScalar(this.length() || 1);
   }
   length(): number {
     return Math.sqrt(this.x * this.x + this.y * this.y);

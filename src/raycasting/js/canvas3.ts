@@ -31,7 +31,14 @@ export class Canvas3 {
   lastTime = 0;
   maxVisibleDistance = 10.0;
   minBrightness = 0.1;
+  isActive = false;
+  private renderCanvas: HTMLCanvasElement;
+  private renderCtx: CanvasRenderingContext2D;
   constructor(private canvas: HTMLCanvasElement, private ctx: CanvasRenderingContext2D, private options: DrawOptions) {
+    this.renderCanvas = document.createElement('canvas');
+    this.renderCanvas.width = SCREEN_WIDTH;
+    this.renderCanvas.height = SCREEN_HEIGHT;
+    this.renderCtx = this.renderCanvas.getContext('2d')!;
     canvas.addEventListener('keydown', (event: KeyboardEvent) => {
       this.keyPressed = event.code;
     });
@@ -43,35 +50,35 @@ export class Canvas3 {
     this.imageData = this.ctx.createImageData(SCREEN_WIDTH, SCREEN_HEIGHT);
   }
 
-  public async draw(currentTime: number) {
+  public draw(currentTime: number) {
+    console.log("draw canvas3");
+
     if (this.lastTime === 0) {
       this.lastTime = currentTime / 1000;
     }
 
     const deltaTime = currentTime / 1000 - this.lastTime;
 
-    const ceilingColor = [52, 152, 219, 255]; // A nice sky blue
-    const floorColor = [46, 64, 83, 255];     // A dark gray/brown
-    // this.ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    // draw the direction arrow
     const dir = this.player.dir.clone().norm();
     const plane = new Vector2(-dir.y, dir.x).mulScalar(0.66);
 
+    let rayDir = new Vector2();
+    const playerMapPos = new Vector2(Math.floor(this.player.pos.x), Math.floor(this.player.pos.y));
+    let mapPos = new Vector2();
+    const deltaDist = new Vector2();
+    let sideDist = new Vector2();
+    let step = new Vector2();
+    let target = new Vector2();
+
     for (let x = 0; x < SCREEN_WIDTH; x++) {
-      //calculate ray position and direction
       let cameraX = 2 * x / SCREEN_WIDTH - 1; //x-coordinate in camera space
-      const rayDir = dir.clone().add(plane.clone().mulScalar(cameraX));
-      const mapPos = new Vector2(Math.floor(this.player.pos.x), Math.floor(this.player.pos.y));
-      const deltaDist = new Vector2(
+      rayDir.copy(dir.clone().add(plane.clone().mulScalar(cameraX)));
+      mapPos.copy(playerMapPos);
+      deltaDist.set(
         (rayDir.x == 0) ? 1e30 : Math.abs(1 / rayDir.x),
         (rayDir.y == 0) ? 1e30 : Math.abs(1 / rayDir.y),
       );
 
-      let sideDist = new Vector2();
-      let step = new Vector2();
-
-      //calculate step and initial sideDist
       if (rayDir.x < 0) {
         step.x = -1;
         sideDist.x = (this.player.pos.x - mapPos.x) * deltaDist.x;
@@ -95,15 +102,14 @@ export class Canvas3 {
       //perform DDA
       while (!hit) {
 
-        let target;
         if (sideDist.x <= sideDist.y) {
-          target = rayDir.clone().mulScalar(sideDist.x);
+          target.copy(rayDir.clone().mulScalar(sideDist.x));
           sideDist.x += deltaDist.x;
           mapPos.x += step.x;
           side = 0;
         }
         else {
-          target = rayDir.clone().mulScalar(sideDist.y);
+          target.copy(rayDir.clone().mulScalar(sideDist.y));
           sideDist.y += deltaDist.y;
           mapPos.y += step.y;
           side = 1;
@@ -151,44 +157,27 @@ export class Canvas3 {
       // draw the ceiling
       for (let y = 0; y < wallStart; y++) {
         const index = (y * SCREEN_WIDTH + x) * 4;
-        data[index] = ceilingColor[0];
-        data[index + 1] = ceilingColor[1];
-        data[index + 2] = ceilingColor[2];
-        data[index + 3] = ceilingColor[3];
+        data[index] = this.options.ceilingColor[0];
+        data[index + 1] = this.options.ceilingColor[1];
+        data[index + 2] = this.options.ceilingColor[2];
+        data[index + 3] = this.options.ceilingColor[3];
       }
 
       // draw line column
-      //
       if (hit) {
-        let color = undefined;
-        switch (this.map.data[mapPos.y][mapPos.x]) {
-          case 1:
-            color = [255, 0, 0, 255];
-            break;
-          case 2:
-            color = [0, 255, 0, 255];
-            break;
-          case 3:
-            color = [0, 0, 255, 255];
-            break;
-          case 4:
-            color = [255, 0, 255, 255];
-            break;
-          default:
-            throw `undefined color: ${this.map.data[mapPos.y][mapPos.x]}`;
-        }
+        let color = this.options.wallColors[this.map.data[mapPos.y][mapPos.x]];
         if (color !== undefined) {
 
           let brightness = 1.0 - (perpWallDist / this.maxVisibleDistance);
           brightness = Math.max(brightness, this.minBrightness);
-          brightness = Math.min(brightness, 1.0); // Safety clamp
+          brightness = Math.min(brightness, 1.0);
           if (side === 1) {
-            brightness *= 0.7; // Make N/S walls 30% darker
+            brightness *= 0.7;
           }
 
-           if (side === 1) {
-            brightness *= 0.7; // Make N/S walls 30% darker
-            }
+          if (side === 1) {
+            brightness *= 0.7;
+          }
 
           const shadedColor = [
             Math.floor(color[0] * brightness),
@@ -199,31 +188,33 @@ export class Canvas3 {
 
           for (let y = wallStart; y < wallEnd; y++) {
             const index = (y * SCREEN_WIDTH + x) * 4;
-            data[index] = shadedColor[0];   // Red
-            data[index + 1] = shadedColor[1];   // Green
-            data[index + 2] = shadedColor[2];   // Blue
-            data[index + 3] = shadedColor[3];   // Alpha (transparency)
+            data[index + 0] = shadedColor[0];
+            data[index + 1] = shadedColor[1];
+            data[index + 2] = shadedColor[2];
+            data[index + 3] = shadedColor[3];
           }
         }
       }
       //draw the floor
       for (let y = wallEnd; y < SCREEN_HEIGHT; y++) {
         const index = (y * SCREEN_WIDTH + x) * 4;
-        data[index] = floorColor[0];
-        data[index + 1] = floorColor[1];
-        data[index + 2] = floorColor[2];
-        data[index + 3] = floorColor[3];
+        data[index] = this.options.floorColor[0];
+        data[index + 1] = this.options.floorColor[1];
+        data[index + 2] = this.options.floorColor[2];
+        data[index + 3] = this.options.floorColor[3];
       }
     }
 
-    const imageBitmap = await createImageBitmap(this.imageData);
-    // this.ctx.imageSmoothingEnabled = false; //TODO: really?
-    this.ctx.drawImage(imageBitmap, 0, 0, this.canvas.width, this.canvas.height);
-    imageBitmap.close();
+    this.renderCtx.putImageData(this.imageData, 0, 0);
+    this.ctx.drawImage(
+      this.renderCanvas,
+      0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
+      0, 0, this.canvas.width, this.canvas.height
+    );
 
     if (this.keyPressed) {
-      let moveSpeed = deltaTime * 10.0; //the constant value is in squares/second
-      let rotSpeed = deltaTime * 70.0; //the constant value is in radians/second
+      let moveSpeed = deltaTime * 10.0;
+      let rotSpeed = deltaTime * 200.0;
       switch (this.keyPressed) {
         case 'KeyW':
         case 'KeyS': { // Combine W and S logic
@@ -251,7 +242,19 @@ export class Canvas3 {
           break;
       }
     }
+
+    this.ctx.font = this.options.title_text_font;
+    this.ctx.fillStyle =this.options.title_text_style; 
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillText(`${Math.round(1 / (currentTime / 1000 - this.lastTime))} FPS`, 10, 10);
     this.lastTime = currentTime / 1000;
-    requestAnimationFrame((dt) => { this.draw(dt) });
+
+    if (!this.isActive) {
+      this.ctx.fillStyle = this.options.pause_color;
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillText("click to start", this.canvas.width / 2 - 20, this.canvas.height / 2);
+    } else {
+      requestAnimationFrame((dt) => { this.draw(dt) });
+    }
   }
 }
