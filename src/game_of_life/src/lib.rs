@@ -166,14 +166,7 @@ impl State {
         info!("AdapterDescriptor: {:#?}", adapter);
 
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor {
-                label: None,
-                required_features: wgpu::Features::empty(),
-                required_limits: wgpu::Limits::default(),
-                memory_hints: Default::default(),
-                trace: wgpu::Trace::Off,
-            })
-            .await?;
+            .request_device(&wgpu::DeviceDescriptor::default()).await?;
 
         let surface_caps = surface.get_capabilities(&adapter);
 

@@ -23,7 +23,12 @@ anyhow = "1.0"
 rand = "0.9"
 winit = { version = "0.30", default-features = false, features = ["rwh_06", "wayland"]  }
 log = "0.4"
-wgpu = { version = "26.0.1", features = ["wgsl"] }
+wgpu = { version = "27.0.1", features = ["wgsl"] }
 pollster = "0.4"
-bytemuck = { version = "1.23", features = [ "derive" ] }
+bytemuck = { version = "1.24", features = [ "derive" ] }
 env_logger = "0.11"
+softbuffer = "0.4"
+raw-window-handle = "0.6"
+
+#TODO decide on one math library
+mint= "0.5"

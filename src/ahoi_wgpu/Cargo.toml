@@ -9,22 +9,22 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 anyhow = "1.0"
-winit = { version = "0.30" }
-log = "0.4"
-wgpu = "26.0.1"
-pollster = "0.4"
-bytemuck = { version = "1.23", features = [ "derive" ] }
+winit.workspace = true
+log.workspace = true
+wgpu.workspace = true
+pollster.workspace = true
+bytemuck = { workspace = true, features = [ "derive" ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.11"
+env_logger.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"
 console_log = "1.0"
-wgpu = { version = "26.0.1", features = ["webgl"]}
+wgpu = { workspace = true, features = ["webgl"]}
 wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4.50"
-web-sys = { version = "0.3.77", features = [
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
     "Performance",
     "Document",
     "Window",

@@ -166,7 +166,68 @@ for(let x = 0; x < WIDTH; x++)
 
 ## Draw the 3d scene
 
-Now we can draw the 3d scene. 
+For drawing the walls as a 3D scene we iterate over the x coordinates and draw 'stripes' for each column. 
+The column is drawn with the color of the brick in the map. the height is calculated by the perpendicular
+width from the player to the wall. to get the best performance we use a Image and set the pixels per column.
+
+to get the height 
+
+```typescript
+if (hit) {
+
+//draw the walls
+let texNum = this.map.data[mapPos.y][mapPos.x] - 1;
+
+const texture = this.textures[texNum];
+const texWidth = texture.width;
+const texHeight = texture.height;
+
+let wallX;
+
+if (side == 0) wallX = this.player.pos.y + perpWallDist * rayDir.y;
+else wallX = this.player.pos.x + perpWallDist * rayDir.x;
+wallX -= Math.floor((wallX));
+
+let texX = Math.floor(wallX * texWidth);
+if (side == 0 && rayDir.x > 0) texX = texWidth - texX - 1;
+if (side == 1 && rayDir.y < 0) texX = texWidth - texX - 1;
+
+const step = 1.0 * texHeight / wallHeight;
+
+const drawStart = -wallHeight / 2 + SCREEN_HEIGHT / 2;
+let texPos = (drawStart - SCREEN_HEIGHT / 2 + wallHeight / 2) * step;
+
+const wallStart = Math.max(0, Math.floor(drawStart));
+const wallEnd = Math.min(SCREEN_HEIGHT, Math.floor(wallHeight / 2 + SCREEN_HEIGHT / 2));
+
+if (drawStart < 0) {
+  texPos += -drawStart * step;
+}
+
+for (let y = wallStart; y < wallEnd; y++) {
+  let texY = Math.floor(texPos) % texHeight;
+  texPos += step;
+
+  let brightness = 1.0 - (perpWallDist / this.maxVisibleDistance);
+  brightness = Math.max(brightness, this.minBrightness);
+  brightness = Math.min(brightness, 1.0);
+  if (side === 1) {
+    brightness *= 0.7;
+  }
+
+  if (side === 1) {
+    brightness *= 0.7;
+  }
+
+  const texIndex = (texY * texWidth + texX) * 4;
+  const screenIndex = (y * SCREEN_WIDTH + x) * 4;
+  data[screenIndex] = texture.data[texIndex] * brightness;     // R
+  data[screenIndex + 1] = texture.data[texIndex + 1] * brightness; // G
+  data[screenIndex + 2] = texture.data[texIndex + 2] * brightness; // B
+  data[screenIndex + 3] = texture.data[texIndex + 3] * brightness; // A
+}
+}
+```
 
 <figure>
   <canvas id="wall-canvas" tabindex="0"></canvas>
@@ -174,7 +235,8 @@ Now we can draw the 3d scene.
 
 ## Add Textures to the walls
 
-Now we can draw the 3d scene. 
+when drawing the textures we simply copy the pixels from a texture and 
+copy the the color to the screen.
 
 <figure>
   <canvas id="final-canvas" tabindex="0"></canvas>

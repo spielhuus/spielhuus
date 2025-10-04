@@ -8,13 +8,13 @@ license = "MIT"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-winit = "0.30"
-env_logger = "0.11"
-log = "0.4"
-softbuffer = "0.4"
-raw-window-handle = "0.6"
+winit.workspace = true
+env_logger.workspace = true
+log.workspace = true
+softbuffer.workspace = true
+raw-window-handle.workspace = true
 rand.workspace = true
-mint = "0.5"
+mint.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.3", features = ["wasm_js"] }

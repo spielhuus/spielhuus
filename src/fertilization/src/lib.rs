@@ -477,17 +477,17 @@ impl State {
             .await?;
 
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor {
-                label: None,
-                required_features: wgpu::Features::empty(),
-                required_limits: if cfg!(target_arch = "wasm32") {
-                    wgpu::Limits::downlevel_webgl2_defaults()
-                } else {
-                    wgpu::Limits::default()
-                },
-                memory_hints: Default::default(),
-                trace: wgpu::Trace::Off,
-            })
+            .request_device(&wgpu::DeviceDescriptor::default()) // {
+            //     label: None,
+            //     required_features: wgpu::Features::empty(),
+            //     required_limits: if cfg!(target_arch = "wasm32") {
+            //         wgpu::Limits::downlevel_webgl2_defaults()
+            //     } else {
+            //         wgpu::Limits::default()
+            //     },
+            //     memory_hints: Default::default(),
+            //     trace: wgpu::Trace::Off,
+            // })
             .await?;
 
         let surface_caps = surface.get_capabilities(&adapter);
