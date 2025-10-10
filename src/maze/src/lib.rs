@@ -582,6 +582,7 @@ impl State {
         let start_time = web_sys::window().unwrap().performance().unwrap().now();
 
         let size = window.inner_size();
+        let is_surface_configured = size.width > 0 && size.height > 0; 
         let board = Board::new(BORDER, INITIAL_CELL_COUNT, 5); //TODO: is the cell size used?
         let solver = Box::new(solver::djikstra::Djikstra::new(&board));
         let generator = Box::new(Backtracking::new());
@@ -608,30 +609,27 @@ impl State {
             .await?;
 
         let surface_caps = surface.get_capabilities(&adapter);
-        // let selected_format = wgpu::TextureFormat::Bgra8UnormSrgb;
-        // let swapchain_format = surface_caps
-        //     .formats
-        //     .iter()
-        //     .find(|d| **d == selected_format)
-        //     .expect("failed to select proper surface texture format!");
         let surface_format = surface_caps
             .formats
             .iter()
             .copied()
-            .find(|f| f.is_srgb()) // Prefer sRGB
+            .find(|f| f.is_srgb()) 
             .unwrap_or(surface_caps.formats[0]);
+
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::Fifo, //surface_caps.present_modes[0],
+            present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };
 
-        surface.configure(&device, &config);
+        if is_surface_configured {
+            surface.configure(&device, &config);
+        }
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
@@ -745,7 +743,7 @@ impl State {
             device,
             queue,
             config,
-            is_surface_configured: true,
+            is_surface_configured,
             render_pipeline,
             window,
             maze_buffer,
@@ -777,6 +775,11 @@ impl State {
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+
+        if !self.is_surface_configured {
+            return Ok(());
+        }
+
         // update maze state
         let mut needs_next_frame = false;
         let mut maze_updated = false;
