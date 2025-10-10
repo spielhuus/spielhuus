@@ -1,8 +1,8 @@
 use rand::prelude::*;
 
-use crate::{Board, CURSOR_COLOR, Generator, State};
+use crate::{Board, Generator, MazeState};
 
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::raylib;
 
 #[derive(Debug)]
 struct FreeCell {
@@ -48,17 +48,19 @@ impl Prim {
 }
 
 impl Generator for Prim {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         let index = self.rng.random_range(0..self.cells.len());
         let item = self.cells.remove(index);
 
         // remove wall
         board.remove_wall(item.index, item.neighbor);
+        board.cells[item.index].cursor = false;
 
         // calc next cells
         let neighbors: Vec<usize> = board.neighbors(item.index).into_iter().flatten().collect();
         for n in &neighbors {
             if !self.contains(n) {
+                board.cells[*n].cursor = true;
                 self.cells.push(FreeCell {
                     index: *n,
                     neighbor: item.index,
@@ -69,21 +71,21 @@ impl Generator for Prim {
         self.visited.push(item.index);
 
         if self.cells.is_empty() {
-            State::GenerationDone
+            MazeState::GenerationDone
         } else {
-            State::Generate
+            MazeState::Generate
         }
     }
 
     fn draw(&self, board: &Board) {
-        // draw the next cells
-        for i in &self.cells {
-            raylib::DrawCircle(
-                (board.x + board.cells[i.index].x * board.cell_size + board.cell_size / 2) as i32,
-                (board.y + board.cells[i.index].y * board.cell_size + board.cell_size / 2) as i32,
-                board.cell_size as f32 / 5.0,
-                CURSOR_COLOR,
-            );
-        }
+        // // draw the next cells
+        // for i in &self.cells {
+        //     raylib::DrawCircle(
+        //         (board.x + board.cells[i.index].x * board.cell_size + board.cell_size / 2) as i32,
+        //         (board.y + board.cells[i.index].y * board.cell_size + board.cell_size / 2) as i32,
+        //         board.cell_size as f32 / 5.0,
+        //         CURSOR_COLOR,
+        //     );
+        // }
     }
 }

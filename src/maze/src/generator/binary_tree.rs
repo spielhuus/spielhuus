@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, State};
+use crate::{Board, Generator, MazeState};
 
 pub const BOOL_TRUE_PROBABILITY: f64 = 0.5;
 
@@ -22,9 +22,9 @@ impl BinaryTree {
 }
 
 impl Generator for BinaryTree {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         if self.x >= board.board_size - 1 && self.y >= board.board_size - 1 {
-            return State::GenerationDone;
+            return MazeState::GenerationDone;
         }
 
         let east = if self.x == board.board_size - 1 {
@@ -50,7 +50,7 @@ impl Generator for BinaryTree {
         } else {
             self.x += 1;
         }
-        State::Generate
+        MazeState::Generate
     }
 
     fn draw(&self, _board: &Board) {}

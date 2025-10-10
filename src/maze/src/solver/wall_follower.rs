@@ -1,4 +1,4 @@
-use crate::{Board, Cell, Direction, Solver, State};
+use crate::{Board, Cell, Direction, Solver, MazeState};
 
 const LINE_WIDTH: f32 = 1.0;
 
@@ -16,20 +16,23 @@ impl Wall {
 pub struct WallFollower {
     end: usize,
     pub path: Vec<usize>,
+    pub walk_path: Vec<usize>,
     walls: Vec<Wall>,
     direction: Direction,
     distance: usize,
 }
 
-use raylib_egui_rs::color::Color;
-use raylib_egui_rs::math::*;
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::color::Color;
+// use raylib_egui_rs::math::*;
+// use raylib_egui_rs::raylib;
 
 impl WallFollower {
     pub fn new(board: &Board) -> Self {
+        println!("WallFollower::new, board size: {}", board.board_size);
         Self {
             end: board.get_index(board.board_size - 1, board.board_size - 1),
             path: vec![0],
+            walk_path: vec![0],
             walls: vec![Wall::new(Direction::East, 0)],
             direction: Direction::East,
             distance: 4,
@@ -99,14 +102,16 @@ impl WallFollower {
             }
         }
     }
+
 }
 
 impl Solver for WallFollower {
-    fn step(&mut self, board: &Board) -> Result<State, String> {
-        let index = *self.path.last().unwrap();
+    fn step(&mut self, board: &mut Board) -> Result<MazeState, String> {
+        let index = *self.walk_path.last().unwrap();
         if index == self.end {
+            println!("collect the path");
             let mut clean_path: Vec<usize> = Vec::new();
-            for path in &self.path {
+            for path in &self.walk_path {
                 if clean_path.len() > 2 && clean_path.get(clean_path.len() - 2).unwrap() == path {
                     clean_path.pop();
                 } else if clean_path.is_empty() || clean_path.last().unwrap() != path {
@@ -114,7 +119,7 @@ impl Solver for WallFollower {
                 }
             }
             self.path = clean_path;
-            return Ok(State::Done);
+            return Ok(MazeState::Done);
         }
 
         let current = &board.cells[index];
@@ -122,116 +127,117 @@ impl Solver for WallFollower {
         if self.wall_left(current) {
             if self.front_wall(current) {
                 self.walls
-                    .push(Wall::new(self.direction, *self.path.last().unwrap()));
+                    .push(Wall::new(self.direction, *self.walk_path.last().unwrap()));
                 self.rotate_cw();
                 self.walls
-                    .push(Wall::new(self.direction, *self.path.last().unwrap()));
+                    .push(Wall::new(self.direction, *self.walk_path.last().unwrap()));
             }
             let new_cell = self.fwd(board, current);
             self.walls
-                .push(Wall::new(self.direction, *self.path.last().unwrap()));
-            self.path.push(new_cell);
+                .push(Wall::new(self.direction, *self.walk_path.last().unwrap()));
+            self.walk_path.push(new_cell);
         } else {
             self.rotate_ccw();
             let new_cell = self.fwd(board, current);
-            self.path.push(new_cell);
+            self.walk_path.push(new_cell);
         }
 
-        Ok(State::Solve)
+        Ok(MazeState::Solve)
     }
 
     fn get_path(&self) -> &Vec<usize> {
         &self.path
+
     }
 
     fn draw(&self, board: &Board) {
-        for wall in &self.walls {
-            match wall.direction {
-                Direction::East => {
-                    raylib::DrawLineEx(
-                        Vector2 {
-                            x: (board.x + board.cells[wall.cell].x * board.cell_size) as f32,
-                            y: (board.y
-                                + board.cells[wall.cell].y * board.cell_size
-                                + self.distance) as f32,
-                        },
-                        Vector2 {
-                            x: (board.x
-                                + board.cells[wall.cell].x * board.cell_size
-                                + board.cell_size) as f32,
-                            y: (board.y
-                                + board.cells[wall.cell].y * board.cell_size
-                                + self.distance) as f32,
-                        },
-                        LINE_WIDTH,
-                        Color::RED,
-                    );
-                }
-                Direction::West => {
-                    raylib::DrawLineEx(
-                        Vector2 {
-                            x: (board.x + board.cells[wall.cell].x * board.cell_size) as f32,
-                            y: (board.y
-                                + board.cells[wall.cell].y * board.cell_size
-                                + board.cell_size
-                                - self.distance) as f32,
-                        },
-                        Vector2 {
-                            x: (board.x
-                                + board.cells[wall.cell].x * board.cell_size
-                                + board.cell_size) as f32,
-                            y: (board.y
-                                + board.cells[wall.cell].y * board.cell_size
-                                + board.cell_size
-                                - self.distance) as f32,
-                        },
-                        LINE_WIDTH,
-                        Color::RED,
-                    );
-                }
-                Direction::South => {
-                    raylib::DrawLineEx(
-                        Vector2 {
-                            x: (board.x
-                                + board.cells[wall.cell].x * board.cell_size
-                                + board.cell_size
-                                - self.distance) as f32,
-                            y: (board.y + board.cells[wall.cell].y * board.cell_size) as f32,
-                        },
-                        Vector2 {
-                            x: (board.x
-                                + board.cells[wall.cell].x * board.cell_size
-                                + board.cell_size
-                                - self.distance) as f32,
-                            y: (board.y
-                                + board.cells[wall.cell].y * board.cell_size
-                                + board.cell_size) as f32,
-                        },
-                        LINE_WIDTH,
-                        Color::RED,
-                    );
-                }
-                Direction::North => {
-                    raylib::DrawLineEx(
-                        Vector2 {
-                            x: (board.x
-                                + board.cells[wall.cell].x * board.cell_size
-                                + self.distance) as f32,
-                            y: (board.y + board.cells[wall.cell].y * board.cell_size) as f32,
-                        },
-                        Vector2 {
-                            x: (board.x
-                                + board.cells[wall.cell].x * board.cell_size
-                                + self.distance) as f32,
-                            y: (board.y
-                                + board.cells[wall.cell].y * board.cell_size
-                                + board.cell_size) as f32,
-                        },
-                        LINE_WIDTH,
-                        Color::RED,
-                    );
-                }
-            }
-        }
+        // for wall in &self.walls {
+        //     match wall.direction {
+        //         Direction::East => {
+        //             raylib::DrawLineEx(
+        //                 Vector2 {
+        //                     x: (board.x + board.cells[wall.cell].x * board.cell_size) as f32,
+        //                     y: (board.y
+        //                         + board.cells[wall.cell].y * board.cell_size
+        //                         + self.distance) as f32,
+        //                 },
+        //                 Vector2 {
+        //                     x: (board.x
+        //                         + board.cells[wall.cell].x * board.cell_size
+        //                         + board.cell_size) as f32,
+        //                     y: (board.y
+        //                         + board.cells[wall.cell].y * board.cell_size
+        //                         + self.distance) as f32,
+        //                 },
+        //                 LINE_WIDTH,
+        //                 Color::RED,
+        //             );
+        //         }
+        //         Direction::West => {
+        //             raylib::DrawLineEx(
+        //                 Vector2 {
+        //                     x: (board.x + board.cells[wall.cell].x * board.cell_size) as f32,
+        //                     y: (board.y
+        //                         + board.cells[wall.cell].y * board.cell_size
+        //                         + board.cell_size
+        //                         - self.distance) as f32,
+        //                 },
+        //                 Vector2 {
+        //                     x: (board.x
+        //                         + board.cells[wall.cell].x * board.cell_size
+        //                         + board.cell_size) as f32,
+        //                     y: (board.y
+        //                         + board.cells[wall.cell].y * board.cell_size
+        //                         + board.cell_size
+        //                         - self.distance) as f32,
+        //                 },
+        //                 LINE_WIDTH,
+        //                 Color::RED,
+        //             );
+        //         }
+        //         Direction::South => {
+        //             raylib::DrawLineEx(
+        //                 Vector2 {
+        //                     x: (board.x
+        //                         + board.cells[wall.cell].x * board.cell_size
+        //                         + board.cell_size
+        //                         - self.distance) as f32,
+        //                     y: (board.y + board.cells[wall.cell].y * board.cell_size) as f32,
+        //                 },
+        //                 Vector2 {
+        //                     x: (board.x
+        //                         + board.cells[wall.cell].x * board.cell_size
+        //                         + board.cell_size
+        //                         - self.distance) as f32,
+        //                     y: (board.y
+        //                         + board.cells[wall.cell].y * board.cell_size
+        //                         + board.cell_size) as f32,
+        //                 },
+        //                 LINE_WIDTH,
+        //                 Color::RED,
+        //             );
+        //         }
+        //         Direction::North => {
+        //             raylib::DrawLineEx(
+        //                 Vector2 {
+        //                     x: (board.x
+        //                         + board.cells[wall.cell].x * board.cell_size
+        //                         + self.distance) as f32,
+        //                     y: (board.y + board.cells[wall.cell].y * board.cell_size) as f32,
+        //                 },
+        //                 Vector2 {
+        //                     x: (board.x
+        //                         + board.cells[wall.cell].x * board.cell_size
+        //                         + self.distance) as f32,
+        //                     y: (board.y
+        //                         + board.cells[wall.cell].y * board.cell_size
+        //                         + board.cell_size) as f32,
+        //                 },
+        //                 LINE_WIDTH,
+        //                 Color::RED,
+        //             );
+        //         }
+        //     }
+        // }
     }
 }

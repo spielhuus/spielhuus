@@ -1,10 +1,10 @@
 use rand::{distr::StandardUniform, prelude::*};
 
-use crate::{Board, Direction, Solver, State, path};
+use crate::{Board, Direction, Solver, MazeState};
 use genetic::{GenotypeInitializer, Phenotype, Population, crossover};
 
-use raylib_egui_rs::color::Color;
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::color::Color;
+// use raylib_egui_rs::raylib;
 
 const POPULATION_SIZE: usize = 1000;
 const MUTATION_RATE: f64 = 0.02;
@@ -270,7 +270,7 @@ impl Genetic<PathEvolver> {
 }
 
 impl Solver for Genetic<PathEvolver> {
-    fn step(&mut self, board: &Board) -> Result<State, String> {
+    fn step(&mut self, board: &mut Board) -> Result<MazeState, String> {
         self.population.for_each_phenotype_mut(|p, genotype| {
             p.reset();
             for (step_index, current_move) in genotype.iter().enumerate() {
@@ -293,9 +293,9 @@ impl Solver for Genetic<PathEvolver> {
             .unwrap();
 
         if winner.reached_end {
-            Ok(State::Done)
+            Ok(MazeState::Done)
         } else {
-            Ok(State::Solve)
+            Ok(MazeState::Solve)
         }
     }
 
@@ -311,15 +311,15 @@ impl Solver for Genetic<PathEvolver> {
     }
 
     fn draw(&self, board: &Board) {
-        for p in self.population.get_phenotypes().iter() {
-            path::draw_path(board, &p.path, raylib::ColorFromHSV(80.0, 0.75, 1.0));
-        }
-        let winner = self
-            .population
-            .get_phenotypes()
-            .iter()
-            .max_by(|a, b| a.get_fitness().partial_cmp(&b.get_fitness()).unwrap())
-            .unwrap();
-        path::draw_path(board, &winner.path, Color::GREEN);
+    //     for p in self.population.get_phenotypes().iter() {
+    //         path::draw_path(board, &p.path, raylib::ColorFromHSV(80.0, 0.75, 1.0));
+    //     }
+    //     let winner = self
+    //         .population
+    //         .get_phenotypes()
+    //         .iter()
+    //         .max_by(|a, b| a.get_fitness().partial_cmp(&b.get_fitness()).unwrap())
+    //         .unwrap();
+    //     path::draw_path(board, &winner.path, Color::GREEN);
     }
 }

@@ -72,8 +72,8 @@ export class Canvas3 {
 
     for (let x = 0; x < SCREEN_WIDTH; x++) {
       let cameraX = 2 * x / SCREEN_WIDTH - 1; //x-coordinate in camera space
-      rayDir.copy(dir.clone().add(plane.clone().mulScalar(cameraX)));
-      mapPos.copy(playerMapPos);
+      rayDir.copyFrom(dir.clone().add(plane.clone().mulScalar(cameraX)));
+      mapPos.copyFrom(playerMapPos);
       deltaDist.set(
         (rayDir.x == 0) ? 1e30 : Math.abs(1 / rayDir.x),
         (rayDir.y == 0) ? 1e30 : Math.abs(1 / rayDir.y),
@@ -103,13 +103,13 @@ export class Canvas3 {
       while (!hit) {
 
         if (sideDist.x <= sideDist.y) {
-          target.copy(rayDir.clone().mulScalar(sideDist.x));
+          target.copyFrom(rayDir.clone().mulScalar(sideDist.x));
           sideDist.x += deltaDist.x;
           mapPos.x += step.x;
           side = 0;
         }
         else {
-          target.copy(rayDir.clone().mulScalar(sideDist.y));
+          target.copyFrom(rayDir.clone().mulScalar(sideDist.y));
           sideDist.y += deltaDist.y;
           mapPos.y += step.y;
           side = 1;

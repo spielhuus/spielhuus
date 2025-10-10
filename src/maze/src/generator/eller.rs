@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use disjoint::DisjointSet;
 use rand::prelude::*;
 
-use crate::{Board, CURSOR_COLOR, Generator, State};
+use crate::{Board, Generator, MazeState};
 
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::raylib;
 
 pub const BOOL_TRUE_PROBABILITY: f64 = 0.5;
 
@@ -39,7 +39,7 @@ impl Eller {
 }
 
 impl Generator for Eller {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         match self.state {
             IState::Merge => {
                 let cell = board.get_index(self.x, self.y);
@@ -72,7 +72,7 @@ impl Generator for Eller {
                         self.state = IState::Bottom;
                     }
                 }
-                State::Generate
+                MazeState::Generate
             }
             IState::Bottom => {
                 let cell = board.get_index(self.x, self.y);
@@ -106,7 +106,7 @@ impl Generator for Eller {
                         self.state = IState::Merge;
                     }
                 }
-                State::Generate
+                MazeState::Generate
             }
             IState::LastMerge => {
                 let cell = board.get_index(self.x, self.y);
@@ -137,7 +137,7 @@ impl Generator for Eller {
                         self.state = IState::Bottom;
                     }
                 }
-                State::Generate
+                MazeState::Generate
             }
             IState::Last => {
                 let cell = board.get_index(self.x, self.y);
@@ -161,17 +161,17 @@ impl Generator for Eller {
                     }
                     self.row.clear();
                 }
-                State::GenerationDone
+                MazeState::GenerationDone
             }
         }
     }
 
     fn draw(&self, board: &Board) {
-        raylib::DrawCircle(
-            (board.x + self.x * board.cell_size + board.cell_size / 2) as i32,
-            (board.y + self.y * board.cell_size + board.cell_size / 2) as i32,
-            board.cell_size as f32 / 5.0,
-            CURSOR_COLOR,
-        );
+        // raylib::DrawCircle(
+        //     (board.x + self.x * board.cell_size + board.cell_size / 2) as i32,
+        //     (board.y + self.y * board.cell_size + board.cell_size / 2) as i32,
+        //     board.cell_size as f32 / 5.0,
+        //     CURSOR_COLOR,
+        // );
     }
 }

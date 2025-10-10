@@ -1,7 +1,7 @@
 use disjoint::DisjointSet;
 use rand::prelude::*;
 
-use crate::{Board, Generator, State};
+use crate::{Board, Generator, MazeState};
 
 #[derive(Debug, Eq, PartialEq)]
 enum Direction {
@@ -60,7 +60,7 @@ impl Kruskal {
 }
 
 impl Generator for Kruskal {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         let edge: Option<Edge> = self.edges.pop();
         if let Some(edge) = edge {
             let index_cell = board.get_index(edge.x, edge.y);
@@ -90,11 +90,11 @@ impl Generator for Kruskal {
             }
             self.visited_edges.push(edge);
         } else {
-            return State::GenerationDone;
+            return MazeState::GenerationDone;
         }
 
         self.step += 1;
-        State::Generate
+        MazeState::Generate
     }
 
     fn draw(&self, _board: &Board) {}

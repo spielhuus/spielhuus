@@ -1,8 +1,8 @@
 use rand::prelude::*;
 
-use crate::{Board, CURSOR_COLOR, Generator, State};
+use crate::{Board, Generator, MazeState};
 
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::raylib;
 
 pub struct AldousBroder {
     visited: Vec<usize>,
@@ -27,7 +27,7 @@ impl AldousBroder {
 }
 
 impl Generator for AldousBroder {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         // get the neighbors of the current cell and pick a random neighbor
         let neighbors: Vec<usize> = board
             .neighbors(self.current_cell)
@@ -41,23 +41,25 @@ impl Generator for AldousBroder {
             board.remove_wall(self.current_cell, next);
             self.visited.push(next);
         }
+        board.cells[self.current_cell].cursor = false;
         self.current_cell = next;
 
         if self.visited.len() >= board.cells.len() {
-            State::GenerationDone
+            MazeState::GenerationDone
         } else {
-            State::Generate
+            board.cells[next].cursor = true;
+            MazeState::Generate
         }
     }
 
     fn draw(&self, board: &Board) {
-        raylib::DrawCircle(
-            (board.x + board.cells[self.current_cell].x * board.cell_size + board.cell_size / 2)
-                as i32,
-            (board.y + board.cells[self.current_cell].y * board.cell_size + board.cell_size / 2)
-                as i32,
-            board.cell_size as f32 / 4.0,
-            CURSOR_COLOR,
-        );
+        // raylib::DrawCircle(
+        //     (board.x + board.cells[self.current_cell].x * board.cell_size + board.cell_size / 2)
+        //         as i32,
+        //     (board.y + board.cells[self.current_cell].y * board.cell_size + board.cell_size / 2)
+        //         as i32,
+        //     board.cell_size as f32 / 4.0,
+        //     CURSOR_COLOR,
+        // );
     }
 }

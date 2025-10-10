@@ -1,9 +1,9 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, State};
+use crate::{Board, Generator, MazeState};
 
-use raylib_egui_rs::color::Color;
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::color::Color;
+// use raylib_egui_rs::raylib;
 
 #[derive(Debug)]
 struct Area {
@@ -120,14 +120,14 @@ impl RecursiveDivision {
 }
 
 impl Generator for RecursiveDivision {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         let mut new_areas: Vec<Area> = Vec::new();
         if let Some(area) = self.areas.pop() {
             let y = self.rng.random_range(area.start.1..area.end.1 - 1);
             let x = self.rng.random_range(area.start.0..area.end.0 - 1);
-            if (area.start.0 - area.end.0) > (area.start.1 - area.end.1) {
+            if (area.end.0 - area.start.0) < (area.end.1 - area.start.1) {
                 self.split_horizontal(x, y, board, &area, &mut new_areas);
-            } else if (area.start.0 - area.end.0) < (area.start.1 - area.end.1) {
+            } else if (area.end.0 - area.start.0) > (area.end.1 - area.start.1) {
                 self.split_vertical(x, y, board, &area, &mut new_areas);
             } else if self.rng.random_bool(self.probability) {
                 self.split_horizontal(x, y, board, &area, &mut new_areas);
@@ -136,24 +136,24 @@ impl Generator for RecursiveDivision {
             }
             self.areas.append(&mut new_areas);
             self.area = area;
-            State::Generate
+            MazeState::Generate
         } else {
-            State::GenerationDone
+            MazeState::GenerationDone
         }
     }
 
     fn draw(&self, board: &Board) {
-        raylib::DrawRectangle(
-            (board.x + self.area.start.0 * board.cell_size) as i32,
-            (board.y + self.area.start.1 * board.cell_size) as i32,
-            ((self.area.end.0 - self.area.start.0) * board.cell_size) as i32,
-            ((self.area.end.1 - self.area.start.1) * board.cell_size) as i32,
-            Color {
-                r: 150,
-                g: 0,
-                b: 0,
-                a: 50,
-            },
-        );
+        // raylib::DrawRectangle(
+        //     (board.x + self.area.start.0 * board.cell_size) as i32,
+        //     (board.y + self.area.start.1 * board.cell_size) as i32,
+        //     ((self.area.end.0 - self.area.start.0) * board.cell_size) as i32,
+        //     ((self.area.end.1 - self.area.start.1) * board.cell_size) as i32,
+        //     Color {
+        //         r: 150,
+        //         g: 0,
+        //         b: 0,
+        //         a: 50,
+        //     },
+        // );
     }
 }

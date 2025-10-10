@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, State};
+use crate::{Board, Generator, MazeState};
 
 pub struct GrowingTree {
     visited: Vec<usize>,
@@ -24,9 +24,10 @@ impl GrowingTree {
 }
 
 impl Generator for GrowingTree {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         let index = self.rng.random_range(0..self.cells.len());
         let cell = self.cells[index];
+        board.cells[cell].cursor = false;
         let neighbors: Vec<usize> = board
             .neighbors(cell)
             .into_iter()
@@ -40,14 +41,15 @@ impl Generator for GrowingTree {
         } else {
             let index = self.rng.random_range(0..neighbors.len());
             let neighbor = neighbors[index];
+            board.cells[neighbor].cursor = true;
             board.remove_wall(cell, neighbor);
             self.cells.push(neighbor);
         }
 
         if self.visited.len() >= board.cells.len() {
-            State::GenerationDone
+            MazeState::GenerationDone
         } else {
-            State::Generate
+            MazeState::Generate
         }
     }
 

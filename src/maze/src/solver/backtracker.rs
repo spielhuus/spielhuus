@@ -1,6 +1,6 @@
 use rand::{rngs::ThreadRng, seq::IndexedRandom};
 
-use crate::{Board, PATH_COLOR, Solver, State, path};
+use crate::{Board, Solver, MazeState};
 
 pub struct Backtracker {
     end: usize,
@@ -21,7 +21,7 @@ impl Backtracker {
 }
 
 impl Solver for Backtracker {
-    fn step(&mut self, board: &Board) -> Result<State, String> {
+    fn step(&mut self, board: &mut Board) -> Result<MazeState, String> {
         let current = &board.cells[*self.path.last().unwrap()];
         let neighbors: Vec<usize> = board
             .neighbors(board.get_index(current.x, current.y))
@@ -75,13 +75,13 @@ impl Solver for Backtracker {
             self.path.push(cell);
             self.positions.push(cell);
             if cell == self.end {
-                return Ok(State::Done);
+                return Ok(MazeState::Done);
             }
         } else {
             self.path.pop();
         }
 
-        Ok(State::Solve)
+        Ok(MazeState::Solve)
     }
 
     fn get_path(&self) -> &Vec<usize> {
@@ -89,6 +89,6 @@ impl Solver for Backtracker {
     }
 
     fn draw(&self, board: &Board) {
-        path::draw_path(board, self.get_path(), PATH_COLOR);
+        // path::draw_path(board, self.get_path(), PATH_COLOR);
     }
 }

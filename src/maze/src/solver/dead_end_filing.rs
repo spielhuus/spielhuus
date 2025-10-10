@@ -1,7 +1,7 @@
-use crate::{Board, PATH_COLOR, Solver, State, path};
+use crate::{Board, Solver, MazeState};
 
-use raylib_egui_rs::color::Color;
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::color::Color;
+// use raylib_egui_rs::raylib;
 
 pub struct DeadEndFilling {
     end: usize,
@@ -13,8 +13,14 @@ pub struct DeadEndFilling {
 
 impl DeadEndFilling {
     pub fn new(board: &Board) -> Self {
+        println!("DeadEndFilling::new, size: {}", board.board_size);
         let mut dead_ends = vec![];
-        for cell in &board.cells {
+        let start_index = 0;
+        let end_index = board.get_index(board.board_size - 1, board.board_size - 1);
+        for (i, cell) in board.cells.iter().enumerate() {
+            if i == start_index || i == end_index {
+                continue;
+            }
             if cell.is_dead_end() {
                 dead_ends.push(board.get_index(cell.x, cell.y));
             }
@@ -27,10 +33,15 @@ impl DeadEndFilling {
             current: 0,
         }
     }
+
+    fn cross_dead_ends(&self, board: &mut Board) {
+        board.cells.iter_mut().for_each(|c| c.crossed = false );
+        self.dead_path.iter().for_each(|c| board.cells[*c].crossed = true );
+    }
 }
 
 impl Solver for DeadEndFilling {
-    fn step(&mut self, board: &Board) -> Result<State, String> {
+    fn step(&mut self, board: &mut Board) -> Result<MazeState, String> {
         if let Some(cell) = self.dead_ends.pop() {
             self.current = cell as i32;
             let current = &board.cells[cell];
@@ -96,7 +107,8 @@ impl Solver for DeadEndFilling {
             }
             let index = self.path.last().unwrap();
             if *index == self.end {
-                return Ok(State::Done);
+                board.cells.iter_mut().for_each(|c| c.crossed = false );
+                return Ok(MazeState::Done);
             }
             let current = &board.cells[*self.path.last().unwrap()];
             let neighbors: Vec<usize> = board
@@ -147,12 +159,19 @@ impl Solver for DeadEndFilling {
                 .collect();
 
             if neighbors.len() != 1 {
-                return Err(format!("neighbors is: {:?}", neighbors));
+                // return Err(format!("neighbors is: {:?}", neighbors));
+                println!("neighbors is: {:?}", neighbors);
             }
+            //TODO
+            if neighbors.len() > 0 {
             self.path.push(*neighbors.first().unwrap());
+            } else {
+                println!("neighbours is empty.");
+                return Ok(MazeState::Done);
+            }
         }
-
-        Ok(State::Solve)
+        self.cross_dead_ends(board);
+        Ok(MazeState::Solve)
     }
 
     fn get_path(&self) -> &Vec<usize> {
@@ -160,30 +179,30 @@ impl Solver for DeadEndFilling {
     }
 
     fn draw(&self, board: &Board) {
-        for index in &self.dead_path {
-            let cell = &board.cells[*index];
-            raylib::DrawLine(
-                (board.x + cell.x * board.cell_size + 1) as i32,
-                (board.y + cell.y * board.cell_size + 1) as i32,
-                (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
-                (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
-                Color::RED,
-            );
-            raylib::DrawLine(
-                (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
-                (board.y + cell.y * board.cell_size + 1) as i32,
-                (board.x + cell.x * board.cell_size + 1) as i32,
-                (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
-                Color::RED,
-            );
-        }
-        let current = &board.cells[self.current as usize];
-        raylib::DrawCircle(
-            (board.x + current.x * board.cell_size + board.cell_size / 2) as i32,
-            (board.y + current.y * board.cell_size + board.cell_size / 2) as i32,
-            board.cell_size as f32 / 5.0,
-            Color::GREEN,
-        );
-        path::draw_path(board, self.get_path(), PATH_COLOR);
+        // for index in &self.dead_path {
+        //     let cell = &board.cells[*index];
+        //     raylib::DrawLine(
+        //         (board.x + cell.x * board.cell_size + 1) as i32,
+        //         (board.y + cell.y * board.cell_size + 1) as i32,
+        //         (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
+        //         (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
+        //         Color::RED,
+        //     );
+        //     raylib::DrawLine(
+        //         (board.x + cell.x * board.cell_size + board.cell_size - 1) as i32,
+        //         (board.y + cell.y * board.cell_size + 1) as i32,
+        //         (board.x + cell.x * board.cell_size + 1) as i32,
+        //         (board.y + cell.y * board.cell_size + board.cell_size - 1) as i32,
+        //         Color::RED,
+        //     );
+        // }
+        // let current = &board.cells[self.current as usize];
+        // raylib::DrawCircle(
+        //     (board.x + current.x * board.cell_size + board.cell_size / 2) as i32,
+        //     (board.y + current.y * board.cell_size + board.cell_size / 2) as i32,
+        //     board.cell_size as f32 / 5.0,
+        //     Color::GREEN,
+        // );
+        // path::draw_path(board, self.get_path(), PATH_COLOR);
     }
 }

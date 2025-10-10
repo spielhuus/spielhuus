@@ -1,7 +1,7 @@
-use crate::{Board, Solver, State};
+use crate::{Board, Solver, MazeState};
 
-use raylib_egui_rs::color::Color;
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::color::Color;
+// use raylib_egui_rs::raylib;
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Weight {
@@ -48,7 +48,7 @@ impl Djikstra {
             .weight
     }
 
-    fn search_path(&mut self, board: &Board) -> State {
+    fn search_path(&mut self, board: &Board) -> MazeState {
         let mut next_cells: Vec<usize> = vec![];
         for index in &self.positions {
             let weight = self.weights[*index].unwrap();
@@ -87,9 +87,9 @@ impl Djikstra {
             }
         }
         self.positions = next_cells;
-        State::Solve
+        MazeState::Solve
     }
-    fn path(&mut self, board: &Board) -> State {
+    fn path(&mut self, board: &Board) -> MazeState {
         let index: usize = *self.path.last().unwrap();
         let neighbors = board.neighbors(index);
         let mut free: Vec<(usize, &Option<usize>)> = neighbors
@@ -121,18 +121,18 @@ impl Djikstra {
                 && self.weights[next.1.unwrap()].unwrap().y == self.start.1
             {
                 self.solved = true;
-                return State::Solve;
+                return MazeState::Solve;
             }
         }
 
-        State::Solve
+        MazeState::Solve
     }
 }
 
 impl Solver for Djikstra {
-    fn step(&mut self, board: &Board) -> Result<State, String> {
+    fn step(&mut self, board: &mut Board) -> Result<MazeState, String> {
         if self.solved {
-            Ok(State::Done)
+            Ok(MazeState::Done)
         } else if !self.reached_end {
             Ok(self.search_path(board))
         } else if !self.solved {
@@ -147,31 +147,31 @@ impl Solver for Djikstra {
     }
 
     fn draw(&self, board: &Board) {
-        // draw the result
-        if !self.solved {
-            for (index, weight) in self.weights.iter().enumerate() {
-                if let Some(weight) = weight {
-                    if self.path.contains(&index) {
-                        raylib::DrawCircle(
-                            (board.x + weight.x * board.cell_size + board.cell_size / 2) as i32,
-                            (board.y + weight.y * board.cell_size + board.cell_size / 2) as i32,
-                            board.cell_size as f32 / 5.0,
-                            Color::WHITE,
-                        );
-                    } else {
-                        raylib::DrawCircle(
-                            (board.x + weight.x * board.cell_size + board.cell_size / 2) as i32,
-                            (board.y + weight.y * board.cell_size + board.cell_size / 2) as i32,
-                            board.cell_size as f32 / 5.0,
-                            raylib::ColorFromHSV(
-                                115.0,
-                                0.75,
-                                1.0 / self.get_max_weight() as f32 * weight.weight as f32,
-                            ),
-                        );
-                    }
-                }
-            }
-        }
+        // // draw the result
+        // if !self.solved {
+        //     for (index, weight) in self.weights.iter().enumerate() {
+        //         if let Some(weight) = weight {
+        //             if self.path.contains(&index) {
+        //                 raylib::DrawCircle(
+        //                     (board.x + weight.x * board.cell_size + board.cell_size / 2) as i32,
+        //                     (board.y + weight.y * board.cell_size + board.cell_size / 2) as i32,
+        //                     board.cell_size as f32 / 5.0,
+        //                     Color::WHITE,
+        //                 );
+        //             } else {
+        //                 raylib::DrawCircle(
+        //                     (board.x + weight.x * board.cell_size + board.cell_size / 2) as i32,
+        //                     (board.y + weight.y * board.cell_size + board.cell_size / 2) as i32,
+        //                     board.cell_size as f32 / 5.0,
+        //                     raylib::ColorFromHSV(
+        //                         115.0,
+        //                         0.75,
+        //                         1.0 / self.get_max_weight() as f32 * weight.weight as f32,
+        //                     ),
+        //                 );
+        //             }
+        //         }
+        //     }
+        // }
     }
 }

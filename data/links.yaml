@@ -84,3 +84,24 @@
   name: "playfuljs"
   url: "https://web.archive.org/web/20240427095647/http://www.playfuljs.com/a-first-person-engine-in-265-lines/"
   description: "A first-person engine in 265 lines"
+
+- id: "voronoi"
+  name: "Voronoi"
+  url: "https://en.wikipedia.org/wiki/Voronoi_diagram"
+  description: "diagram on Wikipedia"
+
+- id: "jfa"
+  name: "JFA"
+  url: "https://www.comp.nus.edu.sg/~tants/jfa/i3d06.pdf"
+  description: "Jump Flooding in GPU with Applications to Voronoi Diagram and Distance Transform"
+
+- id: "bucklog"
+  name: "The Bucklog"
+  url: "https://weblog.jamisbuck.org/2011/2/7/maze-generation-algorithm-recap.html"
+  description: "Maze Generation"
+
+- id: "Disjoint_sets"
+  name: "Wikipedia"
+  url: "https://en.wikipedia.org/wiki/Disjoint_sets"
+  description: "Disjoint sets"
+

@@ -5,7 +5,6 @@ members = [
   "src/monkey",
   "src/ahoi_wgpu",
   "src/ca",
-  "src/voronoi",
   "src/game_of_life",
   "src/fertilization",
   "src/mandelbrot",
@@ -29,6 +28,10 @@ bytemuck = { version = "1.24", features = [ "derive" ] }
 env_logger = "0.11"
 softbuffer = "0.4"
 raw-window-handle = "0.6"
+
+egui = { git = "https://github.com/emilk/egui.git", default-features = false, features = ["default_fonts"] }
+egui-winit = { git = "https://github.com/emilk/egui.git", default-features = false }
+egui-wgpu = { git = "https://github.com/emilk/egui.git", default-features = false, features = ["winit"] }
 
 #TODO decide on one math library
 mint= "0.5"

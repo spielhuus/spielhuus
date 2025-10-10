@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, State};
+use crate::{Board, Generator, MazeState};
 
 pub const BOOL_TRUE_PROBABILITY: f64 = 0.5;
 
@@ -37,7 +37,7 @@ impl Sidewinder {
 }
 
 impl Generator for Sidewinder {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         let cell = board.get_index(self.x, self.y);
         self.set.push(cell);
         if self.x >= board.board_size - 1 {
@@ -50,7 +50,7 @@ impl Generator for Sidewinder {
         }
 
         if self.x >= board.board_size - 1 && self.y >= board.board_size - 1 {
-            State::GenerationDone
+            MazeState::GenerationDone
         } else {
             if self.x == board.board_size - 1 {
                 self.x = 0;
@@ -58,7 +58,7 @@ impl Generator for Sidewinder {
             } else {
                 self.x += 1;
             }
-            State::Generate
+            MazeState::Generate
         }
     }
 

@@ -1,8 +1,8 @@
 use rand::prelude::*;
 
-use crate::{Board, CURSOR_COLOR, Generator, State};
+use crate::{Board, Generator, MazeState};
 
-use raylib_egui_rs::raylib;
+// use raylib_egui_rs::raylib;
 
 enum IState {
     Hunt,
@@ -35,7 +35,7 @@ impl HuntAndKill {
 }
 
 impl Generator for HuntAndKill {
-    fn step(&mut self, board: &mut Board) -> State {
+    fn step(&mut self, board: &mut Board) -> MazeState {
         match self.state {
             IState::Hunt => {
                 for y in 0..board.board_size {
@@ -78,14 +78,15 @@ impl Generator for HuntAndKill {
                                 }
                             }
                             self.state = IState::Kill;
-                            return State::Generate;
+                            return MazeState::Generate;
                         }
                     }
                 }
-                return State::GenerationDone;
+                return MazeState::GenerationDone;
             }
             IState::Kill => {
                 // get the neighbors of the current cell and pick a random neighbor
+                board.cells[self.current_cell].cursor = false;
                 let neighbors: Vec<usize> = board
                     .neighbors(self.current_cell)
                     .into_iter()
@@ -96,10 +97,11 @@ impl Generator for HuntAndKill {
                 // start hunt when no neighbors where found
                 if neighbors.is_empty() {
                     self.state = IState::Hunt;
-                    return State::Generate;
+                    return MazeState::Generate;
                 }
 
                 let index = self.rng.random_range(0..neighbors.len());
+                board.cells[neighbors[index]].cursor = true;
                 let next = neighbors[index];
                 // remove wall
                 if !self.contains(&next) {
@@ -129,20 +131,20 @@ impl Generator for HuntAndKill {
         }
 
         if self.visited.len() >= board.cells.len() {
-            State::GenerationDone
+            MazeState::GenerationDone
         } else {
-            State::Generate
+            MazeState::Generate
         }
     }
 
     fn draw(&self, board: &Board) {
-        raylib::DrawCircle(
-            (board.x + board.cells[self.current_cell].x * board.cell_size + board.cell_size / 2)
-                as i32,
-            (board.y + board.cells[self.current_cell].y * board.cell_size + board.cell_size / 2)
-                as i32,
-            board.cell_size as f32 / 4.0,
-            CURSOR_COLOR,
-        );
+        // raylib::DrawCircle(
+        //     (board.x + board.cells[self.current_cell].x * board.cell_size + board.cell_size / 2)
+        //         as i32,
+        //     (board.y + board.cells[self.current_cell].y * board.cell_size + board.cell_size / 2)
+        //         as i32,
+        //     board.cell_size as f32 / 4.0,
+        //     CURSOR_COLOR,
+        // );
     }
 }
