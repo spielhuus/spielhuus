@@ -525,13 +525,13 @@ fn direction(current: &Cell, prev: Option<&Cell>, next: Option<&Cell>) -> PathDi
         }
     } else if let Some(prev) = prev {
         if prev.x > current.x {
-            return PathDirection::EndRight;
-        } else if prev.x < current.x {
             return PathDirection::EndLeft;
+        } else if prev.x < current.x {
+            return PathDirection::EndRight;
         } else if prev.y > current.y {
-            return PathDirection::EndDown;
-        } else if prev.y < current.y {
             return PathDirection::EndUp;
+        } else if prev.y < current.y {
+            return PathDirection::EndDown;
         } else {
             panic!("direction not found")
         }
@@ -851,7 +851,6 @@ impl State {
                     }
                 }
             }
-
             self.queue
                 .write_buffer(&self.maze_buffer, 0, bytemuck::cast_slice(&maze_gpu_data));
         }
@@ -1099,7 +1098,8 @@ impl State {
         };
         // self.step = false;
         // self.step_count = 0;
-        let new_maze_data = self.board.create_gpu_data();
+        // TODO 
+        let mut new_maze_data = self.board.create_gpu_data();
         self.maze_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -1150,19 +1150,20 @@ pub enum UserEvent {
     StateInitialized(State),
     GenerateMaze,
     SolveMaze,
-    // You can add more here, like ChangeAlgorithm(MazeAlgorithm), etc.
+    Generator(MazeAlgorithm),
+    Solver(PathfindingAlgorithm),
+    Size(usize),
 }
 
 impl std::fmt::Debug for UserEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            // For the complex variant, just write a placeholder string.
-            // This doesn't require `State` to implement Debug.
             UserEvent::StateInitialized(_) => write!(f, "StateInitialized(<State object>)"),
-
-            // For simple variants, you can write their names.
             UserEvent::GenerateMaze => write!(f, "GenerateMaze"),
             UserEvent::SolveMaze => write!(f, "SolveMaze"),
+            UserEvent::Generator(maze_algorithm) => write!(f, "Solver({})", maze_algorithm),
+            UserEvent::Solver(pathfinding_algorithm) => write!(f, "PathFindingAlogrithm({})", pathfinding_algorithm),
+            UserEvent::Size(size) => write!(f, "Size({})", size),
         }
     }
 }
@@ -1171,6 +1172,8 @@ pub struct App {
     #[cfg(target_arch = "wasm32")]
     proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>, 
     state: Option<State>,
+    #[cfg(target_arch = "wasm32")]
+    _event_closures: Vec<Closure<dyn FnMut(web_sys::Event)>>,
 }
 
 impl App {
@@ -1181,6 +1184,8 @@ impl App {
             state: None,
             #[cfg(target_arch = "wasm32")]
             proxy,
+            #[cfg(target_arch = "wasm32")]
+            _event_closures: Vec::new(),
         }
     }
 }
@@ -1190,100 +1195,171 @@ impl ApplicationHandler<UserEvent> for App {
         //create the html ui
         #[cfg(target_arch = "wasm32")]
         {
-
             use wasm_bindgen::prelude::*;
             use wasm_bindgen::JsCast;
             use web_sys::{
                 console, Document, Element, HtmlButtonElement, HtmlFormElement, HtmlOptionElement,
-                HtmlSelectElement, Window,
+                HtmlSelectElement, HtmlInputElement, Window,
             };
+            
+            let proxy = self.proxy.as_ref().unwrap().clone();
+            let on_generate_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlButtonElement>() {
+                    event.prevent_default();
+                    log::info!("generate clicked");
+                    if let Err(e) = proxy.send_event(UserEvent::GenerateMaze) {
+                        log::error!("Failed to send GenerateMaze event: {:?}", e);
+                    }
+                }
+            });
+            
+            let proxy = self.proxy.as_ref().unwrap().clone();
+            let on_solve_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlButtonElement>() {
+                    if let Some(input_element) = target.dyn_ref::<HtmlButtonElement>() {
+                        event.prevent_default();
+                        log::info!("solve clicked");
+                        if let Err(e) = proxy.send_event(UserEvent::SolveMaze) {
+                            log::error!("Failed to send SolveMaze event: {:?}", e);
+                        }
+                    }
+                }
+            });
+
+            let proxy = self.proxy.as_ref().unwrap().clone();
+            let on_select_generator_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlSelectElement>() {
+                    let value_str = input_element.value();
+                    log::info!("generator selected: {}", value_str);
+                    if let Err(e) = proxy.send_event(UserEvent::Generator(
+                            match value_str.as_str() {
+                                 "1" => MazeAlgorithm::RecursiveBacktracker,
+                                 "2" => MazeAlgorithm::Kruskal,
+                                 "3" => MazeAlgorithm::Eller,
+                                 "4" => MazeAlgorithm::Prim,
+                                 "5" => MazeAlgorithm::RecursiveDivision,
+                                 "6" => MazeAlgorithm::AldousBroder,
+                                 "7" => MazeAlgorithm::Wilson,
+                                 "8" => MazeAlgorithm::HuntAndKill,
+                                 "9" => MazeAlgorithm::GrowingTree,
+                                 "10" => MazeAlgorithm::BinaryTree,
+                                 "11" => MazeAlgorithm::Sidewinder,
+                                 _ => MazeAlgorithm::RecursiveBacktracker,
+                            }
+                    
+                    )) {
+                        log::error!("Failed to send SolveMaze event: {:?}", e);
+                    }
+                }
+            });
+
+            let proxy = self.proxy.as_ref().unwrap().clone();
+            let on_select_solver_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlSelectElement>() {
+                    let value_str = input_element.value();
+                    log::info!("solver selected: {}", value_str);
+                    if let Err(e) = proxy.send_event(UserEvent::Solver(
+                            match value_str.as_str() {
+                                "1" => PathfindingAlgorithm::Dijkstra,
+                                "2" => PathfindingAlgorithm::RecursiveBacktracker,
+                                "3" => PathfindingAlgorithm::AStar,
+                                "4" => PathfindingAlgorithm::DeadEndFilling,
+                                "5" => PathfindingAlgorithm::WallFollower,
+                                "6" => PathfindingAlgorithm::Genetic,
+                                _ => PathfindingAlgorithm::Dijkstra,
+                            }
+                    
+                    )) {
+                        log::error!("Failed to send SolveMaze event: {:?}", e);
+                    }
+                }
+            });
+
+            let proxy = self.proxy.as_ref().unwrap().clone();
+            let on_select_size_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                let target = event.target().expect("Event should have a target");
+                if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
+                    let value_str = input_element.value();
+                    log::info!("size selected: {}", value_str);
+                    if let Ok(size) = value_str.parse::<usize>() {
+                        if size >= 1 && size <= 10 {
+                            if let Err(e) = proxy.send_event(UserEvent::Size(size * 10 - 1)) {
+                                log::error!("Failed to send SolveMaze event: {:?}", e);
+                            }
+                        }
+                    }
+                }
+            });
+
 
             let window = web_sys::window().expect("no global `window` exists");
             let document = window.document().expect("should have a document on window");
 
-            // Find the container element by its ID
-            let container = document
-                .get_element_by_id("maze-ui")
-                .expect("should have a #form-container element on the page");
+            //get the text input
+            let generate_button = document
+                .get_element_by_id("generate")
+                .expect("should have an input with id 'generate'");
+            let generate_button_element: HtmlButtonElement = generate_button.dyn_into().map_err(|_| ()).unwrap();
+            generate_button_element
+                .add_event_listener_with_callback(
+                    "click",
+                    on_generate_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_generate_callback);
 
-            container.set_inner_html("");
 
-            let form = document
-                .create_element("form").unwrap()
-                .dyn_into::<HtmlFormElement>().unwrap();
+            let solve_button = document
+                .get_element_by_id("solve")
+                .expect("should have an input with id 'solve'");
+            let solve_button_element: HtmlButtonElement = solve_button.dyn_into().map_err(|_| ()).unwrap();
+            solve_button_element
+                .add_event_listener_with_callback(
+                    "click",
+                    on_solve_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_solve_callback);
 
-            // --- Create the Label and Select List ---
-            let label = document.create_element("label").unwrap();
-            label.set_attribute("for", "framework-select").unwrap();
-            label.set_text_content(Some("Choose your favorite framework:"));
+            let generator_choice = document
+                .get_element_by_id("generator")
+                .expect("should have an input with id 'generator'");
+            let generator_choice_element: HtmlSelectElement = generator_choice.dyn_into().map_err(|_| ()).unwrap();
+            generator_choice_element
+                .add_event_listener_with_callback(
+                    "change",
+                    on_select_generator_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_select_generator_callback);
 
-            let select = document
-                .create_element("select").unwrap()
-                .dyn_into::<HtmlSelectElement>().unwrap();
-            select.set_id("framework-select");
-            select.set_name("framework"); // Important for form submissions
+            let solver_choice = document
+                .get_element_by_id("solver")
+                .expect("should have an input with id 'solver'");
+            let solver_choice_element: HtmlSelectElement = solver_choice.dyn_into().map_err(|_| ()).unwrap();
+            solver_choice_element
+                .add_event_listener_with_callback(
+                    "change",
+                    on_select_solver_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_select_solver_callback);
 
-            // --- Create and add the Options to the Select List ---
-            let options = vec![
-                ("react", "React"),
-                ("vue", "Vue"),
-                ("svelte", "Svelte"),
-                ("solid", "SolidJS"),
-            ];
-
-            for (value, text) in options {
-                let option = document
-                    .create_element("option").unwrap()
-                    .dyn_into::<HtmlOptionElement>().unwrap();
-                option.set_value(value);
-                option.set_text(text);
-                select.append_child(&option).unwrap();
-            }
-
-            // --- Create the Submit Button ---
-            let button_generate = document
-                .create_element("button").unwrap()
-                .dyn_into::<HtmlButtonElement>().unwrap();
-            button_generate.set_type("submit");
-            button_generate.set_text_content(Some("Generate"));
-            
-            let button_solve = document
-                .create_element("button").unwrap()
-                .dyn_into::<HtmlButtonElement>().unwrap();
-            button_solve.set_type("submit");
-            button_solve.set_text_content(Some("Solve"));
-
-            // --- Assemble the Form ---
-            form.append_child(&label).unwrap();
-            form.append_child(&select).unwrap();
-            form.append_child(&button_generate).unwrap();
-            form.append_child(&button_solve).unwrap();
-
-            let proxy_for_generate = self.proxy.as_ref().unwrap().clone();
-            // add event listeners
-            let on_generate = Closure::<dyn FnMut(_)>::new(move |event: web_sys::SubmitEvent| {
-                event.prevent_default();
-                log::info!("generate clicked");
-                if let Err(e) = proxy_for_generate.send_event(UserEvent::GenerateMaze) {
-                    log::error!("Failed to send GenerateMaze event: {:?}", e);
-                }
-            });
-            button_generate.add_event_listener_with_callback("click", on_generate.as_ref().unchecked_ref()).unwrap();
-            on_generate.forget();
-
-            let proxy_for_solve = self.proxy.as_ref().unwrap().clone();
-            let on_solve = Closure::<dyn FnMut(_)>::new(move |event: web_sys::SubmitEvent| {
-                event.prevent_default();
-                log::info!("solve clicked");
-                if let Err(e) = proxy_for_solve.send_event(UserEvent::SolveMaze) {
-                    log::error!("Failed to send GenerateMaze event: {:?}", e);
-                }
-            });
-            button_solve.add_event_listener_with_callback("click", on_solve.as_ref().unchecked_ref()).unwrap();
-            on_solve.forget();
-
-            // --- Finally, add the form to the container on the page ---
-            container.append_child(&form).unwrap();
+            let size_choice = document
+                .get_element_by_id("size")
+                .expect("should have an input with id 'size'");
+            let size_choice_element: HtmlInputElement = size_choice.dyn_into().map_err(|_| ()).unwrap();
+            size_choice_element
+                .add_event_listener_with_callback(
+                    "input",
+                    on_select_size_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_select_size_callback);
         }
 
         #[allow(unused_mut)]
@@ -1341,49 +1417,62 @@ impl ApplicationHandler<UserEvent> for App {
     #[allow(unused_mut)]
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, mut event: UserEvent) {
         match event {
-        UserEvent::StateInitialized(mut initial_state) => {
-            #[cfg(target_arch = "wasm32")]
-            {
-                initial_state.resize(
-                    initial_state.window.inner_size().width,
-                    initial_state.window.inner_size().height,
-                );
-                initial_state.window.request_redraw();
-            }
-            self.state = Some(initial_state);
+            UserEvent::StateInitialized(mut initial_state) => {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        initial_state.resize(
+                            initial_state.window.inner_size().width,
+                            initial_state.window.inner_size().height,
+                        );
+                        initial_state.window.request_redraw();
+                    }
+                    self.state = Some(initial_state);
+                }
+            UserEvent::GenerateMaze => {
+                    if let Some(state) = &mut self.state {
+                        // This is your original code, now in a safe context!
+                        state.init_maze();
+                        state.state = MazeState::Generate;
+                        state.window.request_redraw();
+                    } else {
+                        log::warn!("GenerateMaze event received before state was initialized.");
+                    }
+                }
+            UserEvent::SolveMaze => {
+                    if let Some(state) = &mut self.state {
+                        state.state = MazeState::Solve;
+                        state.init_solver();
+                        state.window.request_redraw();
+                    } else {
+                        log::warn!("SolveMaze event received before state was initialized.");
+                    }
+                }
+            UserEvent::Generator(maze_algorithm) => {
+                    if let Some(state) = &mut self.state {
+                        state.selected_generator = maze_algorithm;
+                        state.init_maze();
+                    } else {
+                        log::warn!("SolveMaze event received before state was initialized.");
+                    }
+            },
+            UserEvent::Solver(pathfinding_algorithm) => {
+                    if let Some(state) = &mut self.state {
+                        state.selected_solver = pathfinding_algorithm;
+                        state.init_solver();
+                    } else {
+                        log::warn!("SolveMaze event received before state was initialized.");
+                    }
+            },
+            UserEvent::Size(size) => {
+                    if let Some(state) = &mut self.state {
+                        state.cell_count = size;
+                        state.init_maze();
+                        state.window.request_redraw();
+                    } else {
+                        log::warn!("SolveMaze event received before state was initialized.");
+                    }
+            },
         }
-        UserEvent::GenerateMaze => {
-            if let Some(state) = &mut self.state {
-                // This is your original code, now in a safe context!
-                state.init_maze();
-                state.state = MazeState::Generate;
-                state.window.request_redraw();
-            } else {
-                log::warn!("GenerateMaze event received before state was initialized.");
-            }
-        }
-        UserEvent::SolveMaze => {
-            if let Some(state) = &mut self.state {
-                state.state = MazeState::Solve;
-                state.init_solver();
-                state.window.request_redraw();
-            } else {
-                log::warn!("SolveMaze event received before state was initialized.");
-            }
-        }
-        }
-
-
-
-        // #[cfg(target_arch = "wasm32")]
-        // {
-        //     event.resize(
-        //         event.window.inner_size().width,
-        //         event.window.inner_size().height,
-        //     );
-        //     event.window.request_redraw();
-        // }
-        // self.state = Some(event);
     }
 
     fn window_event(

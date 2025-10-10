@@ -14,7 +14,40 @@ In graph theory terms, a perfect maze is a **spanning tree** of a grid. This mea
 
 <figure>
   <canvas width="800" height="800" id="shader"></canvas>
-  <figcaption>A maze generated and visualized on a canvas.</figcaption>
+   <div><form action="#" id="maze">
+       <br>
+       <label class="h2" form="maze">size:</label>
+       <input type="range" min="1" max="10" value="1" id="size"/>
+       <br>
+       <label class="h2" form="maze">Generator:</label>
+       <select id="generator">
+         <option value="1">Recursive Backtracker</option>
+         <option value="2">Kruskal</option>
+         <option value="3">Eller</option>
+         <option value="4">Prim</option>
+         <option value="5">Recursive Division</option>
+         <option value="6">Aldous & Broder</option>
+         <option value="7">Wilson</option>
+         <option value="8">Hunt and Kill</option>
+         <option value="9">Growing Tree</option>
+         <option value="10">Binary Tree</option>
+         <option value="11">Sidewinder</option>
+       </select>
+       <br>
+       <label class="h2" form="maze">Solver:</label>
+       <select id="solver">
+         <option value="1">Breadth-First Search</option>
+         <option value="2">Recursive Backtracker</option>
+         <option value="3">a*</option>
+         <option value="4">Dead-End Filling</option>
+         <option value="5">Wall Follower</option>
+         <option value="6">Genetic</option>
+       </select>
+       <br/>
+       <button id="generate" type="button">generate</button>
+       <button id="solve" type="button">solve</button>
+   </form></div>
+  <!-- <figcaption>A maze generated and visualized on a canvas.</figcaption> -->
   <div id="maze-ui"></div>
 </figure>
 

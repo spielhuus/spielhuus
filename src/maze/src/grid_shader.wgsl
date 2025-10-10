@@ -25,32 +25,32 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) ve
     return vec4<f32>(positions[in_vertex_index], 0.0, 1.0);
 }
 
-const WALL_TOP: u32 = 1u; 
-const WALL_RIGHT: u32 = 2u; 
-const WALL_BOTTOM: u32 = 4u; 
-const WALL_LEFT: u32 = 8u; 
-const CELL_VISITED: u32 = 16u; 
-const CELL_BACKTRACK: u32 = 32u; 
-const CELL_CURSOR: u32 = 64u; 
-const PATH_HORIZONTAL: u32 = 128u; 
-const PATH_VERTICAL: u32 = 256u; 
-const PATH_UP_LEFT: u32 = 512u;  
-const PATH_UP_RIGHT: u32 = 1024u; 
-const PATH_DOWN_LEFT: u32 = 2048u; 
-const PATH_DOWN_RIGHT: u32 = 4096u; 
-const START_LEFT: u32 = 8192u; 
-const START_RIGHT: u32 = 16384u; 
-const START_UP: u32 = 32768u; 
-const START_DOWN: u32 = 65536u; 
-const END_LEFT: u32 = 131072u; 
-const END_RIGHT: u32 = 262144u; 
-const END_UP: u32 = 524288u; 
-const END_DOWN: u32 = 1048576u; 
-const ARROW_LEFT: u32 = 2097152u; 
-const ARROW_RIGHT: u32 = 4194304u; 
-const ARROW_UP: u32 = 8388608u; 
-const ARROW_DOWN: u32 = 16777216u; 
-const CROSSED: u32 = 33554432u; 
+const WALL_TOP:    u32 = 1u << 0u;  // 1
+const WALL_RIGHT:  u32 = 1u << 1u;  // 2
+const WALL_BOTTOM: u32 = 1u << 2u;  // 4
+const WALL_LEFT:   u32 = 1u << 3u;  // 8
+const CELL_VISITED:   u32 = 1u << 4u;  // 16
+const CELL_BACKTRACK: u32 = 1u << 5u;  // 32
+const CELL_CURSOR:    u32 = 1u << 6u;  // 64
+const PATH_HORIZONTAL: u32 = 1u << 7u;   // 128
+const PATH_VERTICAL:   u32 = 1u << 8u;   // 256
+const PATH_UP_LEFT:    u32 = 1u << 9u;   // 512
+const PATH_UP_RIGHT:   u32 = 1u << 10u;  // 1024
+const PATH_DOWN_LEFT:  u32 = 1u << 11u;  // 2048
+const PATH_DOWN_RIGHT: u32 = 1u << 12u;  // 4096
+const START_LEFT:  u32 = 1u << 13u;  // 8192
+const START_RIGHT: u32 = 1u << 14u;  // 16384
+const START_UP:    u32 = 1u << 15u;  // 32768
+const START_DOWN:  u32 = 1u << 16u;  // 65536
+const END_LEFT:  u32 = 1u << 17u;  // 131072
+const END_RIGHT: u32 = 1u << 18u;  // 262144
+const END_UP:    u32 = 1u << 19u;  // 524288
+const END_DOWN:  u32 = 1u << 20u;  // 1048576
+const ARROW_LEFT:  u32 = 1u << 21u;  // 2097152
+const ARROW_RIGHT: u32 = 1u << 22u;  // 4194304
+const ARROW_UP:    u32 = 1u << 23u;  // 8388608
+const ARROW_DOWN:  u32 = 1u << 24u;  // 16777216
+const CROSSED: u32 = 1u << 25u;  // 33554432
 
 const wall_thickness: f32 = 0.1;
 
@@ -210,11 +210,11 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         let arrow_color = cursor_color;
 
         var local_uv = inner_uv;
-        if ((cell_data & END_LEFT) != 0u) {
+        if ((cell_data & END_RIGHT) != 0u) {
             local_uv = vec2<f32>(inner_uv.y, 1.0 - inner_uv.x);
-        } else if ((cell_data & END_UP) != 0u) {
-            local_uv = vec2<f32>(1.0 - inner_uv.x, 1.0 - inner_uv.y);
         } else if ((cell_data & END_DOWN) != 0u) {
+            local_uv = vec2<f32>(1.0 - inner_uv.x, 1.0 - inner_uv.y);
+        } else if ((cell_data & END_LEFT) != 0u) {
             local_uv = vec2<f32>(1.0 - inner_uv.y, inner_uv.x);
         }
 
@@ -316,55 +316,6 @@ let arrow_color = cursor_color; // Or any color you want for the arrow
         } else {
             floor_color = visited_floor_color;
         }
-
-//         let arrow_color = cursor_color; // Or any color you want for the arrow
-// 
-//         // We will rotate the inner_uv space so we can use the same "ARROW_UP"
-//         // drawing logic for all four directions.
-//         var local_uv = inner_uv;
-//         if ((cell_data & ARROW_RIGHT) != 0u) {
-//             // Rotate 90 degrees clockwise
-//             local_uv = vec2<f32>(inner_uv.y, 1.0 - inner_uv.x);
-//         } else if ((cell_data & ARROW_DOWN) != 0u) {
-//             // Rotate 180 degrees
-//             local_uv = vec2<f32>(1.0 - inner_uv.x, 1.0 - inner_uv.y);
-//         } else if ((cell_data & ARROW_LEFT) != 0u) {
-//             // Rotate 90 degrees counter-clockwise
-//             local_uv = vec2<f32>(1.0 - inner_uv.y, inner_uv.x);
-//         }
-// 
-//         // --- Arrow Drawing Logic (always for an "up" arrow) ---
-//         let path_thickness = 0.01;
-//         let arrowhead_base_y = 0.4; // The y-position of the arrowhead's flat base
-//         let arrowhead_half_width = 0.3; // Arrowhead goes from 0.5-0.3 to 0.5+0.3
-// 
-//         // 1. Check for the shaft (a simple rectangle)
-//         let is_in_shaft = abs(local_uv.x - 0.5) <= path_thickness / 2.0 &&
-//                           local_uv.y >= arrowhead_base_y;
-// 
-//         // 2. Check for the head (a triangle)
-//         // Bounding box check first for efficiency
-//         var is_in_head = false;
-//         if (local_uv.y < arrowhead_base_y) {
-//             // The two diagonal lines of the arrowhead
-//             let center_x = 0.5;
-//             let tip_y = 0.0;
-//             // The slope of the right edge of the arrowhead
-//             let slope = (arrowhead_base_y - tip_y) / arrowhead_half_width;
-// 
-//             // Check if the pixel is between the two diagonal lines
-//             if (abs(local_uv.x - center_x) * slope <= local_uv.y - tip_y) {
-//                 is_in_head = true;
-//             }
-//         }
-// 
-//         if (is_in_shaft || is_in_head) {
-//             floor_color = arrow_color;
-//         } else if (is_backtrack) {
-//             floor_color = backtrack_floor_color;
-//         } else {
-//             floor_color = visited_floor_color;
-//         }
 
     } else if ((cell_data & CROSSED) != 0u) {
         let on_diag1 = abs(inner_uv.x - inner_uv.y) < cross_thickness / sqrt(2.0);
