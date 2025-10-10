@@ -13,7 +13,7 @@ My objective is to construct and navigate mazes using graph algorithms. Specific
 In graph theory terms, a perfect maze is a **spanning tree** of a grid. This means it connects every cell in the grid without creating any loops or cycles. Because there are no cycles, you can't walk in a circle and end up where you started without retracing your steps. This structure guarantees that there is one unique path from any cell to any other. Every cell is reachable, and there are no inaccessible areas.
 
 <figure>
-  <canvas width=1280 height=860 id="shader"></canvas>
+  <canvas width="800" height="800" id="shader"></canvas>
   <figcaption>A maze generated and visualized on a canvas.</figcaption>
   <div id="maze-ui"></div>
 </figure>
