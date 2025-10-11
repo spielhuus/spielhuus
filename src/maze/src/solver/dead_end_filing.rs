@@ -1,4 +1,4 @@
-use crate::{Board, Solver, MazeState};
+use crate::{Board, MazeState, Solver, CROSSED};
 
 // use raylib_egui_rs::color::Color;
 // use raylib_egui_rs::raylib;
@@ -12,7 +12,7 @@ pub struct DeadEndFilling {
 }
 
 impl DeadEndFilling {
-    pub fn new(board: &Board) -> Self {
+    pub fn new(board: &mut Board) -> Self {
         println!("DeadEndFilling::new, size: {}", board.board_size);
         let mut dead_ends = vec![];
         let start_index = 0;
@@ -22,7 +22,9 @@ impl DeadEndFilling {
                 continue;
             }
             if cell.is_dead_end() {
-                dead_ends.push(board.get_index(cell.x, cell.y));
+                let index = board.get_index(cell.x, cell.y);
+                board.gpu_data[index] |= CROSSED;
+                dead_ends.push(index);
             }
         }
         Self {
@@ -97,6 +99,8 @@ impl Solver for DeadEndFilling {
                 if !(next.x == board.board_size - 1 && next.y == board.board_size - 1
                     || next.x == 0 && next.y == 0)
                 {
+
+                    board.gpu_data[*neighbors.first().unwrap()] |= CROSSED;
                     self.dead_ends.push(*neighbors.first().unwrap());
                 }
                 self.dead_path.push(cell);
@@ -165,8 +169,10 @@ impl Solver for DeadEndFilling {
             //TODO
             if neighbors.len() > 0 {
             self.path.push(*neighbors.first().unwrap());
+            crate::update_path(board, &self.path);      
             } else {
                 println!("neighbours is empty.");
+                board.gpu_data.iter_mut().for_each(|c| *c &= !CROSSED);
                 return Ok(MazeState::Done);
             }
         }

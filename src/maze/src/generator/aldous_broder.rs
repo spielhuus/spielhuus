@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState};
+use crate::{Board, Generator, MazeState, CELL_CURSOR};
 
 // use raylib_egui_rs::raylib;
 
@@ -41,13 +41,13 @@ impl Generator for AldousBroder {
             board.remove_wall(self.current_cell, next);
             self.visited.push(next);
         }
-        board.cells[self.current_cell].cursor = false;
+        board.gpu_data[self.current_cell] &= !CELL_CURSOR;
         self.current_cell = next;
 
         if self.visited.len() >= board.cells.len() {
             MazeState::GenerationDone
         } else {
-            board.cells[next].cursor = true;
+            board.gpu_data[next] |= CELL_CURSOR;
             MazeState::Generate
         }
     }

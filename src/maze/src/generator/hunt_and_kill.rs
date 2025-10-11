@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState};
+use crate::{Board, Generator, MazeState, CELL_CURSOR, CELL_VISITED, WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP};
 
 // use raylib_egui_rs::raylib;
 
@@ -86,7 +86,7 @@ impl Generator for HuntAndKill {
             }
             IState::Kill => {
                 // get the neighbors of the current cell and pick a random neighbor
-                board.cells[self.current_cell].cursor = false;
+                board.gpu_data[self.current_cell] &= !CELL_CURSOR;
                 let neighbors: Vec<usize> = board
                     .neighbors(self.current_cell)
                     .into_iter()
@@ -101,7 +101,7 @@ impl Generator for HuntAndKill {
                 }
 
                 let index = self.rng.random_range(0..neighbors.len());
-                board.cells[neighbors[index]].cursor = true;
+                board.gpu_data[neighbors[index]] |= CELL_CURSOR;
                 let next = neighbors[index];
                 // remove wall
                 if !self.contains(&next) {
@@ -109,21 +109,30 @@ impl Generator for HuntAndKill {
                         crate::Direction::North => {
                             board.cells[self.current_cell].walls.top = false;
                             board.cells[next].walls.bottom = false;
+                            board.gpu_data[self.current_cell] &= !WALL_TOP;
+                            board.gpu_data[next] &= !WALL_BOTTOM;
                         }
                         crate::Direction::South => {
                             board.cells[self.current_cell].walls.bottom = false;
                             board.cells[next].walls.top = false;
+                            board.gpu_data[self.current_cell] &= !WALL_BOTTOM;
+                            board.gpu_data[next] &= !WALL_TOP;
                         }
                         crate::Direction::East => {
                             board.cells[self.current_cell].walls.right = false;
                             board.cells[next].walls.left = false;
+                            board.gpu_data[self.current_cell] &= !WALL_RIGHT;
+                            board.gpu_data[next] &= !WALL_LEFT;
                         }
                         crate::Direction::West => {
                             board.cells[self.current_cell].walls.left = false;
                             board.cells[next].walls.right = false;
+                            board.gpu_data[self.current_cell] &= !WALL_LEFT;
+                            board.gpu_data[next] &= !WALL_RIGHT;
                         }
                     }
                     board.cells[next].visited = true;
+                    board.gpu_data[next] |= CELL_VISITED;
                     self.visited.push(next);
                 }
                 self.current_cell = next;

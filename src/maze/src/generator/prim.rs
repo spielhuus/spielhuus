@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState};
+use crate::{Board, Generator, MazeState, CELL_CURSOR};
 
 // use raylib_egui_rs::raylib;
 
@@ -54,13 +54,13 @@ impl Generator for Prim {
 
         // remove wall
         board.remove_wall(item.index, item.neighbor);
-        board.cells[item.index].cursor = false;
+        board.gpu_data[item.index] &= !CELL_CURSOR;
 
         // calc next cells
         let neighbors: Vec<usize> = board.neighbors(item.index).into_iter().flatten().collect();
         for n in &neighbors {
             if !self.contains(n) {
-                board.cells[*n].cursor = true;
+                board.gpu_data[*n] |= CELL_CURSOR;
                 self.cells.push(FreeCell {
                     index: *n,
                     neighbor: item.index,

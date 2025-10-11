@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState};
+use crate::{Board, Generator, MazeState, CELL_BACKTRACK, CELL_CURSOR, CELL_VISITED};
 // use raylib_egui_rs::raylib;
 
 #[derive(Default)]
@@ -21,8 +21,7 @@ impl Backtracking {
 impl Generator for Backtracking {
     fn step(&mut self, board: &mut Board) -> MazeState {
         let n = board.neighbors(self.current);
-        board.cells[self.current].cursor = false;
-
+        board.gpu_data[self.current] &= !CELL_CURSOR;
         let free: Option<&Option<usize>> = n
             .iter()
             .filter(|i| i.is_some() && !board.cells[i.unwrap()].visited)
@@ -32,20 +31,20 @@ impl Generator for Backtracking {
             // remove the walls
             board.remove_wall(self.current, free);
             // set next cell as current
-            board.cells[free].backtrack = true;
-            board.cells[free].cursor = true;
+            board.gpu_data[free] |= CELL_BACKTRACK;
+            board.gpu_data[free] |= CELL_CURSOR;
             self.current = free;
             board.path.push(free)
         } else if let Some(last) = board.path.pop() {
-            board.cells[self.current].backtrack = false;
-            board.cells[self.current].visited = true;
-            board.cells[last].cursor = true;
-            board.cells[last].backtrack = false;
-            board.cells[last].visited = true;
+            board.gpu_data[self.current] &= !CELL_BACKTRACK;
+            board.gpu_data[self.current] |= CELL_VISITED;
+            board.gpu_data[last] |= CELL_CURSOR;
+            board.gpu_data[last] &= !CELL_BACKTRACK;
+            board.gpu_data[last] |= CELL_VISITED;
             self.current = last;
         } else {
-            board.cells[self.current].cursor = false;
-            board.cells[self.current].visited = true;
+            board.gpu_data[self.current] &= !CELL_CURSOR;
+            board.gpu_data[self.current] |= CELL_VISITED;
             return MazeState::GenerationDone;
         }
 

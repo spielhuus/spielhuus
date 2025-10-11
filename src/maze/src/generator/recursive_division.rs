@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState};
+use crate::{Board, Generator, MazeState, WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP};
 
 // use raylib_egui_rs::color::Color;
 // use raylib_egui_rs::raylib;
@@ -21,18 +21,22 @@ pub struct RecursiveDivision {
 impl RecursiveDivision {
     pub fn new(board: &mut Board) -> Self {
         //remove all walls
-        for cell in &mut board.cells {
+        for (i, cell) in &mut board.cells.iter_mut().enumerate() {
             if cell.x > 0 {
                 cell.walls.left = false;
+                board.gpu_data[i] &= !WALL_LEFT;
             }
             if cell.y > 0 {
                 cell.walls.top = false;
+                board.gpu_data[i] &= !WALL_TOP;
             }
             if cell.x < board.board_size - 1 {
                 cell.walls.right = false;
+                board.gpu_data[i] &= !WALL_RIGHT;
             }
             if cell.y < board.board_size - 1 {
                 cell.walls.bottom = false;
+                board.gpu_data[i] &= !WALL_BOTTOM;
             }
             cell.visited = true;
         }
@@ -61,9 +65,11 @@ impl RecursiveDivision {
         for index in area.start.0..area.end.0 {
             if x != index {
                 let c0 = board.get_index(index, y);
+                board.gpu_data[c0] |= WALL_BOTTOM;
                 board.cells[c0].walls.bottom = true;
                 if y < board.board_size - 1 {
                     let c1 = board.get_index(index, y + 1);
+                    board.gpu_data[c1] |= WALL_TOP;
                     board.cells[c1].walls.top = true;
                 }
             }
@@ -97,9 +103,11 @@ impl RecursiveDivision {
             if y != index {
                 let c0 = board.get_index(x, index);
                 board.cells[c0].walls.right = true;
+                board.gpu_data[c0] |= WALL_RIGHT;
                 if x < board.board_size - 1 {
                     let c1 = board.get_index(x + 1, index);
                     board.cells[c1].walls.left = true;
+                    board.gpu_data[c1] |= WALL_LEFT;
                 }
             }
         }

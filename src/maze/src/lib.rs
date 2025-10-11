@@ -41,32 +41,32 @@ const BORDER: usize = 5;
 
 const INITIAL_CELL_COUNT: usize = 9;
 
-const WALL_TOP: u32 = 1 << 0;
-const WALL_RIGHT: u32 = 1 << 1;
-const WALL_BOTTOM: u32 = 1 << 2;
-const WALL_LEFT: u32 = 1 << 3;
-const CELL_VISITED: u32 = 1 << 4;
-const CELL_BACKTRACK: u32 = 1 << 5;
-const CELL_CURSOR: u32 = 1 << 6;
-const PATH_HORIZONTAL: u32 = 1 << 7;
-const PATH_VERTICAL: u32 = 1 << 8;
-const PATH_UP_LEFT: u32 = 1 << 9;
-const PATH_UP_RIGHT: u32 = 1 << 10;
-const PATH_DOWN_LEFT: u32 = 1 << 11;
-const PATH_DOWN_RIGHT: u32 = 1 << 12;
-const START_LEFT: u32 = 1 << 13;
-const START_RIGHT: u32 = 1 << 14;
-const START_UP: u32 = 1 << 15;
-const START_DOWN: u32 = 1 << 16;
-const END_LEFT: u32 = 1 << 17;
-const END_RIGHT: u32 = 1 << 18;
-const END_UP: u32 = 1 << 19;
-const END_DOWN: u32 = 1 << 20;
-const ARROW_LEFT: u32 = 1 << 21;
-const ARROW_RIGHT: u32 = 1 << 22;
-const ARROW_UP: u32 = 1 << 23;
-const ARROW_DOWN: u32 = 1 << 24;
-const CROSSED: u32 = 1 << 25;
+pub const WALL_TOP: u32 = 1 << 0;
+pub const WALL_RIGHT: u32 = 1 << 1;
+pub const WALL_BOTTOM: u32 = 1 << 2;
+pub const WALL_LEFT: u32 = 1 << 3;
+pub const CELL_VISITED: u32 = 1 << 4;
+pub const CELL_BACKTRACK: u32 = 1 << 5;
+pub const CELL_CURSOR: u32 = 1 << 6;
+pub const PATH_HORIZONTAL: u32 = 1 << 7;
+pub const PATH_VERTICAL: u32 = 1 << 8;
+pub const PATH_UP_LEFT: u32 = 1 << 9;
+pub const PATH_UP_RIGHT: u32 = 1 << 10;
+pub const PATH_DOWN_LEFT: u32 = 1 << 11;
+pub const PATH_DOWN_RIGHT: u32 = 1 << 12;
+pub const START_LEFT: u32 = 1 << 13;
+pub const START_RIGHT: u32 = 1 << 14;
+pub const START_UP: u32 = 1 << 15;
+pub const START_DOWN: u32 = 1 << 16;
+pub const END_LEFT: u32 = 1 << 17;
+pub const END_RIGHT: u32 = 1 << 18;
+pub const END_UP: u32 = 1 << 19;
+pub const END_DOWN: u32 = 1 << 20;
+pub const ARROW_LEFT: u32 = 1 << 21;
+pub const ARROW_RIGHT: u32 = 1 << 22;
+pub const ARROW_UP: u32 = 1 << 23;
+pub const ARROW_DOWN: u32 = 1 << 24;
+pub const CROSSED: u32 = 1 << 25;
 
 pub struct Color {
     pub r: f32,
@@ -155,10 +155,10 @@ pub struct Cell {
     pub x: usize,
     pub y: usize,
     pub visited: bool,
-    pub backtrack: bool,
+    // pub backtrack: bool,
     pub walls: Walls,
     pub state: CellState,
-    pub cursor: bool,
+    // pub cursor: bool,
     pub crossed: bool,
     pub arrow: Option<Direction>,
 }
@@ -169,10 +169,10 @@ impl Cell {
             x,
             y,
             visited: false,
-            backtrack: false,
+            // backtrack: false,
             walls: Walls::default(),
             state: CellState::None,
-            cursor: false,
+            // cursor: false,
             crossed: false,
             arrow: None,
         }
@@ -226,6 +226,7 @@ pub struct Board {
     pub cell_size: usize,
     pub x: usize,
     pub y: usize,
+    pub gpu_data: Vec<u32>,
 }
 
 impl Board {
@@ -238,6 +239,7 @@ impl Board {
             cell_size,
             x: border,
             y: border,
+            gpu_data: vec![WALL_TOP|WALL_BOTTOM|WALL_RIGHT|WALL_LEFT; board_size.pow(2)],
         };
         board.init();
         board
@@ -296,18 +298,26 @@ impl Board {
             crate::Direction::North => {
                 self.cells[cell].walls.top = false;
                 self.cells[neighbor].walls.bottom = false;
+                self.gpu_data[cell] &= !WALL_TOP;
+                self.gpu_data[neighbor] &= !WALL_BOTTOM;
             }
             crate::Direction::South => {
                 self.cells[cell].walls.bottom = false;
                 self.cells[neighbor].walls.top = false;
+                self.gpu_data[cell] &= !WALL_BOTTOM;
+                self.gpu_data[neighbor] &= !WALL_TOP;
             }
             crate::Direction::East => {
                 self.cells[cell].walls.right = false;
                 self.cells[neighbor].walls.left = false;
+                self.gpu_data[cell] &= !WALL_RIGHT;
+                self.gpu_data[neighbor] &= !WALL_LEFT;
             }
             crate::Direction::West => {
                 self.cells[cell].walls.left = false;
                 self.cells[neighbor].walls.right = false;
+                self.gpu_data[cell] &= !WALL_LEFT;
+                self.gpu_data[neighbor] &= !WALL_RIGHT;
             }
         }
         self.cells[cell].visited = true;
@@ -317,7 +327,7 @@ impl Board {
     fn reset(&mut self) {
         self.cells.iter_mut().for_each(|cell| {
             cell.visited = false;
-            cell.backtrack = false;
+            // cell.backtrack = false;
             cell.walls.left = true;
             cell.walls.right = true;
             cell.walls.top = true;
@@ -325,47 +335,47 @@ impl Board {
         });
     }
 
-    fn create_gpu_data(&self) -> Vec<u32> {
-        self.cells
-            .iter()
-            .map(|cell| {
-                let mut cell_data: u32 = 0;
-                if cell.walls.top {
-                    cell_data |= WALL_TOP;
-                }
-                if cell.walls.right {
-                    cell_data |= WALL_RIGHT;
-                }
-                if cell.walls.bottom {
-                    cell_data |= WALL_BOTTOM;
-                }
-                if cell.walls.left {
-                    cell_data |= WALL_LEFT;
-                }
-                if cell.visited {
-                    cell_data |= CELL_VISITED;
-                }
-                if cell.backtrack {
-                    cell_data |= CELL_BACKTRACK;
-                }
-                if cell.crossed {
-                    cell_data |= CROSSED;
-                }
-                if cell.cursor {
-                    cell_data |= CELL_CURSOR;
-                }
-                if let Some(arrow) = cell.arrow {
-                    match arrow {
-                        Direction::North => cell_data |= ARROW_UP,
-                        Direction::South => cell_data |= ARROW_DOWN,
-                        Direction::East => cell_data |= ARROW_RIGHT,
-                        Direction::West => cell_data |= ARROW_LEFT,
-                    }
-                }
-                cell_data
-            })
-            .collect()
-    }
+    // fn create_gpu_data(&self) -> Vec<u32> {
+    //     self.cells
+    //         .iter()
+    //         .map(|cell| {
+    //             let mut cell_data: u32 = 0;
+    //             if cell.walls.top {
+    //                 cell_data |= WALL_TOP;
+    //             }
+    //             if cell.walls.right {
+    //                 cell_data |= WALL_RIGHT;
+    //             }
+    //             if cell.walls.bottom {
+    //                 cell_data |= WALL_BOTTOM;
+    //             }
+    //             if cell.walls.left {
+    //                 cell_data |= WALL_LEFT;
+    //             }
+    //             if cell.visited {
+    //                 cell_data |= CELL_VISITED;
+    //             }
+    //             if cell.backtrack {
+    //                 cell_data |= CELL_BACKTRACK;
+    //             }
+    //             if cell.crossed {
+    //                 cell_data |= CROSSED;
+    //             }
+    //             if cell.cursor {
+    //                 cell_data |= CELL_CURSOR;
+    //             }
+    //             if let Some(arrow) = cell.arrow {
+    //                 match arrow {
+    //                     Direction::North => cell_data |= ARROW_UP,
+    //                     Direction::South => cell_data |= ARROW_DOWN,
+    //                     Direction::East => cell_data |= ARROW_RIGHT,
+    //                     Direction::West => cell_data |= ARROW_LEFT,
+    //                 }
+    //             }
+    //             cell_data
+    //         })
+    //         .collect()
+    // }
 }
 
 #[repr(C)]
@@ -401,6 +411,63 @@ pub enum PathDirection {
     EndDown,
     EndUp,
     EndRight,
+}
+
+impl From<PathDirection> for u32 {
+    fn from(direction: PathDirection) -> u32 {
+        match direction {
+            PathDirection::Horizontal => PATH_HORIZONTAL,
+            PathDirection::Vertical => PATH_VERTICAL,
+            PathDirection::UpLeft => PATH_UP_LEFT,
+            PathDirection::UpRight => PATH_UP_RIGHT,
+            PathDirection::DownLeft => PATH_DOWN_LEFT,
+            PathDirection::DownRight => PATH_DOWN_RIGHT,
+            PathDirection::StartLeft => START_LEFT,
+            PathDirection::StartRight => START_RIGHT,
+            PathDirection::StartUp => START_UP,
+            PathDirection::StartDown => START_DOWN,
+            PathDirection::EndLeft => END_LEFT,
+            PathDirection::EndRight => END_RIGHT,
+            PathDirection::EndUp => END_UP,
+            PathDirection::EndDown => END_DOWN,
+        }
+    }
+}
+
+fn update_path(board: &mut Board, path: &[usize]) {
+    if path.len() >= 3 {
+        // second last step in path
+        let direction = crate::direction(&board.cells[path[path.len()-2]], Some(&board.cells[path[path.len()-3]]), Some(&board.cells[path[path.len()-1]]));
+        crate::clear_direction(board, path[path.len()-2]);
+        board.gpu_data[path[path.len()-2]] |= <PathDirection as std::convert::Into<u32>>::into(direction);
+        // end of path
+        let direction = crate::direction(&board.cells[path[path.len()-1]], Some(&board.cells[path[path.len()-2]]), None);
+        crate::clear_direction(board, path[path.len()-1]);
+        board.gpu_data[path[path.len()-1]] |= <PathDirection as std::convert::Into<u32>>::into(direction);
+    }
+    if path.len() == 2 {
+        let direction = crate::direction(&board.cells[path[path.len()-2]], None, Some(&board.cells[path[path.len()-1]]));
+        crate::clear_direction(board, path[path.len()-2]);
+        board.gpu_data[path[path.len()-2]] |= <PathDirection as std::convert::Into<u32>>::into(direction);
+    }
+}
+
+fn clear_direction(board: &mut Board, cell: usize) {
+    board.gpu_data[cell] &= !PATH_HORIZONTAL;
+    board.gpu_data[cell] &= !PATH_VERTICAL;
+    board.gpu_data[cell] &= !PATH_UP_LEFT;
+    board.gpu_data[cell] &= !PATH_UP_RIGHT;
+    board.gpu_data[cell] &= !PATH_DOWN_LEFT;
+    board.gpu_data[cell] &= !PATH_DOWN_RIGHT;
+    board.gpu_data[cell] &= !START_LEFT;
+    board.gpu_data[cell] &= !START_RIGHT;
+    board.gpu_data[cell] &= !START_UP;
+    board.gpu_data[cell] &= !START_DOWN;
+    board.gpu_data[cell] &= !END_LEFT;
+    board.gpu_data[cell] &= !END_RIGHT;
+    board.gpu_data[cell] &= !END_UP;
+    board.gpu_data[cell] &= !END_DOWN;
+    
 }
 
 fn direction(current: &Cell, prev: Option<&Cell>, next: Option<&Cell>) -> PathDirection {
@@ -621,7 +688,7 @@ impl State {
             format: surface_format,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::Fifo,
+            present_mode: wgpu::PresentMode::AutoVsync, //Fifo,
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
@@ -647,10 +714,10 @@ impl State {
             contents: bytemuck::cast_slice(&[uniforms]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
-        let initial_maze_data = board.create_gpu_data();
+        // let initial_maze_data = board.create_gpu_data();
         let maze_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Maze Storage Buffer"),
-            contents: bytemuck::cast_slice(&initial_maze_data),
+            contents: bytemuck::cast_slice(&board.gpu_data),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
         let uniform_bind_group_layout =
@@ -811,48 +878,48 @@ impl State {
         }
 
         if maze_updated {
-            let mut maze_gpu_data = self.board.create_gpu_data();
+            // let mut maze_gpu_data = self.board.create_gpu_data();
             // get the path
-            if self.state == MazeState::Solve || self.state == MazeState::Done {
-                let path = self.solver.get_path();
-                if path.len() > 1 {
-                    for (i, item) in path.iter().enumerate() {
-                        let prev = if i > 0 { path.get(i - 1) } else { None };
-                        let next = path.get(i + 1); // get handles out-of-bounds by returning None
-                        let direction = direction(
-                            &self.board.cells[*item],
-                            if let Some(prev) = prev {
-                                Some(&self.board.cells[*prev])
-                            } else {
-                                None
-                            },
-                            if let Some(next) = next {
-                                Some(&self.board.cells[*next])
-                            } else {
-                                None
-                            },
-                        );
-                        match direction {
-                            PathDirection::UpLeft => maze_gpu_data[*item] |= PATH_UP_LEFT,
-                            PathDirection::UpRight => maze_gpu_data[*item] |= PATH_UP_RIGHT,
-                            PathDirection::DownLeft => maze_gpu_data[*item] |= PATH_DOWN_LEFT,
-                            PathDirection::DownRight => maze_gpu_data[*item] |= PATH_DOWN_RIGHT,
-                            PathDirection::Horizontal => maze_gpu_data[*item] |= PATH_HORIZONTAL,
-                            PathDirection::Vertical => maze_gpu_data[*item] |= PATH_VERTICAL,
-                            PathDirection::StartLeft => maze_gpu_data[*item] |= START_LEFT,
-                            PathDirection::StartDown => maze_gpu_data[*item] |= START_DOWN,
-                            PathDirection::StartUp => maze_gpu_data[*item] |= START_UP,
-                            PathDirection::StartRight => maze_gpu_data[*item] |= START_RIGHT,
-                            PathDirection::EndLeft => maze_gpu_data[*item] |= END_LEFT,
-                            PathDirection::EndDown => maze_gpu_data[*item] |= END_DOWN,
-                            PathDirection::EndUp => maze_gpu_data[*item] |= END_UP,
-                            PathDirection::EndRight => maze_gpu_data[*item] |= END_RIGHT,
-                        }
-                    }
-                }
-            }
+            // if self.state == MazeState::Solve || self.state == MazeState::Done {
+            //     let path = self.solver.get_path();
+            //     if path.len() > 1 {
+            //         for (i, item) in path.iter().enumerate() {
+            //             let prev = if i > 0 { path.get(i - 1) } else { None };
+            //             let next = path.get(i + 1); // get handles out-of-bounds by returning None
+            //             let direction = direction(
+            //                 &self.board.cells[*item],
+            //                 if let Some(prev) = prev {
+            //                     Some(&self.board.cells[*prev])
+            //                 } else {
+            //                     None
+            //                 },
+            //                 if let Some(next) = next {
+            //                     Some(&self.board.cells[*next])
+            //                 } else {
+            //                     None
+            //                 },
+            //             );
+            //             match direction {
+            //                 PathDirection::UpLeft => maze_gpu_data[*item] |= PATH_UP_LEFT,
+            //                 PathDirection::UpRight => maze_gpu_data[*item] |= PATH_UP_RIGHT,
+            //                 PathDirection::DownLeft => maze_gpu_data[*item] |= PATH_DOWN_LEFT,
+            //                 PathDirection::DownRight => maze_gpu_data[*item] |= PATH_DOWN_RIGHT,
+            //                 PathDirection::Horizontal => maze_gpu_data[*item] |= PATH_HORIZONTAL,
+            //                 PathDirection::Vertical => maze_gpu_data[*item] |= PATH_VERTICAL,
+            //                 PathDirection::StartLeft => maze_gpu_data[*item] |= START_LEFT,
+            //                 PathDirection::StartDown => maze_gpu_data[*item] |= START_DOWN,
+            //                 PathDirection::StartUp => maze_gpu_data[*item] |= START_UP,
+            //                 PathDirection::StartRight => maze_gpu_data[*item] |= START_RIGHT,
+            //                 PathDirection::EndLeft => maze_gpu_data[*item] |= END_LEFT,
+            //                 PathDirection::EndDown => maze_gpu_data[*item] |= END_DOWN,
+            //                 PathDirection::EndUp => maze_gpu_data[*item] |= END_UP,
+            //                 PathDirection::EndRight => maze_gpu_data[*item] |= END_RIGHT,
+            //             }
+            //         }
+            //     }
+            // }
             self.queue
-                .write_buffer(&self.maze_buffer, 0, bytemuck::cast_slice(&maze_gpu_data));
+                .write_buffer(&self.maze_buffer, 0, bytemuck::cast_slice(&self.board.gpu_data));
         }
 
         let output = self.surface.get_current_texture()?;
@@ -1099,12 +1166,12 @@ impl State {
         // self.step = false;
         // self.step_count = 0;
         // TODO 
-        let mut new_maze_data = self.board.create_gpu_data();
+        // let mut new_maze_data = self.board.create_gpu_data();
         self.maze_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Maze Storage Buffer (resized)"),
-                contents: bytemuck::cast_slice(&new_maze_data),
+                contents: bytemuck::cast_slice(&self.board.gpu_data),
                 usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
         self.uniform_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -1134,7 +1201,7 @@ impl State {
             }
             PathfindingAlgorithm::AStar => Box::new(solver::a_star::AStar::new(&self.board)),
             PathfindingAlgorithm::DeadEndFilling => {
-                Box::new(solver::dead_end_filing::DeadEndFilling::new(&self.board))
+                Box::new(solver::dead_end_filing::DeadEndFilling::new(&mut self.board))
             }
             PathfindingAlgorithm::WallFollower => {
                 Box::new(solver::wall_follower::WallFollower::new(&self.board))

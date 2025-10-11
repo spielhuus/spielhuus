@@ -73,12 +73,15 @@ impl Solver for AStar {
 
         if let Some((cell, _)) = neighbors {
             self.path.push(cell);
+            crate::update_path(board, &self.path);
             self.positions.push(cell);
             if cell == self.end {
                 return Ok(MazeState::Done);
             }
         } else {
-            self.path.pop();
+            let cell = self.path.pop();
+            crate::clear_direction(board, cell.unwrap());
+            crate::update_path(board, &self.path);
         }
 
         Ok(MazeState::Solve)
