@@ -1,3 +1,4 @@
+mod color;
 pub mod generator;
 pub mod solver;
 
@@ -85,8 +86,8 @@ pub const WF_TURN_LEFT_W_TO_S: u32 = 1 << 6; // Entered from WEST, turning left 
 pub const WF_TURN_LEFT_S_TO_E: u32 = 1 << 7; // Entered from SOUTH, turning left to exit EAST
 
 // --- Right Turns (Bits 8-11) ---
-pub const WF_TURN_RIGHT_W_TO_N: u32 = 1 << 8;  // Entered from WEST, turning right to exit NORTH
-pub const WF_TURN_RIGHT_N_TO_E: u32 = 1 << 9;  // Entered from NORTH, turning right to exit EAST
+pub const WF_TURN_RIGHT_W_TO_N: u32 = 1 << 8; // Entered from WEST, turning right to exit NORTH
+pub const WF_TURN_RIGHT_N_TO_E: u32 = 1 << 9; // Entered from NORTH, turning right to exit EAST
 pub const WF_TURN_RIGHT_E_TO_S: u32 = 1 << 10; // Entered from EAST, turning right to exit SOUTH
 pub const WF_TURN_RIGHT_S_TO_W: u32 = 1 << 11; // Entered from SOUTH, turning right to exit WEST
 
@@ -265,7 +266,7 @@ impl Board {
             cell_size,
             x: border,
             y: border,
-            gpu_data: vec![[WALL_TOP|WALL_BOTTOM|WALL_RIGHT|WALL_LEFT, 0]; board_size.pow(2)],
+            gpu_data: vec![[WALL_TOP | WALL_BOTTOM | WALL_RIGHT | WALL_LEFT, 0]; board_size.pow(2)],
         };
         board.init();
         board
@@ -364,10 +365,22 @@ impl Board {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct Colors {
+    wall_color: [f32; 4],
+    unvisited_floor_color: [f32; 4],
+    visited_floor_color: [f32; 4],
+    backtrack_floor_color: [f32; 4],
+    cursor_color: [f32; 4],
+    cross_color: [f32; 4],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct Uniforms {
     resolution: [f32; 2],
     time: f32,
     grid_size: u32,
+    colors: Colors,
 }
 
 pub struct State {
@@ -389,6 +402,7 @@ pub struct State {
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
     uniform_bind_group_layout: wgpu::BindGroupLayout,
+    colors: Colors,
     maze_buffer: wgpu::Buffer,
     #[cfg(not(target_arch = "wasm32"))]
     proxy: winit::event_loop::EventLoopProxy<UserEvent>,
@@ -407,7 +421,7 @@ pub struct State {
 impl State {
     async fn new(
         window: Arc<Window>,
-        #[cfg(not(target_arch = "wasm32"))] proxy: winit::event_loop::EventLoopProxy<UserEvent>, 
+        #[cfg(not(target_arch = "wasm32"))] proxy: winit::event_loop::EventLoopProxy<UserEvent>,
         #[cfg(target_arch = "wasm32")] canvas: HtmlCanvasElement,
     ) -> anyhow::Result<State> {
         #[cfg(not(target_arch = "wasm32"))]
@@ -416,7 +430,7 @@ impl State {
         let start_time = web_sys::window().unwrap().performance().unwrap().now();
 
         let size = window.inner_size();
-        let is_surface_configured = size.width > 0 && size.height > 0; 
+        let is_surface_configured = size.width > 0 && size.height > 0;
         let board = Board::new(BORDER, INITIAL_CELL_COUNT, 5); //TODO: is the cell size used?
         let solver = Box::new(solver::djikstra::Djikstra::new(&board));
         let generator = Box::new(Backtracking::new());
@@ -447,7 +461,7 @@ impl State {
             .formats
             .iter()
             .copied()
-            .find(|f| f.is_srgb()) 
+            .find(|f| f.is_srgb())
             .unwrap_or(surface_caps.formats[0]);
 
         let config = wgpu::SurfaceConfiguration {
@@ -455,7 +469,10 @@ impl State {
             format: surface_format,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::AutoVsync, //Fifo,
+            present_mode: wgpu::PresentMode::Fifo,
+            #[cfg(target_arch = "wasm32")]
+            alpha_mode: wgpu::CompositeAlphaMode::PreMultiplied,
+            #[cfg(not(target_arch = "wasm32"))]
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
@@ -470,12 +487,104 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         });
 
+        // let colors: Colors;
+        // #[cfg(target_arch = "wasm32")]
+        // {
+        //     use wasm_bindgen::prelude::*;
+        //     use web_sys::window;
+        //     let window = window().expect("should have a window in this context");
+        //     let document = window.document().expect("window should have a document");
+        //     let root = document
+        //         .document_element()
+        //         .expect("document should have a root element");
+        //
+        //     let style = window
+        //         .get_computed_style(&root)
+        //         .unwrap()
+        //         .expect("element should have a computed style");
+        //
+        //     let black = color::parse_rgb_color(
+        //         &style
+        //             .get_property_value("--black")
+        //             .expect("expect black color"),
+        //     )
+        //     .unwrap();
+        //     let white = color::parse_rgb_color(
+        //         &style
+        //             .get_property_value("--white")
+        //             .expect("expect white color"),
+        //     )
+        //     .unwrap();
+        //     let red = color::parse_rgb_color(
+        //         &style.get_property_value("--red").expect("expect red color"),
+        //     )
+        //     .unwrap();
+        //     let orange = color::parse_rgb_color(
+        //         &style
+        //             .get_property_value("--orange")
+        //             .expect("expect orange color"),
+        //     )
+        //     .unwrap();
+        //     let lightgrey = color::parse_rgb_color(
+        //         &style
+        //             .get_property_value("--lightgrey")
+        //             .expect("expect lightgrey color"),
+        //     )
+        //     .unwrap();
+        //     let lightred = color::parse_rgb_color(
+        //         &style
+        //             .get_property_value("--lightred")
+        //             .expect("expect lightred color"),
+        //     )
+        //     .unwrap();
+        //     let blue = color::parse_rgb_color(
+        //         &style
+        //             .get_property_value("--blue")
+        //             .expect("expect blue color"),
+        //     )
+        //     .unwrap();
+        //     colors = Colors {
+        //         wall_color: [orange.r as f32, orange.g as f32, orange.b as f32, 0.5],
+        //         unvisited_floor_color: [
+        //             lightgrey.r as f32,
+        //             lightgrey.g as f32,
+        //             lightgrey.b as f32,
+        //             0.5,
+        //         ],
+        //         visited_floor_color: [0.0, 0.0, 0.0, 0.0],
+        //         backtrack_floor_color: [
+        //             lightred.r as f32,
+        //             lightred.g as f32,
+        //             lightred.b as f32,
+        //             0.5,
+        //         ],
+        //         cursor_color: [red.r as f32, red.g as f32, red.b as f32, red.a as f32],
+        //         cross_color: [red.r as f32, red.g as f32, red.b as f32, red.a as f32],
+        //     };
+        // }
+        //
+        // #[cfg(not(target_arch = "wasm32"))]
+        // {
+        //     colors = Colors {
+        //         wall_color: [1.0, 1.0, 1.0, 1.0],
+        //         unvisited_floor_color: [0.1, 0.1, 0.1, 0.1],
+        //         visited_floor_color: [0.0, 0.0, 0.0, 0.0],
+        //         backtrack_floor_color: [0.1, 0.0, 0.0, 0.1],
+        //         cursor_color: [1.0, 0.0, 0.0, 1.0],
+        //         cross_color: [1.0, 0.2, 0.2, 1.0],
+        //     };
+        // }
+
+        let colors = State::get_colors();
+
         // Setup buffers and bind groups (no changes needed here)
         let uniforms = Uniforms {
             resolution: [0.0, 0.0],
             time: 0.0,
             grid_size: INITIAL_CELL_COUNT as u32,
+            colors,
         };
+
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Uniform Buffer"),
             contents: bytemuck::cast_slice(&[uniforms]),
@@ -585,6 +694,7 @@ impl State {
             maze_buffer,
             uniform_buffer,
             uniform_bind_group_layout,
+            colors,
             uniform_bind_group,
             #[cfg(target_arch = "wasm32")]
             canvas,
@@ -593,6 +703,98 @@ impl State {
             #[cfg(feature = "egui")]
             scale_factor: 1.0,
         })
+    }
+
+    fn get_colors() -> Colors {
+        let colors: Colors;
+        #[cfg(target_arch = "wasm32")]
+        {
+            use wasm_bindgen::prelude::*;
+            use web_sys::window;
+            let window = window().expect("should have a window in this context");
+            let document = window.document().expect("window should have a document");
+            let root = document
+                .document_element()
+                .expect("document should have a root element");
+
+            let style = window
+                .get_computed_style(&root)
+                .unwrap()
+                .expect("element should have a computed style");
+
+            let black = color::parse_rgb_color(
+                &style
+                    .get_property_value("--black")
+                    .expect("expect black color"),
+            )
+            .unwrap();
+            let white = color::parse_rgb_color(
+                &style
+                    .get_property_value("--white")
+                    .expect("expect white color"),
+            )
+            .unwrap();
+            let red = color::parse_rgb_color(
+                &style.get_property_value("--red").expect("expect red color"),
+            )
+            .unwrap();
+            let orange = color::parse_rgb_color(
+                &style
+                    .get_property_value("--orange")
+                    .expect("expect orange color"),
+            )
+            .unwrap();
+            let lightgrey = color::parse_rgb_color(
+                &style
+                    .get_property_value("--lightgrey")
+                    .expect("expect lightgrey color"),
+            )
+            .unwrap();
+            let lightred = color::parse_rgb_color(
+                &style
+                    .get_property_value("--lightred")
+                    .expect("expect lightred color"),
+            )
+            .unwrap();
+            let blue = color::parse_rgb_color(
+                &style
+                    .get_property_value("--blue")
+                    .expect("expect blue color"),
+            )
+            .unwrap();
+            colors = Colors {
+                wall_color: [orange.r as f32, orange.g as f32, orange.b as f32, 0.5],
+                unvisited_floor_color: [
+                    lightgrey.r as f32,
+                    lightgrey.g as f32,
+                    lightgrey.b as f32,
+                    0.2,
+                ],
+                visited_floor_color: [0.0, 0.0, 0.0, 0.0],
+                backtrack_floor_color: [
+                    lightred.r as f32,
+                    lightred.g as f32,
+                    lightred.b as f32,
+                    0.2,
+                ],
+                cursor_color: [red.r as f32, red.g as f32, red.b as f32, red.a as f32],
+                cross_color: [red.r as f32, red.g as f32, red.b as f32, red.a as f32],
+            };
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            colors = Colors {
+                wall_color: [1.0, 1.0, 1.0, 1.0],
+                unvisited_floor_color: [0.1, 0.1, 0.1, 0.1],
+                visited_floor_color: [0.0, 0.0, 0.0, 0.0],
+                backtrack_floor_color: [0.1, 0.0, 0.0, 0.1],
+                cursor_color: [1.0, 0.0, 0.0, 1.0],
+                cross_color: [1.0, 0.2, 0.2, 1.0],
+            };
+        }
+
+        colors
     }
 
     fn handle_key(&self, event_loop: &ActiveEventLoop, code: KeyCode, is_pressed: bool) {
@@ -611,7 +813,6 @@ impl State {
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-
         if !self.is_surface_configured {
             return Ok(());
         }
@@ -647,8 +848,11 @@ impl State {
         }
 
         if maze_updated {
-            self.queue
-                .write_buffer(&self.maze_buffer, 0, bytemuck::cast_slice(&self.board.gpu_data));
+            self.queue.write_buffer(
+                &self.maze_buffer,
+                0,
+                bytemuck::cast_slice(&self.board.gpu_data),
+            );
         }
 
         let output = self.surface.get_current_texture()?;
@@ -703,6 +907,7 @@ impl State {
                 ],
                 time: elapsed,
                 grid_size: self.cell_count as u32,
+                colors: self.colors,
             };
             self.queue.write_buffer(
                 &self.uniform_buffer,
@@ -867,9 +1072,9 @@ impl State {
                 Box::new(solver::backtracker::Backtracker::new(&self.board))
             }
             PathfindingAlgorithm::AStar => Box::new(solver::a_star::AStar::new(&self.board)),
-            PathfindingAlgorithm::DeadEndFilling => {
-                Box::new(solver::dead_end_filing::DeadEndFilling::new(&mut self.board))
-            }
+            PathfindingAlgorithm::DeadEndFilling => Box::new(
+                solver::dead_end_filing::DeadEndFilling::new(&mut self.board),
+            ),
             PathfindingAlgorithm::WallFollower => {
                 Box::new(solver::wall_follower::WallFollower::new(&self.board))
             }
@@ -887,6 +1092,7 @@ pub enum UserEvent {
     Generator(MazeAlgorithm),
     Solver(PathfindingAlgorithm),
     Size(usize),
+    ThemeChanged,
 }
 
 impl std::fmt::Debug for UserEvent {
@@ -896,15 +1102,18 @@ impl std::fmt::Debug for UserEvent {
             UserEvent::GenerateMaze => write!(f, "GenerateMaze"),
             UserEvent::SolveMaze => write!(f, "SolveMaze"),
             UserEvent::Generator(maze_algorithm) => write!(f, "Solver({})", maze_algorithm),
-            UserEvent::Solver(pathfinding_algorithm) => write!(f, "PathFindingAlogrithm({})", pathfinding_algorithm),
+            UserEvent::Solver(pathfinding_algorithm) => {
+                write!(f, "PathFindingAlogrithm({})", pathfinding_algorithm)
+            }
             UserEvent::Size(size) => write!(f, "Size({})", size),
+            UserEvent::ThemeChanged => write!(f, "ThemeChanged()"),
         }
     }
 }
 
 #[derive(Default)]
 pub struct App {
-    proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>, 
+    proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>,
     state: Option<State>,
     #[cfg(target_arch = "wasm32")]
     _event_closures: Vec<Closure<dyn FnMut(web_sys::Event)>>,
@@ -927,25 +1136,26 @@ impl ApplicationHandler<UserEvent> for App {
         //create the html ui
         #[cfg(target_arch = "wasm32")]
         {
-            use wasm_bindgen::prelude::*;
             use wasm_bindgen::JsCast;
+            use wasm_bindgen::prelude::*;
             use web_sys::{
-                console, Document, Element, HtmlButtonElement, HtmlFormElement, HtmlOptionElement,
-                HtmlSelectElement, HtmlInputElement, Window,
+                Document, Element, HtmlButtonElement, HtmlFormElement, HtmlInputElement,
+                HtmlOptionElement, HtmlSelectElement, Window, console,
             };
-            
+
             let proxy = self.proxy.as_ref().unwrap().clone();
-            let on_generate_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
-                let target = event.target().expect("Event should have a target");
-                if let Some(input_element) = target.dyn_ref::<HtmlButtonElement>() {
-                    event.prevent_default();
-                    log::info!("generate clicked");
-                    if let Err(e) = proxy.send_event(UserEvent::GenerateMaze) {
-                        log::error!("Failed to send GenerateMaze event: {:?}", e);
+            let on_generate_callback =
+                Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                    let target = event.target().expect("Event should have a target");
+                    if let Some(input_element) = target.dyn_ref::<HtmlButtonElement>() {
+                        event.prevent_default();
+                        log::info!("generate clicked");
+                        if let Err(e) = proxy.send_event(UserEvent::GenerateMaze) {
+                            log::error!("Failed to send GenerateMaze event: {:?}", e);
+                        }
                     }
-                }
-            });
-            
+                });
+
             let proxy = self.proxy.as_ref().unwrap().clone();
             let on_solve_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
                 let target = event.target().expect("Event should have a target");
@@ -961,41 +1171,42 @@ impl ApplicationHandler<UserEvent> for App {
             });
 
             let proxy = self.proxy.as_ref().unwrap().clone();
-            let on_select_generator_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
-                let target = event.target().expect("Event should have a target");
-                if let Some(input_element) = target.dyn_ref::<HtmlSelectElement>() {
-                    let value_str = input_element.value();
-                    log::info!("generator selected: {}", value_str);
-                    if let Err(e) = proxy.send_event(UserEvent::Generator(
-                            match value_str.as_str() {
-                                 "1" => MazeAlgorithm::RecursiveBacktracker,
-                                 "2" => MazeAlgorithm::Kruskal,
-                                 "3" => MazeAlgorithm::Eller,
-                                 "4" => MazeAlgorithm::Prim,
-                                 "5" => MazeAlgorithm::RecursiveDivision,
-                                 "6" => MazeAlgorithm::AldousBroder,
-                                 "7" => MazeAlgorithm::Wilson,
-                                 "8" => MazeAlgorithm::HuntAndKill,
-                                 "9" => MazeAlgorithm::GrowingTree,
-                                 "10" => MazeAlgorithm::BinaryTree,
-                                 "11" => MazeAlgorithm::Sidewinder,
-                                 _ => MazeAlgorithm::RecursiveBacktracker,
-                            }
-                    
-                    )) {
-                        log::error!("Failed to send SolveMaze event: {:?}", e);
+            let on_select_generator_callback =
+                Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                    let target = event.target().expect("Event should have a target");
+                    if let Some(input_element) = target.dyn_ref::<HtmlSelectElement>() {
+                        let value_str = input_element.value();
+                        log::info!("generator selected: {}", value_str);
+                        if let Err(e) =
+                            proxy.send_event(UserEvent::Generator(match value_str.as_str() {
+                                "1" => MazeAlgorithm::RecursiveBacktracker,
+                                "2" => MazeAlgorithm::Kruskal,
+                                "3" => MazeAlgorithm::Eller,
+                                "4" => MazeAlgorithm::Prim,
+                                "5" => MazeAlgorithm::RecursiveDivision,
+                                "6" => MazeAlgorithm::AldousBroder,
+                                "7" => MazeAlgorithm::Wilson,
+                                "8" => MazeAlgorithm::HuntAndKill,
+                                "9" => MazeAlgorithm::GrowingTree,
+                                "10" => MazeAlgorithm::BinaryTree,
+                                "11" => MazeAlgorithm::Sidewinder,
+                                _ => MazeAlgorithm::RecursiveBacktracker,
+                            }))
+                        {
+                            log::error!("Failed to send SolveMaze event: {:?}", e);
+                        }
                     }
-                }
-            });
+                });
 
             let proxy = self.proxy.as_ref().unwrap().clone();
-            let on_select_solver_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
-                let target = event.target().expect("Event should have a target");
-                if let Some(input_element) = target.dyn_ref::<HtmlSelectElement>() {
-                    let value_str = input_element.value();
-                    log::info!("solver selected: {}", value_str);
-                    if let Err(e) = proxy.send_event(UserEvent::Solver(
-                            match value_str.as_str() {
+            let on_select_solver_callback =
+                Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                    let target = event.target().expect("Event should have a target");
+                    if let Some(input_element) = target.dyn_ref::<HtmlSelectElement>() {
+                        let value_str = input_element.value();
+                        log::info!("solver selected: {}", value_str);
+                        if let Err(e) =
+                            proxy.send_event(UserEvent::Solver(match value_str.as_str() {
                                 "1" => PathfindingAlgorithm::Dijkstra,
                                 "2" => PathfindingAlgorithm::RecursiveBacktracker,
                                 "3" => PathfindingAlgorithm::AStar,
@@ -1003,30 +1214,29 @@ impl ApplicationHandler<UserEvent> for App {
                                 "5" => PathfindingAlgorithm::WallFollower,
                                 "6" => PathfindingAlgorithm::Genetic,
                                 _ => PathfindingAlgorithm::Dijkstra,
-                            }
-                    
-                    )) {
-                        log::error!("Failed to send SolveMaze event: {:?}", e);
+                            }))
+                        {
+                            log::error!("Failed to send SolveMaze event: {:?}", e);
+                        }
                     }
-                }
-            });
+                });
 
             let proxy = self.proxy.as_ref().unwrap().clone();
-            let on_select_size_callback = Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
-                let target = event.target().expect("Event should have a target");
-                if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
-                    let value_str = input_element.value();
-                    log::info!("size selected: {}", value_str);
-                    if let Ok(size) = value_str.parse::<usize>() {
-                        if size >= 1 && size <= 10 {
-                            if let Err(e) = proxy.send_event(UserEvent::Size(size * 10 - 1)) {
-                                log::error!("Failed to send SolveMaze event: {:?}", e);
+            let on_select_size_callback =
+                Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                    let target = event.target().expect("Event should have a target");
+                    if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
+                        let value_str = input_element.value();
+                        log::info!("size selected: {}", value_str);
+                        if let Ok(size) = value_str.parse::<usize>() {
+                            if size >= 1 && size <= 10 {
+                                if let Err(e) = proxy.send_event(UserEvent::Size(size * 10 - 1)) {
+                                    log::error!("Failed to send SolveMaze event: {:?}", e);
+                                }
                             }
                         }
                     }
-                }
-            });
-
+                });
 
             let window = web_sys::window().expect("no global `window` exists");
             let document = window.document().expect("should have a document on window");
@@ -1035,7 +1245,8 @@ impl ApplicationHandler<UserEvent> for App {
             let generate_button = document
                 .get_element_by_id("generate")
                 .expect("should have an input with id 'generate'");
-            let generate_button_element: HtmlButtonElement = generate_button.dyn_into().map_err(|_| ()).unwrap();
+            let generate_button_element: HtmlButtonElement =
+                generate_button.dyn_into().map_err(|_| ()).unwrap();
             generate_button_element
                 .add_event_listener_with_callback(
                     "click",
@@ -1044,11 +1255,11 @@ impl ApplicationHandler<UserEvent> for App {
                 .unwrap();
             self._event_closures.push(on_generate_callback);
 
-
             let solve_button = document
                 .get_element_by_id("solve")
                 .expect("should have an input with id 'solve'");
-            let solve_button_element: HtmlButtonElement = solve_button.dyn_into().map_err(|_| ()).unwrap();
+            let solve_button_element: HtmlButtonElement =
+                solve_button.dyn_into().map_err(|_| ()).unwrap();
             solve_button_element
                 .add_event_listener_with_callback(
                     "click",
@@ -1060,7 +1271,8 @@ impl ApplicationHandler<UserEvent> for App {
             let generator_choice = document
                 .get_element_by_id("generator")
                 .expect("should have an input with id 'generator'");
-            let generator_choice_element: HtmlSelectElement = generator_choice.dyn_into().map_err(|_| ()).unwrap();
+            let generator_choice_element: HtmlSelectElement =
+                generator_choice.dyn_into().map_err(|_| ()).unwrap();
             generator_choice_element
                 .add_event_listener_with_callback(
                     "change",
@@ -1072,7 +1284,8 @@ impl ApplicationHandler<UserEvent> for App {
             let solver_choice = document
                 .get_element_by_id("solver")
                 .expect("should have an input with id 'solver'");
-            let solver_choice_element: HtmlSelectElement = solver_choice.dyn_into().map_err(|_| ()).unwrap();
+            let solver_choice_element: HtmlSelectElement =
+                solver_choice.dyn_into().map_err(|_| ()).unwrap();
             solver_choice_element
                 .add_event_listener_with_callback(
                     "change",
@@ -1084,7 +1297,8 @@ impl ApplicationHandler<UserEvent> for App {
             let size_choice = document
                 .get_element_by_id("size")
                 .expect("should have an input with id 'size'");
-            let size_choice_element: HtmlInputElement = size_choice.dyn_into().map_err(|_| ()).unwrap();
+            let size_choice_element: HtmlInputElement =
+                size_choice.dyn_into().map_err(|_| ()).unwrap();
             size_choice_element
                 .add_event_listener_with_callback(
                     "input",
@@ -1092,6 +1306,34 @@ impl ApplicationHandler<UserEvent> for App {
                 )
                 .unwrap();
             self._event_closures.push(on_select_size_callback);
+
+            // theme changer event
+            let proxy = self.proxy.as_ref().unwrap().clone();
+            let callback = Closure::wrap(Box::new(move |theme: JsValue| {
+                if let Some(theme_str) = theme.as_string() {
+                    if let Err(e) = proxy.send_event(UserEvent::ThemeChanged) {
+                        log::error!("Failed to send ThemeChanged event: {:?}", e);
+                    }
+                }
+            }) as Box<dyn FnMut(JsValue)>);
+
+            let theme_controller =
+                js_sys::Reflect::get(&window, &JsValue::from_str("themeController"))
+                    .unwrap()
+                    .dyn_into::<js_sys::Object>()
+                    .unwrap();
+
+            let subscriber =
+                js_sys::Reflect::get(&theme_controller, &JsValue::from_str("subscribe"))
+                    .expect("subscribe fn");
+            let subscribe_fn: &js_sys::Function = subscriber
+                .dyn_ref::<js_sys::Function>()
+                .expect("`subscribe` should be a function");
+
+            subscribe_fn
+                .call1(&theme_controller, callback.as_ref().unchecked_ref())
+                .unwrap();
+            callback.forget();
         }
 
         #[allow(unused_mut)]
@@ -1127,10 +1369,14 @@ impl ApplicationHandler<UserEvent> for App {
         {
             if let Some(proxy) = self.proxy.take() {
                 wasm_bindgen_futures::spawn_local(async move {
-                 let new_state = State::new(window, canvas)
-                                .await
-                                .expect("Unable to create canvas!!!");
-                assert!(proxy.send_event(UserEvent::StateInitialized(new_state)).is_ok());
+                    let new_state = State::new(window, canvas)
+                        .await
+                        .expect("Unable to create canvas!!!");
+                    assert!(
+                        proxy
+                            .send_event(UserEvent::StateInitialized(new_state))
+                            .is_ok()
+                    );
                 });
             }
         }
@@ -1140,61 +1386,71 @@ impl ApplicationHandler<UserEvent> for App {
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, mut event: UserEvent) {
         match event {
             UserEvent::StateInitialized(mut initial_state) => {
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        initial_state.resize(
-                            initial_state.window.inner_size().width,
-                            initial_state.window.inner_size().height,
-                        );
-                        initial_state.window.request_redraw();
-                    }
-                    self.state = Some(initial_state);
+                #[cfg(target_arch = "wasm32")]
+                {
+                    initial_state.resize(
+                        initial_state.window.inner_size().width,
+                        initial_state.window.inner_size().height,
+                    );
+                    initial_state.window.request_redraw();
                 }
+                self.state = Some(initial_state);
+            }
             UserEvent::GenerateMaze => {
-                    if let Some(state) = &mut self.state {
-                        // This is your original code, now in a safe context!
-                        state.init_maze();
-                        state.state = MazeState::Generate;
-                        state.window.request_redraw();
-                    } else {
-                        log::warn!("GenerateMaze event received before state was initialized.");
-                    }
+                if let Some(state) = &mut self.state {
+                    // This is your original code, now in a safe context!
+                    state.init_maze();
+                    state.state = MazeState::Generate;
+                    state.window.request_redraw();
+                } else {
+                    log::warn!("GenerateMaze event received before state was initialized.");
                 }
+            }
             UserEvent::SolveMaze => {
-                    if let Some(state) = &mut self.state {
-                        state.board.gpu_data.iter_mut().for_each(|c| c[0] &= WALL_RIGHT | WALL_LEFT | WALL_TOP | WALL_BOTTOM);
-                        state.state = MazeState::Solve;
-                        state.init_solver();
-                        state.window.request_redraw();
-                    } else {
-                        log::warn!("SolveMaze event received before state was initialized.");
-                    }
+                if let Some(state) = &mut self.state {
+                    state
+                        .board
+                        .gpu_data
+                        .iter_mut()
+                        .for_each(|c| c[0] &= WALL_RIGHT | WALL_LEFT | WALL_TOP | WALL_BOTTOM);
+                    state.state = MazeState::Solve;
+                    state.init_solver();
+                    state.window.request_redraw();
+                } else {
+                    log::warn!("SolveMaze event received before state was initialized.");
                 }
+            }
             UserEvent::Generator(maze_algorithm) => {
-                    if let Some(state) = &mut self.state {
-                        state.selected_generator = maze_algorithm;
-                        state.init_maze();
-                    } else {
-                        log::warn!("SolveMaze event received before state was initialized.");
-                    }
-            },
+                if let Some(state) = &mut self.state {
+                    state.selected_generator = maze_algorithm;
+                    state.init_maze();
+                } else {
+                    log::warn!("SolveMaze event received before state was initialized.");
+                }
+            }
             UserEvent::Solver(pathfinding_algorithm) => {
-                    if let Some(state) = &mut self.state {
-                        state.selected_solver = pathfinding_algorithm;
-                        state.init_solver();
-                    } else {
-                        log::warn!("SolveMaze event received before state was initialized.");
-                    }
-            },
+                if let Some(state) = &mut self.state {
+                    state.selected_solver = pathfinding_algorithm;
+                    state.init_solver();
+                } else {
+                    log::warn!("SolveMaze event received before state was initialized.");
+                }
+            }
             UserEvent::Size(size) => {
-                    if let Some(state) = &mut self.state {
-                        state.cell_count = size;
-                        state.init_maze();
-                        state.window.request_redraw();
-                    } else {
-                        log::warn!("SolveMaze event received before state was initialized.");
-                    }
-            },
+                if let Some(state) = &mut self.state {
+                    state.cell_count = size;
+                    state.init_maze();
+                    state.window.request_redraw();
+                } else {
+                    log::warn!("SolveMaze event received before state was initialized.");
+                }
+            }
+
+            UserEvent::ThemeChanged => {
+                if let Some(state) = &mut self.state {
+                    state.colors = State::get_colors();
+                }
+            }
         }
     }
 
@@ -1242,9 +1498,7 @@ impl ApplicationHandler<UserEvent> for App {
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run() -> anyhow::Result<()> {
     let event_loop = EventLoop::with_user_event().build()?;
-    let mut app = App::new(
-        &event_loop,
-    );
+    let mut app = App::new(&event_loop);
     event_loop.run_app(&mut app)?;
 
     Ok(())

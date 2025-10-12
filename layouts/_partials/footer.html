@@ -2,7 +2,7 @@
   <div class="arrow background"></div>
   <div class="arrow orange"></div>
   <div class="arrow darkorange"></div>
-  <div class="arrow red"></div>
+  <div class="arrow redpastell"></div>
   <div class="arrow purple"></div>
 </div>
 <div class="footer">
@@ -19,34 +19,48 @@
   const themeToggleButton = document.getElementById('theme-toggle');
   const docElement = document.documentElement;
 
-  const setTheme = (theme) => {
-    docElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
-      themeToggleButton.textContent = '🌙';
-    } else {
-      themeToggleButton.textContent = '☀️';
+  window.themeController = {
+    listeners: [], // This is your "listener array"
+
+    // Method for other parts of the app (like Rust/WASM) to subscribe
+    subscribe: function(callback) {
+      this.listeners.push(callback);
+      // Immediately notify the new subscriber of the current theme
+      callback(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    },
+
+    // Notifies all listeners
+    _notify: function(newTheme) {
+      this.listeners.forEach(callback => callback(newTheme));
+    },
+    // The central function to set the theme
+    setTheme: function(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+
+      const themeToggleButton = document.getElementById('theme-toggle');
+      if (theme === 'dark') {
+        themeToggleButton.textContent = '🌙';
+      } else {
+        themeToggleButton.textContent = '☀️';
+      }
+      
+      // Notify all subscribers about the change
+      this._notify(theme);
     }
   };
 
   themeToggleButton.addEventListener('click', () => {
-    const currentTheme = docElement.getAttribute('data-theme');
-    if (currentTheme === 'dark') {
-      setTheme('light');
-    } else {
-      setTheme('dark');
-    }
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    window.themeController.setTheme(newTheme);
   });
 
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
-    setTheme(savedTheme);
+    window.themeController.setTheme(savedTheme);
   } else {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (prefersDark) {
-      setTheme('dark');
-    } else {
-      setTheme('light');
-    }
+    window.themeController.setTheme(prefersDark ? 'dark' : 'light');
   }
 </script>

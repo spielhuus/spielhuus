@@ -1,7 +1,17 @@
+struct Colors {
+    wall_color: vec4<f32>,
+    unvisited_floor_color: vec4<f32>,
+    visited_floor_color: vec4<f32>,
+    backtrack_floor_color: vec4<f32>,
+    cursor_color: vec4<f32>,
+    cross_color: vec4<f32>,
+}
+
 struct Uniforms {
     resolution: vec2<f32>,
     time: f32,
     grid_size: u32,
+    colors: Colors,
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -52,14 +62,7 @@ const CELL_WEIGHT: u32 = 1u << 26u;
 const USE_WALL_FOLLOWER_PATH: u32 = 1u << 27u;
 
 const wall_thickness: f32 = 0.1;
-
-// Define the colors
-const wall_color = vec3<f32>(1.0, 1.0, 1.0);
-const unvisited_floor_color = vec4<f32>(0.1, 0.1, 0.1, 0.1);
-const visited_floor_color = vec4<f32>(0.0, 0.0, 0.0, 0.0);
-const backtrack_floor_color = vec4<f32>(0.1, 0.0, 0.0, 0.1);
-const cursor_color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
-const cross_color = vec4<f32>(1.0, 0.2, 0.2, 1.0);
+  
 const cursor_radius = 0.2;
 const MIN_PATH_THICKNESS = 0.45;
 const MAX_PATH_THICKNESS = 0.55;
@@ -125,27 +128,27 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
     let is_backtrack = (cell_data.x & CELL_BACKTRACK) != 0u;
     let is_cursor = (cell_data.x & CELL_CURSOR) != 0u;
 
-    var floor_color: vec4<f32>;
+    var floor_color: vec4<f32> = uniforms.colors.unvisited_floor_color;
     let inner_uv = fract(maze_uv * grid_f); // Pixel's position inside the cell (0.0 to 1.0)
     if is_cursor {
         let center = vec2<f32>(0.5, 0.5);
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center < cursor_radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & PATH_HORIZONTAL) != 0u {
         if inner_uv.y >= MIN_PATH_THICKNESS && inner_uv.y <= MAX_PATH_THICKNESS {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & PATH_VERTICAL) != 0u {
         if inner_uv.x >= MIN_PATH_THICKNESS && inner_uv.x <= MAX_PATH_THICKNESS {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & PATH_UP_LEFT) != 0u {
         let center = vec2<f32>(0.0, 0.0);
@@ -153,9 +156,9 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         let outer_radius = MAX_PATH_THICKNESS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center >= inner_radius && dist_from_center <= outer_radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & PATH_UP_RIGHT) != 0u {
         let center = vec2<f32>(1.0, 0.0);
@@ -163,9 +166,9 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         let outer_radius = MAX_PATH_THICKNESS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center >= inner_radius && dist_from_center <= outer_radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & PATH_DOWN_LEFT) != 0u {
         let center = vec2<f32>(0.0, 1.0);
@@ -173,9 +176,9 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         let outer_radius = MAX_PATH_THICKNESS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center >= inner_radius && dist_from_center <= outer_radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & PATH_DOWN_RIGHT) != 0u {
         let center = vec2<f32>(1.0, 1.0);
@@ -183,56 +186,56 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         let outer_radius = MAX_PATH_THICKNESS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center >= inner_radius && dist_from_center <= outer_radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & START_LEFT) != 0u {
         let center = vec2<f32>(0.5, 0.5);
         let radius = START_RADIUS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center < radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else if inner_uv.x < 0.5 && (inner_uv.y >= MIN_PATH_THICKNESS && inner_uv.y <= MAX_PATH_THICKNESS) {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & START_RIGHT) != 0u {
         let center = vec2<f32>(0.5, 0.5);
         let radius = START_RADIUS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center < radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else if inner_uv.x > 0.5 && (inner_uv.y >= MIN_PATH_THICKNESS && inner_uv.y <= MAX_PATH_THICKNESS) {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & START_UP) != 0u {
         let center = vec2<f32>(0.5, 0.5);
         let radius = START_RADIUS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center < radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else if inner_uv.y < 0.5 && (inner_uv.x >= MIN_PATH_THICKNESS && inner_uv.x <= MAX_PATH_THICKNESS) {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & START_DOWN) != 0u {
         let center = vec2<f32>(0.5, 0.5);
         let radius = START_RADIUS;
         let dist_from_center = distance(inner_uv, center);
         if dist_from_center < radius {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else if inner_uv.y > 0.5 && (inner_uv.x >= MIN_PATH_THICKNESS && inner_uv.x <= MAX_PATH_THICKNESS) {
-            floor_color = cursor_color;
+            floor_color =  uniforms.colors.cursor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & (END_UP | END_DOWN | END_LEFT | END_RIGHT)) != 0u {
-        let arrow_color = cursor_color;
+        let arrow_color =  uniforms.colors.cursor_color;
 
         var local_uv = inner_uv;
         if (cell_data.x & END_RIGHT) != 0u {
@@ -264,10 +267,10 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         if is_in_shaft || is_in_head {
             floor_color = arrow_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & (ARROW_UP | ARROW_DOWN | ARROW_LEFT | ARROW_RIGHT)) != 0u {
-        let arrow_color = cursor_color;
+        let arrow_color =  uniforms.colors.cursor_color;
 
         var local_uv = inner_uv;
         if (cell_data.x & ARROW_RIGHT) != 0u {
@@ -305,17 +308,17 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         if is_in_shaft || is_in_head {
             floor_color = arrow_color;
         } else if is_backtrack {
-            floor_color = backtrack_floor_color;
+            floor_color =  uniforms.colors.backtrack_floor_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & CROSSED) != 0u {
         let on_diag1 = abs(inner_uv.x - inner_uv.y) < cross_thickness / sqrt(2.0);
         let on_diag2 = abs(inner_uv.x + inner_uv.y - 1.0) < cross_thickness / sqrt(2.0);
         if on_diag1 || on_diag2 {
-            floor_color = cross_color;
+            floor_color =  uniforms.colors.cross_color;
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if (cell_data.x & CELL_WEIGHT) != 0u {
         let center = vec2<f32>(0.5, 0.5);
@@ -330,12 +333,12 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
 
             floor_color = vec4<f32>(path_color_rgb, 1.0);
         } else {
-            floor_color = visited_floor_color;
+            floor_color =  uniforms.colors.visited_floor_color;
         }
     } else if is_backtrack {
-        floor_color = backtrack_floor_color;
+        floor_color =  uniforms.colors.backtrack_floor_color;
     } else if is_visited {
-        floor_color = visited_floor_color;
+        floor_color =  uniforms.colors.visited_floor_color;
     }
 
     // draw the walls
@@ -352,7 +355,7 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
 
     if min_dist < wall_thickness {
         let wall_alpha = 1.0 - smoothstep(0.0, wall_thickness, min_dist);
-        return vec4(wall_color * wall_alpha, wall_alpha);
+        return vec4(uniforms.colors.wall_color.rgb, wall_alpha);
     }
 
     return floor_color;

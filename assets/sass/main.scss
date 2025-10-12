@@ -241,7 +241,7 @@ header {
     }
   }
   
-  $arrow-color-names: "background", "darkblue", "blue", "lightblue", "purple", "pink", "yellow", "white", "orange", "darkorange", "red";
+  $arrow-color-names: "background", "darkblue", "blue", "lightblue", "purple", "pink", "yellow", "white", "orange", "darkorange", "red", "redpastell";
   @each $name in $arrow-color-names {
     &.#{$name} {
       --color: var(--#{$name});

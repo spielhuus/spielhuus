@@ -34,6 +34,7 @@ console_log = "1.0"
 wgpu = { workspace = true, features = ["webgl"]}
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
+js-sys  = "0.3"
 web-sys = { version = "0.3", features = [
     "Performance",
     "Document",
@@ -48,6 +49,7 @@ web-sys = { version = "0.3", features = [
     "HtmlButtonElement",
     "HtmlInputElement",
     "HtmlSelectElement",
+    "CssStyleDeclaration",
 ]}
 
 [features]
