@@ -389,6 +389,7 @@ pub struct State {
     selected_solver: PathfindingAlgorithm,
     cell_count: usize,
     cell_size: usize,
+    steps_per_frame: usize,
     generator: Box<dyn Generator>,
     solver: Box<dyn Solver>,
     state: MazeState,
@@ -486,94 +487,6 @@ impl State {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         });
-
-        // let colors: Colors;
-        // #[cfg(target_arch = "wasm32")]
-        // {
-        //     use wasm_bindgen::prelude::*;
-        //     use web_sys::window;
-        //     let window = window().expect("should have a window in this context");
-        //     let document = window.document().expect("window should have a document");
-        //     let root = document
-        //         .document_element()
-        //         .expect("document should have a root element");
-        //
-        //     let style = window
-        //         .get_computed_style(&root)
-        //         .unwrap()
-        //         .expect("element should have a computed style");
-        //
-        //     let black = color::parse_rgb_color(
-        //         &style
-        //             .get_property_value("--black")
-        //             .expect("expect black color"),
-        //     )
-        //     .unwrap();
-        //     let white = color::parse_rgb_color(
-        //         &style
-        //             .get_property_value("--white")
-        //             .expect("expect white color"),
-        //     )
-        //     .unwrap();
-        //     let red = color::parse_rgb_color(
-        //         &style.get_property_value("--red").expect("expect red color"),
-        //     )
-        //     .unwrap();
-        //     let orange = color::parse_rgb_color(
-        //         &style
-        //             .get_property_value("--orange")
-        //             .expect("expect orange color"),
-        //     )
-        //     .unwrap();
-        //     let lightgrey = color::parse_rgb_color(
-        //         &style
-        //             .get_property_value("--lightgrey")
-        //             .expect("expect lightgrey color"),
-        //     )
-        //     .unwrap();
-        //     let lightred = color::parse_rgb_color(
-        //         &style
-        //             .get_property_value("--lightred")
-        //             .expect("expect lightred color"),
-        //     )
-        //     .unwrap();
-        //     let blue = color::parse_rgb_color(
-        //         &style
-        //             .get_property_value("--blue")
-        //             .expect("expect blue color"),
-        //     )
-        //     .unwrap();
-        //     colors = Colors {
-        //         wall_color: [orange.r as f32, orange.g as f32, orange.b as f32, 0.5],
-        //         unvisited_floor_color: [
-        //             lightgrey.r as f32,
-        //             lightgrey.g as f32,
-        //             lightgrey.b as f32,
-        //             0.5,
-        //         ],
-        //         visited_floor_color: [0.0, 0.0, 0.0, 0.0],
-        //         backtrack_floor_color: [
-        //             lightred.r as f32,
-        //             lightred.g as f32,
-        //             lightred.b as f32,
-        //             0.5,
-        //         ],
-        //         cursor_color: [red.r as f32, red.g as f32, red.b as f32, red.a as f32],
-        //         cross_color: [red.r as f32, red.g as f32, red.b as f32, red.a as f32],
-        //     };
-        // }
-        //
-        // #[cfg(not(target_arch = "wasm32"))]
-        // {
-        //     colors = Colors {
-        //         wall_color: [1.0, 1.0, 1.0, 1.0],
-        //         unvisited_floor_color: [0.1, 0.1, 0.1, 0.1],
-        //         visited_floor_color: [0.0, 0.0, 0.0, 0.0],
-        //         backtrack_floor_color: [0.1, 0.0, 0.0, 0.1],
-        //         cursor_color: [1.0, 0.0, 0.0, 1.0],
-        //         cross_color: [1.0, 0.2, 0.2, 1.0],
-        //     };
-        // }
 
         let colors = State::get_colors();
 
@@ -680,6 +593,7 @@ impl State {
             selected_solver: PathfindingAlgorithm::RecursiveBacktracker,
             cell_count: INITIAL_CELL_COUNT,
             cell_size: (window.inner_size().width as usize - 2 * BORDER) / 5,
+            steps_per_frame: 5,
             generator,
             solver,
             state: MazeState::Wait,
@@ -818,6 +732,7 @@ impl State {
         }
 
         // update maze state
+        #[cfg(target_arch = "wasm32")]
         let mut needs_next_frame = false;
         let mut maze_updated = false;
         match self.state {
@@ -825,17 +740,31 @@ impl State {
             MazeState::Wait => {}
             MazeState::GenerationDone => {}
             MazeState::Generate => {
-                self.state = self.generator.step(&mut self.board);
-                maze_updated = true;
+                for _ in 0..self.steps_per_frame {
+                    self.state = self.generator.step(&mut self.board);
+                    maze_updated = true;
+                    if self.state == MazeState::GenerationDone {
+                       #[cfg(target_arch = "wasm32")] { needs_next_frame = true; }
+                       break;
+                    }
+                }
+                #[cfg(target_arch = "wasm32")]
                 if self.state == MazeState::Generate {
                     needs_next_frame = true;
                 }
             }
             MazeState::Solve => {
-                self.state = self.solver.step(&mut self.board).unwrap();
-                maze_updated = true;
-                if self.state == MazeState::Solve {
-                    needs_next_frame = true;
+                for _ in 0..self.steps_per_frame {
+                    self.state = self.solver.step(&mut self.board).unwrap();
+                    maze_updated = true;
+                    if self.state == MazeState::Done {
+                       #[cfg(target_arch = "wasm32")] { needs_next_frame = true; }
+                       break;
+                    }
+                    #[cfg(target_arch = "wasm32")]
+                    if self.state == MazeState::Solve {
+                        needs_next_frame = true;
+                    }
                 }
             }
             MazeState::Done => {
@@ -931,6 +860,7 @@ impl State {
                 let mut generator = self.selected_generator;
                 let mut solver = self.selected_solver;
                 let mut new_cell_count = self.cell_count;
+                let mut new_steps_per_frame = self.steps_per_frame;
                 self.egui_renderer.begin_frame(&self.window);
 
                 egui_winit::egui::Window::new("Maze Controls")
@@ -951,6 +881,17 @@ impl State {
                                     .changed()
                                 {
                                     self.proxy.send_event(UserEvent::Size(new_cell_count)).ok();
+                                }
+                                ui.end_row();
+                                ui.label("Steps per frame:");
+                                if ui
+                                    .add(
+                                        egui::Slider::new(&mut new_steps_per_frame, 1..=100)
+                                            .step_by(1.0),
+                                    )
+                                    .changed()
+                                {
+                                    self.proxy.send_event(UserEvent::StepsPerFrame(new_steps_per_frame)).ok();
                                 }
                                 ui.end_row();
                                 ui.label("Generator:");
@@ -1092,6 +1033,7 @@ pub enum UserEvent {
     Generator(MazeAlgorithm),
     Solver(PathfindingAlgorithm),
     Size(usize),
+    StepsPerFrame(usize),
     ThemeChanged,
 }
 
@@ -1106,6 +1048,7 @@ impl std::fmt::Debug for UserEvent {
                 write!(f, "PathFindingAlogrithm({})", pathfinding_algorithm)
             }
             UserEvent::Size(size) => write!(f, "Size({})", size),
+            UserEvent::StepsPerFrame(steps) => write!(f, "StepsPerFrame({})", steps),
             UserEvent::ThemeChanged => write!(f, "ThemeChanged()"),
         }
     }
@@ -1231,7 +1174,24 @@ impl ApplicationHandler<UserEvent> for App {
                         if let Ok(size) = value_str.parse::<usize>() {
                             if size >= 1 && size <= 10 {
                                 if let Err(e) = proxy.send_event(UserEvent::Size(size * 10 - 1)) {
-                                    log::error!("Failed to send SolveMaze event: {:?}", e);
+                                    log::error!("Failed to send Size event: {:?}", e);
+                                }
+                            }
+                        }
+                    }
+                });
+
+            let proxy = self.proxy.as_ref().unwrap().clone();
+            let on_select_steps_callback =
+                Closure::<dyn FnMut(_)>::new(move |event: web_sys::Event| {
+                    let target = event.target().expect("Event should have a target");
+                    if let Some(input_element) = target.dyn_ref::<HtmlInputElement>() {
+                        let value_str = input_element.value();
+                        log::info!("steps selected: {}", value_str);
+                        if let Ok(steps) = value_str.parse::<usize>() {
+                            if steps >= 1 && steps <= 100 {
+                                if let Err(e) = proxy.send_event(UserEvent::StepsPerFrame(steps)) {
+                                    log::error!("Failed to send StepsPerFrame event: {:?}", e);
                                 }
                             }
                         }
@@ -1306,6 +1266,19 @@ impl ApplicationHandler<UserEvent> for App {
                 )
                 .unwrap();
             self._event_closures.push(on_select_size_callback);
+            
+            let steps_choice = document
+                .get_element_by_id("steps")
+                .expect("should have an input with id 'steps'");
+            let steps_choice_element: HtmlInputElement =
+                steps_choice.dyn_into().map_err(|_| ()).unwrap();
+            steps_choice_element
+                .add_event_listener_with_callback(
+                    "input",
+                    on_select_steps_callback.as_ref().unchecked_ref(),
+                )
+                .unwrap();
+            self._event_closures.push(on_select_steps_callback);
 
             // theme changer event
             let proxy = self.proxy.as_ref().unwrap().clone();
@@ -1445,10 +1418,19 @@ impl ApplicationHandler<UserEvent> for App {
                     log::warn!("SolveMaze event received before state was initialized.");
                 }
             }
+            UserEvent::StepsPerFrame(steps) => {
+                if let Some(state) = &mut self.state {
+                    log::info!("set steps per frame: {steps}");
+                    state.steps_per_frame = steps;
+                } else {
+                    log::warn!("SolveMaze event received before state was initialized.");
+                }
+            }
 
             UserEvent::ThemeChanged => {
                 if let Some(state) = &mut self.state {
                     state.colors = State::get_colors();
+                    state.window.request_redraw();
                 }
             }
         }

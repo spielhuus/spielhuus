@@ -255,6 +255,29 @@ footer > .arrows {
   transform: scaleX(1.1);
 }
 
+.two-cols {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+/* Make the canvas responsive */
+.two-cols > canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* On smaller screens, stack the items vertically */
+@media (max-width: 960px) {
+  .two-cols {
+    flex-direction: column;
+  }
+}
+
+
 .icon {
   display: inline-block;
   background-size: contain;

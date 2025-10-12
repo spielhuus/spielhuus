@@ -20,7 +20,7 @@ pub struct HuntAndKill {
 impl HuntAndKill {
     pub fn new(board: &mut Board) -> Self {
         let mut rng = rand::rng();
-        let current_cell = rng.random_range(0..board.board_size ^ 2) as usize;
+        let current_cell = rng.random_range(0..board.board_size.pow(2)) as usize;
         board.cells[current_cell].visited = true;
         Self {
             visited: vec![current_cell],
@@ -64,18 +64,26 @@ impl Generator for HuntAndKill {
                                 crate::Direction::North => {
                                     board.cells[self.current_cell].walls.top = false;
                                     board.cells[next].walls.bottom = false;
+                                    board.gpu_data[self.current_cell][0] &= !WALL_TOP;
+                                    board.gpu_data[next][0] &= !WALL_BOTTOM;
                                 }
                                 crate::Direction::South => {
                                     board.cells[self.current_cell].walls.bottom = false;
                                     board.cells[next].walls.top = false;
+                                    board.gpu_data[self.current_cell][0] &= !WALL_BOTTOM;
+                                    board.gpu_data[next][0] &= !WALL_TOP;
                                 }
                                 crate::Direction::East => {
                                     board.cells[self.current_cell].walls.right = false;
                                     board.cells[next].walls.left = false;
+                                    board.gpu_data[self.current_cell][0] &= !WALL_RIGHT;
+                                    board.gpu_data[next][0] &= !WALL_LEFT;
                                 }
                                 crate::Direction::West => {
                                     board.cells[self.current_cell].walls.left = false;
                                     board.cells[next].walls.right = false;
+                                    board.gpu_data[self.current_cell][0] &= !WALL_LEFT;
+                                    board.gpu_data[next][0] &= !WALL_RIGHT;
                                 }
                             }
                             self.state = IState::Kill;
@@ -141,6 +149,7 @@ impl Generator for HuntAndKill {
         }
 
         if self.visited.len() >= board.cells.len() {
+            board.gpu_data[self.current_cell][0] &= !CELL_CURSOR;
             MazeState::GenerationDone
         } else {
             MazeState::Generate
