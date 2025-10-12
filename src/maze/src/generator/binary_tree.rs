@@ -52,6 +52,4 @@ impl Generator for BinaryTree {
         }
         MazeState::Generate
     }
-
-    fn draw(&self, _board: &Board) {}
 }

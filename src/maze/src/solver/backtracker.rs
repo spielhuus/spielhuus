@@ -1,6 +1,6 @@
 use rand::{rngs::ThreadRng, seq::IndexedRandom};
 
-use crate::{Board, MazeState, PathDirection, Solver};
+use crate::{solver::path, Board, MazeState, Solver};
 
 pub struct Backtracker {
     end: usize,
@@ -73,15 +73,15 @@ impl Solver for Backtracker {
         let cell = neighbors.choose(&mut self.rng);
         if let Some(&cell) = cell {
             self.path.push(cell);
-            crate::update_path(board, &self.path);
+            path::update_path(board, &self.path);
             self.positions.push(cell);
             if cell == self.end {
                 return Ok(MazeState::Done);
             }
         } else {
             let cell = self.path.pop();
-            crate::clear_direction(board, cell.unwrap());
-            crate::update_path(board, &self.path);
+            path::clear_direction(board, cell.unwrap());
+            path::update_path(board, &self.path);
         }
 
         Ok(MazeState::Solve)
@@ -89,9 +89,5 @@ impl Solver for Backtracker {
 
     fn get_path(&self) -> &Vec<usize> {
         &self.path
-    }
-
-    fn draw(&self, board: &Board) {
-        // path::draw_path(board, self.get_path(), PATH_COLOR);
     }
 }

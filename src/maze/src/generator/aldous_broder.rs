@@ -1,8 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState, CELL_CURSOR};
-
-// use raylib_egui_rs::raylib;
+use crate::{Board, CELL_CURSOR, Generator, MazeState};
 
 pub struct AldousBroder {
     visited: Vec<usize>,
@@ -41,25 +39,14 @@ impl Generator for AldousBroder {
             board.remove_wall(self.current_cell, next);
             self.visited.push(next);
         }
-        board.gpu_data[self.current_cell] &= !CELL_CURSOR;
+        board.gpu_data[self.current_cell][0] &= !CELL_CURSOR;
         self.current_cell = next;
 
         if self.visited.len() >= board.cells.len() {
             MazeState::GenerationDone
         } else {
-            board.gpu_data[next] |= CELL_CURSOR;
+            board.gpu_data[next][0] |= CELL_CURSOR;
             MazeState::Generate
         }
-    }
-
-    fn draw(&self, board: &Board) {
-        // raylib::DrawCircle(
-        //     (board.x + board.cells[self.current_cell].x * board.cell_size + board.cell_size / 2)
-        //         as i32,
-        //     (board.y + board.cells[self.current_cell].y * board.cell_size + board.cell_size / 2)
-        //         as i32,
-        //     board.cell_size as f32 / 4.0,
-        //     CURSOR_COLOR,
-        // );
     }
 }

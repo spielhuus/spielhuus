@@ -61,6 +61,4 @@ impl Generator for Sidewinder {
             MazeState::Generate
         }
     }
-
-    fn draw(&self, _board: &Board) {}
 }

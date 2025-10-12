@@ -1,10 +1,9 @@
-use crate::{Board, Solver, MazeState};
+use crate::{Board, MazeState, Solver, solver::path};
 
 pub struct AStar {
     end: usize,
     positions: Vec<usize>,
     pub path: Vec<usize>,
-    // rng: ThreadRng,
 }
 
 impl AStar {
@@ -13,7 +12,6 @@ impl AStar {
             end: board.get_index(board.board_size - 1, board.board_size - 1),
             positions: vec![0],
             path: vec![0],
-            // rng: rand::rng(),
         }
     }
 }
@@ -73,15 +71,15 @@ impl Solver for AStar {
 
         if let Some((cell, _)) = neighbors {
             self.path.push(cell);
-            crate::update_path(board, &self.path);
+            path::update_path(board, &self.path);
             self.positions.push(cell);
             if cell == self.end {
                 return Ok(MazeState::Done);
             }
         } else {
             let cell = self.path.pop();
-            crate::clear_direction(board, cell.unwrap());
-            crate::update_path(board, &self.path);
+            path::clear_direction(board, cell.unwrap());
+            path::update_path(board, &self.path);
         }
 
         Ok(MazeState::Solve)
@@ -89,9 +87,5 @@ impl Solver for AStar {
 
     fn get_path(&self) -> &Vec<usize> {
         &self.path
-    }
-
-    fn draw(&self, board: &Board) {
-        // path::draw_path(board, self.get_path(), PATH_COLOR);
     }
 }

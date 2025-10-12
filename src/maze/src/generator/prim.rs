@@ -1,8 +1,6 @@
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState, CELL_CURSOR};
-
-// use raylib_egui_rs::raylib;
+use crate::{Board, CELL_CURSOR, Generator, MazeState};
 
 #[derive(Debug)]
 struct FreeCell {
@@ -54,13 +52,13 @@ impl Generator for Prim {
 
         // remove wall
         board.remove_wall(item.index, item.neighbor);
-        board.gpu_data[item.index] &= !CELL_CURSOR;
+        board.gpu_data[item.index][0] &= !CELL_CURSOR;
 
         // calc next cells
         let neighbors: Vec<usize> = board.neighbors(item.index).into_iter().flatten().collect();
         for n in &neighbors {
             if !self.contains(n) {
-                board.gpu_data[*n] |= CELL_CURSOR;
+                board.gpu_data[*n][0] |= CELL_CURSOR;
                 self.cells.push(FreeCell {
                     index: *n,
                     neighbor: item.index,
@@ -75,17 +73,5 @@ impl Generator for Prim {
         } else {
             MazeState::Generate
         }
-    }
-
-    fn draw(&self, board: &Board) {
-        // // draw the next cells
-        // for i in &self.cells {
-        //     raylib::DrawCircle(
-        //         (board.x + board.cells[i.index].x * board.cell_size + board.cell_size / 2) as i32,
-        //         (board.y + board.cells[i.index].y * board.cell_size + board.cell_size / 2) as i32,
-        //         board.cell_size as f32 / 5.0,
-        //         CURSOR_COLOR,
-        //     );
-        // }
     }
 }

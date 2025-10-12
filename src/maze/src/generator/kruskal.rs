@@ -1,7 +1,9 @@
 use disjoint::DisjointSet;
 use rand::prelude::*;
 
-use crate::{Board, Generator, MazeState, CELL_VISITED, WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP};
+use crate::{
+    Board, CELL_VISITED, Generator, MazeState, WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP,
+};
 
 #[derive(Debug, Eq, PartialEq)]
 enum Direction {
@@ -77,20 +79,20 @@ impl Generator for Kruskal {
                 //remove walls
                 match edge.direction {
                     Direction::North => {
-                        board.gpu_data[index_cell] &= !WALL_TOP;
-                        board.gpu_data[index_neighbor] &= !WALL_BOTTOM;
+                        board.gpu_data[index_cell][0] &= !WALL_TOP;
+                        board.gpu_data[index_neighbor][0] &= !WALL_BOTTOM;
                         board.cells[index_cell].walls.top = false;
                         board.cells[index_neighbor].walls.bottom = false;
                     }
                     Direction::West => {
-                        board.gpu_data[index_cell] &= !WALL_LEFT;
-                        board.gpu_data[index_neighbor] &= !WALL_RIGHT;
+                        board.gpu_data[index_cell][0] &= !WALL_LEFT;
+                        board.gpu_data[index_neighbor][0] &= !WALL_RIGHT;
                         board.cells[index_cell].walls.left = false;
                         board.cells[index_neighbor].walls.right = false;
                     }
                 }
-                board.gpu_data[index_cell] |= CELL_VISITED;
-                board.gpu_data[index_neighbor] |= CELL_VISITED;
+                board.gpu_data[index_cell][0] |= CELL_VISITED;
+                board.gpu_data[index_neighbor][0] |= CELL_VISITED;
                 board.cells[index_cell].visited = true;
                 board.cells[index_neighbor].visited = true;
             }
@@ -102,6 +104,4 @@ impl Generator for Kruskal {
         self.step += 1;
         MazeState::Generate
     }
-
-    fn draw(&self, _board: &Board) {}
 }

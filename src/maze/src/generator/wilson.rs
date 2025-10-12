@@ -2,11 +2,10 @@ use std::collections::HashMap;
 
 use rand::prelude::*;
 
-use crate::{Board, Direction, Generator, MazeState, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP, CELL_BACKTRACK, CELL_CURSOR};
-
-// use raylib_egui_rs::color::Color;
-// use raylib_egui_rs::math::*;
-// use raylib_egui_rs::raylib;
+use crate::{
+    ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP, Board, CELL_BACKTRACK, CELL_CURSOR, Direction,
+    Generator, MazeState,
+};
 
 enum IState {
     Search,
@@ -48,7 +47,7 @@ impl Generator for Wilson {
         match self.state {
             IState::Search => {
                 let last = self.current;
-                board.gpu_data[last] &= !CELL_CURSOR;
+                board.gpu_data[last][0] &= !CELL_CURSOR;
                 let neighbors = board.neighbors(self.current);
                 let neighbors: Vec<(usize, &Option<usize>)> = neighbors
                     .iter()
@@ -57,15 +56,27 @@ impl Generator for Wilson {
                     .collect();
                 let index: usize = self.rng.random_range(0..neighbors.len());
                 self.current = neighbors[index].1.unwrap();
-                board.gpu_data[self.current] |= CELL_CURSOR;
-                board.gpu_data[self.current] |= CELL_BACKTRACK;
+                board.gpu_data[self.current][0] |= CELL_CURSOR;
+                board.gpu_data[self.current][0] |= CELL_BACKTRACK;
                 self.visited.insert(
                     last,
                     match neighbors[index].0 {
-                        0 => { board.gpu_data[last] |= ARROW_UP; Direction::North }
-                        1 => { board.gpu_data[last] |= ARROW_DOWN; Direction::South }
-                        2 => { board.gpu_data[last] |= ARROW_RIGHT; Direction::East }
-                        3 => { board.gpu_data[last] |= ARROW_LEFT; Direction::West }
+                        0 => {
+                            board.gpu_data[last][0] |= ARROW_UP;
+                            Direction::North
+                        }
+                        1 => {
+                            board.gpu_data[last][0] |= ARROW_DOWN;
+                            Direction::South
+                        }
+                        2 => {
+                            board.gpu_data[last][0] |= ARROW_RIGHT;
+                            Direction::East
+                        }
+                        3 => {
+                            board.gpu_data[last][0] |= ARROW_LEFT;
+                            Direction::West
+                        }
                         _ => panic!("unknwon direction"),
                     },
                 );
@@ -77,7 +88,7 @@ impl Generator for Wilson {
             }
             IState::FollowPath => {
                 let last = self.current;
-                board.gpu_data[last] &= !CELL_BACKTRACK;
+                board.gpu_data[last][0] &= !CELL_BACKTRACK;
                 self.ust.push(self.current);
                 self.available.retain(|&x| x != self.current);
                 let neighbors = board.neighbors(self.current);
@@ -103,21 +114,15 @@ impl Generator for Wilson {
                     }
                 }
 
-
                 if self.ust.contains(&self.current) {
                     board.gpu_data.iter_mut().for_each(|c| {
-                            *c &= !CELL_CURSOR;
-                            *c &= !CELL_BACKTRACK;
-                            *c &= !ARROW_DOWN;
-                            *c &= !ARROW_UP;
-                            *c &= !ARROW_LEFT;
-                            *c &= !ARROW_RIGHT;
+                        c[0] &= !CELL_CURSOR;
+                        c[0] &= !CELL_BACKTRACK;
+                        c[0] &= !ARROW_DOWN;
+                        c[0] &= !ARROW_UP;
+                        c[0] &= !ARROW_LEFT;
+                        c[0] &= !ARROW_RIGHT;
                     });
-                    //TODO remove
-                    // board.cells.iter_mut().for_each(|c| { 
-                    //     c.arrow = None; 
-                    //
-                    // });
                     if self.available.is_empty() {
                         return MazeState::GenerationDone;
                     }
@@ -129,23 +134,5 @@ impl Generator for Wilson {
             }
         }
         MazeState::Generate
-    }
-
-    fn draw(&self, board: &Board) {
-        // raylib::DrawCircle(
-        //     (board.x + board.cells[self.start].x * board.cell_size + board.cell_size / 2) as i32,
-        //     (board.y + board.cells[self.start].y * board.cell_size + board.cell_size / 2) as i32,
-        //     board.cell_size as f32 / 4.0,
-        //     Color::WHITE,
-        // );
-        // raylib::DrawCircle(
-        //     (board.x + board.cells[self.current].x * board.cell_size + board.cell_size / 2) as i32,
-        //     (board.y + board.cells[self.current].y * board.cell_size + board.cell_size / 2) as i32,
-        //     board.cell_size as f32 / 4.0,
-        //     CURSOR_COLOR,
-        // );
-        // for (c, d) in &self.visited {
-        //     self.draw_arrow(board, c, d);
-        // }
     }
 }

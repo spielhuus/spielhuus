@@ -1,7 +1,7 @@
-use egui_winit::egui::Context;
 use egui_wgpu::wgpu::{CommandEncoder, Device, Queue, StoreOp, TextureFormat, TextureView};
-use egui_wgpu::{wgpu, Renderer, ScreenDescriptor};
+use egui_wgpu::{Renderer, ScreenDescriptor, wgpu};
 use egui_winit::State;
+use egui_winit::egui::Context;
 use winit::event::WindowEvent;
 use winit::window::Window;
 
@@ -58,8 +58,7 @@ impl EguiRenderer {
 
     pub fn begin_frame(&mut self, window: &Window) {
         let raw_input = self.state.take_egui_input(window);
-        // self.state.egui_ctx().begin_pass(raw_input);
-        self.context().begin_frame(raw_input);
+        self.context().begin_pass(raw_input);
         self.frame_started = true;
     }
 
@@ -112,7 +111,6 @@ impl EguiRenderer {
 
         self.renderer
             .render(&mut rpass.forget_lifetime(), &tris, &screen_descriptor);
-
 
         for x in &full_output.textures_delta.free {
             self.renderer.free_texture(x)

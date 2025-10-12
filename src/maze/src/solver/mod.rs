@@ -6,6 +6,7 @@ pub mod dead_end_filing;
 pub mod djikstra;
 pub mod genetic;
 pub mod wall_follower;
+pub mod path;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum PathfindingAlgorithm {

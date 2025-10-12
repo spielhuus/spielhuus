@@ -5,8 +5,6 @@ use rand::prelude::*;
 
 use crate::{Board, Generator, MazeState};
 
-// use raylib_egui_rs::raylib;
-
 pub const BOOL_TRUE_PROBABILITY: f64 = 0.5;
 
 enum IState {
@@ -164,14 +162,5 @@ impl Generator for Eller {
                 MazeState::GenerationDone
             }
         }
-    }
-
-    fn draw(&self, board: &Board) {
-        // raylib::DrawCircle(
-        //     (board.x + self.x * board.cell_size + board.cell_size / 2) as i32,
-        //     (board.y + self.y * board.cell_size + board.cell_size / 2) as i32,
-        //     board.cell_size as f32 / 5.0,
-        //     CURSOR_COLOR,
-        // );
     }
 }

@@ -1,7 +1,4 @@
-use crate::{Board, Solver, MazeState};
-
-// use raylib_egui_rs::color::Color;
-// use raylib_egui_rs::raylib;
+use crate::{solver::path, Board, MazeState, Solver, CELL_WEIGHT};
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Weight {
@@ -48,7 +45,7 @@ impl Djikstra {
             .weight
     }
 
-    fn search_path(&mut self, board: &Board) -> MazeState {
+    fn search_path(&mut self, board: &mut Board) -> MazeState {
         let mut next_cells: Vec<usize> = vec![];
         for index in &self.positions {
             let weight = self.weights[*index].unwrap();
@@ -77,6 +74,8 @@ impl Djikstra {
                         weight: weight.weight + 1,
                     });
                     next_cells.push(j.unwrap());
+                    board.gpu_data[j.unwrap()][0] |= CELL_WEIGHT;
+                    board.gpu_data[j.unwrap()][1] = weight.weight as u32 + 1;
                     if self.weights[j.unwrap()].unwrap().x == self.end.0
                         && self.weights[j.unwrap()].unwrap().y == self.end.1
                     {
@@ -89,7 +88,7 @@ impl Djikstra {
         self.positions = next_cells;
         MazeState::Solve
     }
-    fn path(&mut self, board: &Board) -> MazeState {
+    fn path(&mut self, board: &mut Board) -> MazeState {
         let index: usize = *self.path.last().unwrap();
         let neighbors = board.neighbors(index);
         let mut free: Vec<(usize, &Option<usize>)> = neighbors
@@ -117,6 +116,7 @@ impl Djikstra {
         });
         if let Some(next) = free.first() {
             self.path.push(next.1.unwrap());
+            path::update_path(board, &self.path);
             if self.weights[next.1.unwrap()].unwrap().x == self.start.0
                 && self.weights[next.1.unwrap()].unwrap().y == self.start.1
             {
@@ -132,6 +132,10 @@ impl Djikstra {
 impl Solver for Djikstra {
     fn step(&mut self, board: &mut Board) -> Result<MazeState, String> {
         if self.solved {
+            board.gpu_data.iter_mut().for_each(|c| {
+                c[0] &= !CELL_WEIGHT;
+                c[1] = 0;
+            });
             Ok(MazeState::Done)
         } else if !self.reached_end {
             Ok(self.search_path(board))
@@ -144,34 +148,5 @@ impl Solver for Djikstra {
 
     fn get_path(&self) -> &Vec<usize> {
         &self.path
-    }
-
-    fn draw(&self, board: &Board) {
-        // // draw the result
-        // if !self.solved {
-        //     for (index, weight) in self.weights.iter().enumerate() {
-        //         if let Some(weight) = weight {
-        //             if self.path.contains(&index) {
-        //                 raylib::DrawCircle(
-        //                     (board.x + weight.x * board.cell_size + board.cell_size / 2) as i32,
-        //                     (board.y + weight.y * board.cell_size + board.cell_size / 2) as i32,
-        //                     board.cell_size as f32 / 5.0,
-        //                     Color::WHITE,
-        //                 );
-        //             } else {
-        //                 raylib::DrawCircle(
-        //                     (board.x + weight.x * board.cell_size + board.cell_size / 2) as i32,
-        //                     (board.y + weight.y * board.cell_size + board.cell_size / 2) as i32,
-        //                     board.cell_size as f32 / 5.0,
-        //                     raylib::ColorFromHSV(
-        //                         115.0,
-        //                         0.75,
-        //                         1.0 / self.get_max_weight() as f32 * weight.weight as f32,
-        //                     ),
-        //                 );
-        //             }
-        //         }
-        //     }
-        // }
     }
 }

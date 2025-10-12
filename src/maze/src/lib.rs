@@ -67,6 +67,34 @@ pub const ARROW_RIGHT: u32 = 1 << 22;
 pub const ARROW_UP: u32 = 1 << 23;
 pub const ARROW_DOWN: u32 = 1 << 24;
 pub const CROSSED: u32 = 1 << 25;
+pub const CELL_WEIGHT: u32 = 1 << 26;
+pub const USE_WALL_FOLLOWER_PATH: u32 = 1 << 27;
+
+// --- Wall Follower Path Flags (New, Consistent Naming) ---
+
+// --- Straights (Bits 0-3) ---
+pub const WF_STRAIGHT_N: u32 = 1 << 0; // Moving FROM South TO North
+pub const WF_STRAIGHT_E: u32 = 1 << 1; // Moving FROM West TO East
+pub const WF_STRAIGHT_S: u32 = 1 << 2; // Moving FROM North TO South
+pub const WF_STRAIGHT_W: u32 = 1 << 3; // Moving FROM East TO West
+
+// --- Left Turns (Bits 4-7) ---
+pub const WF_TURN_LEFT_E_TO_N: u32 = 1 << 4; // Entered from EAST, turning left to exit NORTH
+pub const WF_TURN_LEFT_N_TO_W: u32 = 1 << 5; // Entered from NORTH, turning left to exit WEST
+pub const WF_TURN_LEFT_W_TO_S: u32 = 1 << 6; // Entered from WEST, turning left to exit SOUTH
+pub const WF_TURN_LEFT_S_TO_E: u32 = 1 << 7; // Entered from SOUTH, turning left to exit EAST
+
+// --- Right Turns (Bits 8-11) ---
+pub const WF_TURN_RIGHT_W_TO_N: u32 = 1 << 8;  // Entered from WEST, turning right to exit NORTH
+pub const WF_TURN_RIGHT_N_TO_E: u32 = 1 << 9;  // Entered from NORTH, turning right to exit EAST
+pub const WF_TURN_RIGHT_E_TO_S: u32 = 1 << 10; // Entered from EAST, turning right to exit SOUTH
+pub const WF_TURN_RIGHT_S_TO_W: u32 = 1 << 11; // Entered from SOUTH, turning right to exit WEST
+
+// --- U-Turns (Bits 12-15) ---
+pub const WF_UTURN_ON_N_SIDE: u32 = 1 << 12; // Entered from SOUTH, U-turn on North side
+pub const WF_UTURN_ON_E_SIDE: u32 = 1 << 13; // Entered from WEST, U-turn on East side
+pub const WF_UTURN_ON_S_SIDE: u32 = 1 << 14; // Entered from NORTH, U-turn on South side
+pub const WF_UTURN_ON_W_SIDE: u32 = 1 << 15; // Entered from EAST, U-turn on West side
 
 pub struct Color {
     pub r: f32,
@@ -108,13 +136,11 @@ pub enum MazeState {
 
 pub trait Generator {
     fn step(&mut self, board: &mut Board) -> MazeState;
-    fn draw(&self, board: &Board);
 }
 
 pub trait Solver {
     fn step(&mut self, board: &mut Board) -> Result<MazeState, String>;
     fn get_path(&self) -> &Vec<usize>;
-    fn draw(&self, board: &Board);
 }
 
 #[derive(Clone, Debug)]
@@ -226,7 +252,7 @@ pub struct Board {
     pub cell_size: usize,
     pub x: usize,
     pub y: usize,
-    pub gpu_data: Vec<u32>,
+    pub gpu_data: Vec<[u32; 2]>,
 }
 
 impl Board {
@@ -239,7 +265,7 @@ impl Board {
             cell_size,
             x: border,
             y: border,
-            gpu_data: vec![WALL_TOP|WALL_BOTTOM|WALL_RIGHT|WALL_LEFT; board_size.pow(2)],
+            gpu_data: vec![[WALL_TOP|WALL_BOTTOM|WALL_RIGHT|WALL_LEFT, 0]; board_size.pow(2)],
         };
         board.init();
         board
@@ -298,26 +324,26 @@ impl Board {
             crate::Direction::North => {
                 self.cells[cell].walls.top = false;
                 self.cells[neighbor].walls.bottom = false;
-                self.gpu_data[cell] &= !WALL_TOP;
-                self.gpu_data[neighbor] &= !WALL_BOTTOM;
+                self.gpu_data[cell][0] &= !WALL_TOP;
+                self.gpu_data[neighbor][0] &= !WALL_BOTTOM;
             }
             crate::Direction::South => {
                 self.cells[cell].walls.bottom = false;
                 self.cells[neighbor].walls.top = false;
-                self.gpu_data[cell] &= !WALL_BOTTOM;
-                self.gpu_data[neighbor] &= !WALL_TOP;
+                self.gpu_data[cell][0] &= !WALL_BOTTOM;
+                self.gpu_data[neighbor][0] &= !WALL_TOP;
             }
             crate::Direction::East => {
                 self.cells[cell].walls.right = false;
                 self.cells[neighbor].walls.left = false;
-                self.gpu_data[cell] &= !WALL_RIGHT;
-                self.gpu_data[neighbor] &= !WALL_LEFT;
+                self.gpu_data[cell][0] &= !WALL_RIGHT;
+                self.gpu_data[neighbor][0] &= !WALL_LEFT;
             }
             crate::Direction::West => {
                 self.cells[cell].walls.left = false;
                 self.cells[neighbor].walls.right = false;
-                self.gpu_data[cell] &= !WALL_LEFT;
-                self.gpu_data[neighbor] &= !WALL_RIGHT;
+                self.gpu_data[cell][0] &= !WALL_LEFT;
+                self.gpu_data[neighbor][0] &= !WALL_RIGHT;
             }
         }
         self.cells[cell].visited = true;
@@ -334,48 +360,6 @@ impl Board {
             cell.walls.bottom = true;
         });
     }
-
-    // fn create_gpu_data(&self) -> Vec<u32> {
-    //     self.cells
-    //         .iter()
-    //         .map(|cell| {
-    //             let mut cell_data: u32 = 0;
-    //             if cell.walls.top {
-    //                 cell_data |= WALL_TOP;
-    //             }
-    //             if cell.walls.right {
-    //                 cell_data |= WALL_RIGHT;
-    //             }
-    //             if cell.walls.bottom {
-    //                 cell_data |= WALL_BOTTOM;
-    //             }
-    //             if cell.walls.left {
-    //                 cell_data |= WALL_LEFT;
-    //             }
-    //             if cell.visited {
-    //                 cell_data |= CELL_VISITED;
-    //             }
-    //             if cell.backtrack {
-    //                 cell_data |= CELL_BACKTRACK;
-    //             }
-    //             if cell.crossed {
-    //                 cell_data |= CROSSED;
-    //             }
-    //             if cell.cursor {
-    //                 cell_data |= CELL_CURSOR;
-    //             }
-    //             if let Some(arrow) = cell.arrow {
-    //                 match arrow {
-    //                     Direction::North => cell_data |= ARROW_UP,
-    //                     Direction::South => cell_data |= ARROW_DOWN,
-    //                     Direction::East => cell_data |= ARROW_RIGHT,
-    //                     Direction::West => cell_data |= ARROW_LEFT,
-    //                 }
-    //             }
-    //             cell_data
-    //         })
-    //         .collect()
-    // }
 }
 
 #[repr(C)]
@@ -384,226 +368,6 @@ struct Uniforms {
     resolution: [f32; 2],
     time: f32,
     grid_size: u32,
-}
-
-enum GuiState {
-    None,
-    Refresh,
-    Generate,
-    Solve,
-    Reset,
-    // Step,
-}
-
-#[derive(Debug)]
-pub enum PathDirection {
-    UpLeft,
-    UpRight,
-    DownLeft,
-    DownRight,
-    Horizontal,
-    Vertical,
-    StartLeft,
-    StartDown,
-    StartUp,
-    StartRight,
-    EndLeft,
-    EndDown,
-    EndUp,
-    EndRight,
-}
-
-impl From<PathDirection> for u32 {
-    fn from(direction: PathDirection) -> u32 {
-        match direction {
-            PathDirection::Horizontal => PATH_HORIZONTAL,
-            PathDirection::Vertical => PATH_VERTICAL,
-            PathDirection::UpLeft => PATH_UP_LEFT,
-            PathDirection::UpRight => PATH_UP_RIGHT,
-            PathDirection::DownLeft => PATH_DOWN_LEFT,
-            PathDirection::DownRight => PATH_DOWN_RIGHT,
-            PathDirection::StartLeft => START_LEFT,
-            PathDirection::StartRight => START_RIGHT,
-            PathDirection::StartUp => START_UP,
-            PathDirection::StartDown => START_DOWN,
-            PathDirection::EndLeft => END_LEFT,
-            PathDirection::EndRight => END_RIGHT,
-            PathDirection::EndUp => END_UP,
-            PathDirection::EndDown => END_DOWN,
-        }
-    }
-}
-
-fn update_path(board: &mut Board, path: &[usize]) {
-    if path.len() >= 3 {
-        // second last step in path
-        let direction = crate::direction(&board.cells[path[path.len()-2]], Some(&board.cells[path[path.len()-3]]), Some(&board.cells[path[path.len()-1]]));
-        crate::clear_direction(board, path[path.len()-2]);
-        board.gpu_data[path[path.len()-2]] |= <PathDirection as std::convert::Into<u32>>::into(direction);
-        // end of path
-        let direction = crate::direction(&board.cells[path[path.len()-1]], Some(&board.cells[path[path.len()-2]]), None);
-        crate::clear_direction(board, path[path.len()-1]);
-        board.gpu_data[path[path.len()-1]] |= <PathDirection as std::convert::Into<u32>>::into(direction);
-    }
-    if path.len() == 2 {
-        let direction = crate::direction(&board.cells[path[path.len()-2]], None, Some(&board.cells[path[path.len()-1]]));
-        crate::clear_direction(board, path[path.len()-2]);
-        board.gpu_data[path[path.len()-2]] |= <PathDirection as std::convert::Into<u32>>::into(direction);
-    }
-}
-
-fn clear_direction(board: &mut Board, cell: usize) {
-    board.gpu_data[cell] &= !PATH_HORIZONTAL;
-    board.gpu_data[cell] &= !PATH_VERTICAL;
-    board.gpu_data[cell] &= !PATH_UP_LEFT;
-    board.gpu_data[cell] &= !PATH_UP_RIGHT;
-    board.gpu_data[cell] &= !PATH_DOWN_LEFT;
-    board.gpu_data[cell] &= !PATH_DOWN_RIGHT;
-    board.gpu_data[cell] &= !START_LEFT;
-    board.gpu_data[cell] &= !START_RIGHT;
-    board.gpu_data[cell] &= !START_UP;
-    board.gpu_data[cell] &= !START_DOWN;
-    board.gpu_data[cell] &= !END_LEFT;
-    board.gpu_data[cell] &= !END_RIGHT;
-    board.gpu_data[cell] &= !END_UP;
-    board.gpu_data[cell] &= !END_DOWN;
-    
-}
-
-fn direction(current: &Cell, prev: Option<&Cell>, next: Option<&Cell>) -> PathDirection {
-    // +---+---+---+    current.y < previous.y &&
-    // +   +   +   +    current.y == next.y &&
-    // +---+---+---+    current.x == previous.x &&
-    // +   + c + n +    current.x < next.x
-    // +---+---+---+
-    // +   + p +   +
-    // +---+---+---+
-    // +---+---+---+    current.y == previous.y &&
-    // +   +   +   +    current.y < next.y &&
-    // +---+---+---+    current.x < previous.x &&
-    // +   + c + p +    currnet.x == next.x
-    // +---+---+---+
-    // +   + n +   +
-    // +---+---+---+
-    //
-    // +---+---+---+    current.y < previous.y &&
-    // +   +   +   +    current.y == next.y &&
-    // +---+---+---+    currnet.x == previous.x &&
-    // + n + c +   +    current.x > next.x
-    // +---+---+---+
-    // +   + p +   +
-    // +---+---+---+
-    // +---+---+---+    current.y == previous.y &&
-    // +   +   +   +    current.y < next.y &&
-    // +---+---+---+    current.x > previous.x &&
-    // + p + c +   +    current.x == next.x
-    // +---+---+---+
-    // +   + n +   +
-    // +---+---+---+
-
-    //
-    // +---+---+---+    current.y > previous.y &&
-    // +   + p +   +    current.y == next.y &&
-    // +---+---+---+    current.x == previous.x &&
-    // +   + c + n +    currnet.x < next.x
-    // +---+---+---+
-    // +   +   +   +
-    // +---+---+---+
-    // +---+---+---+    current.y == previous.y &&
-    // +   + n +   +    current.y > next.y &&
-    // +---+---+---+    current.x < prvious.x &&
-    // +   + c + p +    current.x == next.x
-    // +---+---+---+
-    // +   +   +   +
-    // +---+---+---+
-    //
-    // +---+---+---+    current.y > previous.y &&
-    // +   + p +   +    current.y == next.y &&
-    // +---+---+---+    current.x == previous.x &&
-    // + n + c +   +    current.x > next.x
-    // +---+---+---+
-    // +   +   +   +
-    // +---+---+---+
-    // +---+---+---+    current.y == previous.y &&
-    // +   + n +   +    current.y > next.y &&
-    // +---+---+---+    current.x > previous.x &&
-    // + p + c +   +    current.x == next.x
-    // +---+---+---+
-    // +   +   +   +
-    // +---+---+---+
-    //
-    if let (Some(prev), Some(next)) = (prev, next) {
-        if current.x == next.x && current.x == prev.x {
-            return PathDirection::Vertical;
-        } else if current.y == next.y && current.y == prev.y {
-            return PathDirection::Horizontal;
-        } else if (current.y < prev.y
-            && current.y == next.y
-            && current.x == prev.x
-            && current.x < next.x)
-            || (current.y == prev.y
-                && current.y < next.y
-                && current.x < prev.x
-                && current.x == next.x)
-        {
-            return PathDirection::DownRight;
-        } else if (current.y < prev.y
-            && current.y == next.y
-            && current.x == prev.x
-            && current.x > next.x)
-            || (current.y == prev.y
-                && current.y < next.y
-                && current.x > prev.x
-                && current.x == next.x)
-        {
-            return PathDirection::DownLeft;
-        } else if (current.y > prev.y
-            && current.y == next.y
-            && current.x == prev.x
-            && current.x < next.x)
-            || (current.y == prev.y
-                && current.y > next.y
-                && current.x < prev.x
-                && current.x == next.x)
-        {
-            return PathDirection::UpRight;
-        } else if (current.y > prev.y
-            && current.y == next.y
-            && current.x == prev.x
-            && current.x > next.x)
-            || (current.y == prev.y
-                && current.y > next.y
-                && current.x > prev.x
-                && current.x == next.x)
-        {
-            return PathDirection::UpLeft;
-        }
-    } else if let Some(next) = next {
-        if next.x > current.x {
-            return PathDirection::StartRight;
-        } else if next.x < current.x {
-            return PathDirection::StartLeft;
-        } else if next.y > current.y {
-            return PathDirection::StartDown;
-        } else if next.y < current.y {
-            return PathDirection::StartUp;
-        } else {
-            panic!("direction not found")
-        }
-    } else if let Some(prev) = prev {
-        if prev.x > current.x {
-            return PathDirection::EndLeft;
-        } else if prev.x < current.x {
-            return PathDirection::EndRight;
-        } else if prev.y > current.y {
-            return PathDirection::EndUp;
-        } else if prev.y < current.y {
-            return PathDirection::EndDown;
-        } else {
-            panic!("direction not found")
-        }
-    }
-    panic!("direction not found for cell: {:?}", current)
 }
 
 pub struct State {
@@ -627,6 +391,8 @@ pub struct State {
     uniform_bind_group_layout: wgpu::BindGroupLayout,
     maze_buffer: wgpu::Buffer,
     #[cfg(not(target_arch = "wasm32"))]
+    proxy: winit::event_loop::EventLoopProxy<UserEvent>,
+    #[cfg(not(target_arch = "wasm32"))]
     start_time: std::time::Instant,
     #[cfg(target_arch = "wasm32")]
     start_time: f64,
@@ -641,6 +407,7 @@ pub struct State {
 impl State {
     async fn new(
         window: Arc<Window>,
+        #[cfg(not(target_arch = "wasm32"))] proxy: winit::event_loop::EventLoopProxy<UserEvent>, 
         #[cfg(target_arch = "wasm32")] canvas: HtmlCanvasElement,
     ) -> anyhow::Result<State> {
         #[cfg(not(target_arch = "wasm32"))]
@@ -700,7 +467,7 @@ impl State {
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("grid_shader.wgsl").into()),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         });
 
         // Setup buffers and bind groups (no changes needed here)
@@ -797,6 +564,8 @@ impl State {
         let egui_renderer = egui_utils::EguiRenderer::new(&device, config.format, None, 1, &window);
 
         Ok(Self {
+            #[cfg(not(target_arch = "wasm32"))]
+            proxy,
             board,
             selected_generator: MazeAlgorithm::RecursiveBacktracker,
             selected_solver: PathfindingAlgorithm::RecursiveBacktracker,
@@ -878,46 +647,6 @@ impl State {
         }
 
         if maze_updated {
-            // let mut maze_gpu_data = self.board.create_gpu_data();
-            // get the path
-            // if self.state == MazeState::Solve || self.state == MazeState::Done {
-            //     let path = self.solver.get_path();
-            //     if path.len() > 1 {
-            //         for (i, item) in path.iter().enumerate() {
-            //             let prev = if i > 0 { path.get(i - 1) } else { None };
-            //             let next = path.get(i + 1); // get handles out-of-bounds by returning None
-            //             let direction = direction(
-            //                 &self.board.cells[*item],
-            //                 if let Some(prev) = prev {
-            //                     Some(&self.board.cells[*prev])
-            //                 } else {
-            //                     None
-            //                 },
-            //                 if let Some(next) = next {
-            //                     Some(&self.board.cells[*next])
-            //                 } else {
-            //                     None
-            //                 },
-            //             );
-            //             match direction {
-            //                 PathDirection::UpLeft => maze_gpu_data[*item] |= PATH_UP_LEFT,
-            //                 PathDirection::UpRight => maze_gpu_data[*item] |= PATH_UP_RIGHT,
-            //                 PathDirection::DownLeft => maze_gpu_data[*item] |= PATH_DOWN_LEFT,
-            //                 PathDirection::DownRight => maze_gpu_data[*item] |= PATH_DOWN_RIGHT,
-            //                 PathDirection::Horizontal => maze_gpu_data[*item] |= PATH_HORIZONTAL,
-            //                 PathDirection::Vertical => maze_gpu_data[*item] |= PATH_VERTICAL,
-            //                 PathDirection::StartLeft => maze_gpu_data[*item] |= START_LEFT,
-            //                 PathDirection::StartDown => maze_gpu_data[*item] |= START_DOWN,
-            //                 PathDirection::StartUp => maze_gpu_data[*item] |= START_UP,
-            //                 PathDirection::StartRight => maze_gpu_data[*item] |= START_RIGHT,
-            //                 PathDirection::EndLeft => maze_gpu_data[*item] |= END_LEFT,
-            //                 PathDirection::EndDown => maze_gpu_data[*item] |= END_DOWN,
-            //                 PathDirection::EndUp => maze_gpu_data[*item] |= END_UP,
-            //                 PathDirection::EndRight => maze_gpu_data[*item] |= END_RIGHT,
-            //             }
-            //         }
-            //     }
-            // }
             self.queue
                 .write_buffer(&self.maze_buffer, 0, bytemuck::cast_slice(&self.board.gpu_data));
         }
@@ -994,12 +723,9 @@ impl State {
             };
 
             {
-                let mut new_generate = false;
-                let mut new_solve = false;
                 let mut generator = self.selected_generator;
                 let mut solver = self.selected_solver;
                 let mut new_cell_count = self.cell_count;
-                let mut gui_state = GuiState::None;
                 self.egui_renderer.begin_frame(&self.window);
 
                 egui_winit::egui::Window::new("Maze Controls")
@@ -1019,12 +745,7 @@ impl State {
                                     )
                                     .changed()
                                 {
-                                    let new_cell_size = (self.window.inner_size().height as usize
-                                        - 2 * BORDER)
-                                        / new_cell_count;
-                                    self.cell_count = new_cell_count;
-                                    self.cell_size = new_cell_size;
-                                    gui_state = GuiState::Refresh;
+                                    self.proxy.send_event(UserEvent::Size(new_cell_count)).ok();
                                 }
                                 ui.end_row();
                                 ui.label("Generator:");
@@ -1053,73 +774,23 @@ impl State {
                                         }
                                     });
                                 ui.end_row();
-                                // ui.label("Steps:");
-                                // ui.add(egui::Slider::new(&mut state.steps, 1..=100));
-                                // ui.end_row();
                             });
                         ui.separator();
                         if ui.button("generate").clicked() {
-                            new_generate = true;
-                            gui_state = GuiState::Generate;
+                            self.proxy.send_event(UserEvent::GenerateMaze).ok();
                         }
                         if ui.button("solve").clicked() {
-                            new_solve = true;
-                            gui_state = GuiState::Solve;
+                            self.proxy.send_event(UserEvent::SolveMaze).ok();
                         }
-                        // if ui.button("step").clicked() {
-                        //     gui_state = MazeState::Step;
-                        // }
-                        // if ui.button("reset").clicked() {
-                        //     gui_state = MazeState::Reset;
-                        // }
                         ui.separator();
                         ui.label("Info:");
-                        // ui.label(format!("State: {}", self.state));
-                        // ui.label(format!("Size: {}x{}", state.cell_count, state.cell_count));
-                        // ui.label(format!("Step: {}", state.step_count));
-                        // ui.label(format!(
-                        //     "Solution length: {}",
-                        //     state.solver.get_path().len()
-                        // ));
                     });
 
                 if solver != self.selected_solver {
-                    self.selected_solver = solver;
-                    self.init_solver();
-                    self.state = MazeState::Wait;
+                    self.proxy.send_event(UserEvent::Solver(solver)).ok();
                 }
                 if generator != self.selected_generator {
-                    self.selected_generator = generator;
-                    self.init_maze();
-                }
-
-                match gui_state {
-                    GuiState::Generate => {
-                        self.state = MazeState::Generate;
-                        self.init_maze();
-                        self.window.request_redraw();
-                    }
-                    GuiState::Solve => {
-                        self.state = MazeState::Solve;
-                        self.init_solver();
-                        self.window.request_redraw();
-                    }
-                    GuiState::Refresh => {
-                        self.init_maze();
-                        self.state = MazeState::Generate;
-                        self.window.request_redraw();
-                    }
-                    GuiState::Reset => {
-                        self.init_maze();
-                        self.window.request_redraw();
-                    }
-                    // GuiState::Step => {
-                    //     self.state = State::Solve;
-                    //     self.step_by_step = true;
-                    //     self.step = true;
-                    //     self.solver.draw(&self.board);
-                    // }
-                    GuiState::None => {}
+                    self.proxy.send_event(UserEvent::Generator(generator)).ok();
                 }
             }
 
@@ -1163,10 +834,6 @@ impl State {
             MazeAlgorithm::BinaryTree => Box::new(BinaryTree::new()),
             MazeAlgorithm::Sidewinder => Box::new(Sidewinder::new(&mut self.board)),
         };
-        // self.step = false;
-        // self.step_count = 0;
-        // TODO 
-        // let mut new_maze_data = self.board.create_gpu_data();
         self.maze_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -1235,8 +902,8 @@ impl std::fmt::Debug for UserEvent {
     }
 }
 
+#[derive(Default)]
 pub struct App {
-    #[cfg(target_arch = "wasm32")]
     proxy: Option<winit::event_loop::EventLoopProxy<UserEvent>>, 
     state: Option<State>,
     #[cfg(target_arch = "wasm32")]
@@ -1244,12 +911,10 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(#[cfg(target_arch = "wasm32")] event_loop: &EventLoop<UserEvent>) -> Self {
-        #[cfg(target_arch = "wasm32")]
+    pub fn new(event_loop: &EventLoop<UserEvent>) -> Self {
         let proxy = Some(event_loop.create_proxy());
         Self {
             state: None,
-            #[cfg(target_arch = "wasm32")]
             proxy,
             #[cfg(target_arch = "wasm32")]
             _event_closures: Vec::new(),
@@ -1434,7 +1099,6 @@ impl ApplicationHandler<UserEvent> for App {
 
         #[cfg(target_arch = "wasm32")]
         let canvas = {
-            // Use a block to scope variables
             use wasm_bindgen::JsCast;
             use winit::platform::web::WindowAttributesExtWebSys;
 
@@ -1454,7 +1118,9 @@ impl ApplicationHandler<UserEvent> for App {
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            self.state = Some(pollster::block_on(State::new(window)).unwrap());
+            if let Some(proxy) = self.proxy.take() {
+                self.state = Some(pollster::block_on(State::new(window, proxy)).unwrap());
+            }
         }
 
         #[cfg(target_arch = "wasm32")]
@@ -1464,18 +1130,7 @@ impl ApplicationHandler<UserEvent> for App {
                  let new_state = State::new(window, canvas)
                                 .await
                                 .expect("Unable to create canvas!!!");
-                // Send the correct enum variant
                 assert!(proxy.send_event(UserEvent::StateInitialized(new_state)).is_ok());
-
-                    // assert!(
-                    //     proxy
-                    //         .send_event(
-                    //             State::new(window, canvas)
-                    //                 .await
-                    //                 .expect("Unable to create canvas!!!")
-                    //         )
-                    //         .is_ok()
-                    // )
                 });
             }
         }
@@ -1507,6 +1162,7 @@ impl ApplicationHandler<UserEvent> for App {
                 }
             UserEvent::SolveMaze => {
                     if let Some(state) = &mut self.state {
+                        state.board.gpu_data.iter_mut().for_each(|c| c[0] &= WALL_RIGHT | WALL_LEFT | WALL_TOP | WALL_BOTTOM);
                         state.state = MazeState::Solve;
                         state.init_solver();
                         state.window.request_redraw();
@@ -1571,10 +1227,6 @@ impl ApplicationHandler<UserEvent> for App {
                     },
                 ..
             } => {
-                // #[cfg(target_arch = "wasm32")]
-                // if code == KeyCode::F11 && key_state.is_pressed() {
-                //     state.toggle_fullscreen();
-                // }
                 state.handle_key(event_loop, code, key_state.is_pressed());
             }
             _ => {}
@@ -1587,16 +1239,10 @@ impl ApplicationHandler<UserEvent> for App {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn run() -> anyhow::Result<()> {
-    #[cfg(target_arch = "wasm32")]
-    {
-        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-        console_log::init_with_level(log::Level::Debug).unwrap_throw();
-    }
-
     let event_loop = EventLoop::with_user_event().build()?;
     let mut app = App::new(
-        #[cfg(target_arch = "wasm32")]
         &event_loop,
     );
     event_loop.run_app(&mut app)?;
