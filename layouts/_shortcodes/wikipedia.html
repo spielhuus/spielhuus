@@ -1,0 +1,13 @@
+{{ $article := .Get 0 }}
+{{ if not $article }}
+  {{ errorf "The 'wikipedia' shortcode requires an article title. E.g., {{< wikipedia \"Hugo (software)\" >}}" }}
+{{ end }}
+
+{{ $linkText := .Get 1 | default $article }}
+{{ $lang := .Get "lang" | default "en" }}
+
+{{ $urlPath := replace $article " " "_" }}
+
+{{ $url := printf "https://%s.wikipedia.org/wiki/%s" $lang $urlPath }}
+
+<a href="{{ $url }}" target="_blank" rel="noopener noreferrer">{{ $linkText | safeHTML }}</a>
