@@ -57,8 +57,8 @@ impl Djikstra {
                     if (i.is_some() && self.weights[i.unwrap()].is_none())
                         && ((d == 0 && !board.cells[*index].walls.top)
                             || (d == 1 && !board.cells[*index].walls.bottom)
-                            || (d == 2 && !board.cells[*index].walls.left)
-                            || (d == 3 && !board.cells[*index].walls.right))
+                            || (d == 2 && !board.cells[*index].walls.right)
+                            || (d == 3 && !board.cells[*index].walls.left))
                     {
                         return true;
                     }
@@ -100,8 +100,8 @@ impl Djikstra {
                     && self.weights[i.unwrap()].is_some())
                     && ((d == 0 && !board.cells[index].walls.top)
                         || (d == 1 && !board.cells[index].walls.bottom)
-                        || (d == 2 && !board.cells[index].walls.left)
-                        || (d == 3 && !board.cells[index].walls.right))
+                        || (d == 2 && !board.cells[index].walls.right)
+                        || (d == 3 && !board.cells[index].walls.left))
                 {
                     return true;
                 }

@@ -10,7 +10,9 @@ links = [ 'bucklog', 'Disjoint_sets' ]
 
 My objective is to construct and navigate mazes using graph algorithms. Specifically, we'll focus on generating 'perfect mazes.' A perfect maze is a simple, elegant structure with a single, guaranteed solution path between any two points.
 
-In graph theory terms, a perfect maze is a **spanning tree** of a grid. This means it connects every cell in the grid without creating any loops or cycles. Because there are no cycles, you can't walk in a circle and end up where you started without retracing your steps. This structure guarantees that there is one unique path from any cell to any other. Every cell is reachable, and there are no inaccessible areas.
+In graph theory terms, a perfect maze is a {{< wikipedia "Spanning tree" >}} of a grid. This means it connects every cell in the grid without creating any loops or cycles. Because there are no cycles, you can't walk in a circle and end up where you started without retracing your steps. This structure guarantees that there is one unique path from any cell to any other. Every cell is reachable, and there are no inaccessible areas.
+
+
 
 
 <style>

@@ -45,14 +45,14 @@ impl Solver for AStar {
                                 }
                             }
                             2 => {
-                                if !current.walls.left {
+                                if !current.walls.right {
                                     Some((c, distance))
                                 } else {
                                     None
                                 }
                             }
                             3 => {
-                                if !current.walls.right {
+                                if !current.walls.left {
                                     Some((c, distance))
                                 } else {
                                     None

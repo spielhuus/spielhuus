@@ -74,28 +74,11 @@ pub const USE_WALL_FOLLOWER_PATH: u32 = 1 << 27;
 // --- Wall Follower Path Flags (New, Consistent Naming) ---
 
 // --- Straights (Bits 0-3) ---
-pub const WF_STRAIGHT_N: u32 = 1 << 0; // Moving FROM South TO North
-pub const WF_STRAIGHT_E: u32 = 1 << 1; // Moving FROM West TO East
-pub const WF_STRAIGHT_S: u32 = 1 << 2; // Moving FROM North TO South
-pub const WF_STRAIGHT_W: u32 = 1 << 3; // Moving FROM East TO West
+pub const WF_TURN_TOP_RIGHT: u32 = 1 << 4;
+pub const WF_TURN_TOP_LEFT: u32 = 1 << 5;
+pub const WF_TURN_BOTTOM_RIGHT: u32 = 1 << 6;
+pub const WF_TURN_BOTTOM_LEFT: u32 = 1 << 7;
 
-// --- Left Turns (Bits 4-7) ---
-pub const WF_TURN_LEFT_E_TO_N: u32 = 1 << 4; // Entered from EAST, turning left to exit NORTH
-pub const WF_TURN_LEFT_N_TO_W: u32 = 1 << 5; // Entered from NORTH, turning left to exit WEST
-pub const WF_TURN_LEFT_W_TO_S: u32 = 1 << 6; // Entered from WEST, turning left to exit SOUTH
-pub const WF_TURN_LEFT_S_TO_E: u32 = 1 << 7; // Entered from SOUTH, turning left to exit EAST
-
-// --- Right Turns (Bits 8-11) ---
-pub const WF_TURN_RIGHT_W_TO_N: u32 = 1 << 8; // Entered from WEST, turning right to exit NORTH
-pub const WF_TURN_RIGHT_N_TO_E: u32 = 1 << 9; // Entered from NORTH, turning right to exit EAST
-pub const WF_TURN_RIGHT_E_TO_S: u32 = 1 << 10; // Entered from EAST, turning right to exit SOUTH
-pub const WF_TURN_RIGHT_S_TO_W: u32 = 1 << 11; // Entered from SOUTH, turning right to exit WEST
-
-// --- U-Turns (Bits 12-15) ---
-pub const WF_UTURN_ON_N_SIDE: u32 = 1 << 12; // Entered from SOUTH, U-turn on North side
-pub const WF_UTURN_ON_E_SIDE: u32 = 1 << 13; // Entered from WEST, U-turn on East side
-pub const WF_UTURN_ON_S_SIDE: u32 = 1 << 14; // Entered from NORTH, U-turn on South side
-pub const WF_UTURN_ON_W_SIDE: u32 = 1 << 15; // Entered from EAST, U-turn on West side
 
 pub struct Color {
     pub r: f32,
@@ -272,54 +255,68 @@ impl Board {
         board
     }
 
-    fn init(&mut self) {
+fn init(&mut self) {
+    for j in 0..self.board_size {
         for i in 0..self.board_size {
-            for j in 0..self.board_size {
-                self.cells.push(Cell::new(i, j));
-            }
+            self.cells.push(Cell::new(i, j));
         }
-        self.cells[0].walls.left = false;
-        self.cells.last_mut().unwrap().walls.right = false;
     }
+    
+    self.cells[0].walls.left = false;
+    self.gpu_data[0][0] &= !WALL_LEFT;
+    self.gpu_data[0][0] |= START_LEFT;
+
+    let last_index = self.cells.len() - 1;
+    self.cells[last_index].walls.right = false;
+    self.gpu_data[last_index][0] &= !WALL_RIGHT;
+    self.gpu_data[last_index][0] |= END_RIGHT;
+}
 
     pub fn get_cell(&mut self, index: usize) -> &mut Cell {
         &mut self.cells[index]
     }
 
-    pub fn get_index(&self, x: usize, y: usize) -> usize {
-        let index = x * self.board_size + y;
-        assert!(self.cells[index].x == x && self.cells[index].y == y,);
-        index
+pub fn get_index(&self, x: usize, y: usize) -> usize {
+    let index = y * self.board_size + x;
+    assert!(self.cells[index].x == x && self.cells[index].y == y);
+    index
+}
+pub fn neighbors(&self, cell_index: usize) -> Vec<Option<usize>> {
+    let mut res = Vec::<Option<usize>>::new();
+    let x = self.cells[cell_index].x;
+    let y = self.cells[cell_index].y;
+
+    // Top (North, y-1)
+    if y > 0 {
+        res.push(Some(cell_index - self.board_size));
+    } else {
+        res.push(None);
     }
 
-    /**
-     * return the neighbors [top, bottom, right, left]
-     */
-    pub fn neighbors(&self, cell_index: usize) -> Vec<Option<usize>> {
-        let mut res = Vec::<Option<usize>>::new();
-        if self.cells[cell_index].y > 0 {
-            res.push(Some(cell_index - 1));
-        } else {
-            res.push(None);
-        }
-        if self.cells[cell_index].y < self.board_size - 1 {
-            res.push(Some(cell_index + 1));
-        } else {
-            res.push(None);
-        }
-        if self.cells[cell_index].x > 0 {
-            res.push(Some(cell_index - self.board_size));
-        } else {
-            res.push(None);
-        }
-        if self.cells[cell_index].x < self.board_size - 1 {
-            res.push(Some(cell_index + self.board_size));
-        } else {
-            res.push(None);
-        }
-        res
+    // Bottom (South, y+1)
+    if y < self.board_size - 1 {
+        res.push(Some(cell_index + self.board_size));
+    } else {
+        res.push(None);
     }
 
+    // Right (East, x+1)
+    if x < self.board_size - 1 {
+        res.push(Some(cell_index + 1));
+    } else {
+        res.push(None);
+    }
+
+    // Left (West, x-1)
+    if x > 0 {
+        res.push(Some(cell_index - 1));
+    } else {
+        res.push(None);
+    }
+    
+    res
+}
+ 
     pub fn remove_wall(&mut self, cell: usize, neighbor: usize) {
         match self.cells[cell].direction(&self.cells[neighbor]) {
             crate::Direction::North => {

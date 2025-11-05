@@ -55,7 +55,7 @@ function drawLcsGrid(ctx: CanvasRenderingContext2D, a: string, b: string, dp?: n
       ctx.textBaseline = 'middle';
       ctx.fillText(a.charAt(i-2), start_x + cell_size * i + cell_size/2, start_y + cell_size/2);
     }
-    ctx.moveTo(start_x + i * cell_size + cell_size, start_y);
+    ctx.moveTo(start_x + i * cell_size + cell_size, start_y + cell_size);
     ctx.lineTo(start_x + i * cell_size + cell_size, start_y + cell_size*length_b);
   }
   for (let i:number = 0; i<length_b; i++) {
@@ -66,7 +66,7 @@ function drawLcsGrid(ctx: CanvasRenderingContext2D, a: string, b: string, dp?: n
       ctx.textBaseline = 'middle';
       ctx.fillText(b.charAt(i-2), start_x + cell_size/2, start_y + cell_size * i + cell_size/2, );
     }
-    ctx.moveTo(start_x, start_y + i * cell_size + cell_size);
+    ctx.moveTo(start_x + cell_size, start_y + i * cell_size + cell_size);
     ctx.lineTo(start_x + cell_size*length_a, start_y + i * cell_size + cell_size);
   }
   ctx.stroke();

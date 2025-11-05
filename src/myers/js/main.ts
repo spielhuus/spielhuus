@@ -15,16 +15,15 @@ type DiffItem = {
 class Diff {
   trace: number[][];
   cell_d_k: Array<Array<[number, number]>>;
-  constructor(public left: string, public right: string) {
 
-
+  constructor(public left: string[], public right: string[]) {
     const n = this.left.length; 
     const m = this.right.length; 
     this.cell_d_k = Array.from( 
-      { length: n + 1 },  
-      () => new Array(m + 1) 
-    ); 
-    this.trace = this.shortest_edit();
+                               { length: n + 1 },  
+                               () => new Array(m + 1) 
+                              ); 
+                              this.trace = this.shortest_edit();
   };
 
   private shortest_edit(): number[][] {
@@ -53,11 +52,11 @@ class Diff {
 
         let y = x - k;
         if (x >= 0 && y >= 0 && x <= n && y <= m) { 
-            this.cell_d_k[x][y] = [d, k]; 
+          this.cell_d_k[x][y] = [d, k]; 
         } 
 
         // Follow the "snake" of matches
-        while (x < n && y < m && this.left.charAt(x) === this.right.charAt(y)) {
+        while (x < n && y < m && this.left[x] === this.right[y]) {
           x++;
           y++;
 
@@ -87,7 +86,7 @@ class Diff {
     let y = this.right.length;
     let prev_k, prev_y, edit_type;
     //iterate the trace from the end
-    for (let d = this.trace.length - 2; d > 0; d--) {
+    for (let d = this.trace.length - 2; d >= 0; d--) {
       const v = this.trace[d];
       const k = x - y;
       if (k == -d || (k != d && v[k + offset - 1] < v[k + offset + 1])) {
@@ -106,26 +105,26 @@ class Diff {
           change: DiffType.NoChange,
           position_a: x,
           position_b: y,
-          content: this.left.charAt(x - 1),
+          content: this.left[x - 1],
         });
         x = x - 1;
         y = y - 1;
       }
 
-      if (d >= 0) {
+      if (d > 0) {
         if (edit_type === DiffType.Add) {
           result.push({
             change: DiffType.Add,
             position_a: 0,
             position_b: y,
-            content: this.right.charAt(y - 1),
+            content: this.right[y - 1],
           });
         } else { // DiffType.Delete
           result.push({
             change: DiffType.Delete,
             position_a: x,
             position_b: 0,
-            content: this.left.charAt(x - 1),
+            content: this.left[x - 1],
           });
         }
       }
@@ -156,7 +155,7 @@ class DiffGraph {
   start_y: number;
 
   constructor(private diff: Diff) {
-    const canvas = document.getElementById('lcs_canvas_1') as HTMLCanvasElement;
+    const canvas = document.getElementById('diff_canvas_1') as HTMLCanvasElement;
     const ctx = canvas?.getContext('2d');
     if (!ctx) {
       throw new Error("Context not found"); 
@@ -186,21 +185,21 @@ class DiffGraph {
   private drawWeights() {
     for (let x = 0; x<this.diff.cell_d_k.length; x++) {
       for (let y = 0; y<this.diff.cell_d_k[x].length; y++) {
-          if (this.diff.cell_d_k[x][y]) {
+        if (this.diff.cell_d_k[x][y]) {
           this.ctx.beginPath();
-          this.ctx.fillStyle = this.orange;
-          this.ctx.strokeStyle = this.orange;
+          this.ctx.fillStyle = this.grey;
+          this.ctx.strokeStyle = this.grey;
           this.ctx.font = (this.cell_size * 0.2) + 'px Arial';
           this.ctx.textAlign = 'left';
           this.ctx.textBaseline = 'top';
           this.ctx.fillText(
-          this.diff.cell_d_k[x][y][0].toString() + "/" + this.diff.cell_d_k[x][y][1].toString(), 
+            this.diff.cell_d_k[x][y][0].toString() + "/" + this.diff.cell_d_k[x][y][1].toString(), 
             this.start_x + this.cell_size * (x + 1) + this.cell_size / 8,
             this.start_y + this.cell_size * (y + 1) + this.cell_size / 8);
-            this.ctx.stroke();
-            this.ctx.beginPath();
-            this.ctx.arc(this.start_x + this.cell_size * (x + 1), this.start_y + this.cell_size * (y + 1), 2, 0, 2*3.14);
-            this.ctx.fill();
+          this.ctx.stroke();
+          this.ctx.beginPath();
+          this.ctx.arc(this.start_x + this.cell_size * (x + 1), this.start_y + this.cell_size * (y + 1), 2, 0, 2*3.14);
+          this.ctx.fill();
         }
       }
     }
@@ -241,13 +240,15 @@ class DiffGraph {
       y = prev_y;
     }
 
+    this.ctx.fillStyle = this.orange;
+    this.ctx.strokeStyle = this.orange;
     this.ctx.beginPath();
     this.ctx.moveTo(Math.floor(this.start_x + (this.diff.left.length + 1) * this.cell_size), Math.floor(this.start_y + (this.diff.right.length + 1) * this.cell_size));
     for (let i = 0; i < result.length; i++) {
-        const x1 = result[i][0];
-        const y1 = result[i][1];
-        this.ctx.lineTo(Math.floor(this.start_x + (x1 + 1) * this.cell_size), Math.floor(this.start_y + (y1 + 1) * this.cell_size));
-        this.ctx.stroke();
+      const x1 = result[i][0];
+      const y1 = result[i][1];
+      this.ctx.lineTo(Math.floor(this.start_x + (x1 + 1) * this.cell_size), Math.floor(this.start_y + (y1 + 1) * this.cell_size));
+      this.ctx.stroke();
     }
     this.ctx.stroke();
 
@@ -255,11 +256,11 @@ class DiffGraph {
     this.ctx.arc(Math.floor(this.start_x + (this.diff.left.length + 1) * this.cell_size), Math.floor(this.start_y + (this.diff.right.length + 1) * this.cell_size), 4, 0, 2*3.14);
     this.ctx.fill();
     for (let i = 0; i < result.length; i++) {
-        const x1 = result[i][0];
-        const y1 = result[i][1];
-        this.ctx.beginPath();
-        this.ctx.arc(Math.floor(this.start_x + this.cell_size * (x1 + 1)), Math.floor(this.start_y + this.cell_size * (y1 + 1)), 4, 0, 2*3.14);
-        this.ctx.fill();
+      const x1 = result[i][0];
+      const y1 = result[i][1];
+      this.ctx.beginPath();
+      this.ctx.arc(Math.floor(this.start_x + this.cell_size * (x1 + 1)), Math.floor(this.start_y + this.cell_size * (y1 + 1)), 4, 0, 2*3.14);
+      this.ctx.fill();
     }
   }
 
@@ -274,29 +275,33 @@ class DiffGraph {
     this.ctx.beginPath();
 
     for (let i:number = 0; i<length_a; i++) {
-      this.ctx.fillStyle = this.blue;
-      this.ctx.font = text_size + 'px Arial';
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(this.diff.left.charAt(i - 1), this.start_x + this.cell_size * i + this.cell_size/2, this.start_y + this.cell_size/2);
+      if (i > 0) {
+        this.ctx.fillStyle = this.blue;
+        this.ctx.font = text_size + 'px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(this.diff.left[i - 1], this.start_x + this.cell_size * i + this.cell_size/2, this.start_y + this.cell_size/2);
+      }
       this.ctx.moveTo(this.start_x + i * this.cell_size + this.cell_size, this.start_y + this.cell_size);
       this.ctx.lineTo(this.start_x + i * this.cell_size + this.cell_size, this.start_y + this.cell_size*length_b);
     }
     for (let i:number = 0; i<length_b; i++) {
-      this.ctx.fillStyle = this.green;
-      this.ctx.font = text_size + 'px Arial';
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(this.diff.right.charAt(i - 1), this.start_x + this.cell_size/2, this.start_y + this.cell_size * i + this.cell_size/2, );
+      if (i > 0) {
+        this.ctx.fillStyle = this.green;
+        this.ctx.font = text_size + 'px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(this.diff.right[i - 1], this.start_x + this.cell_size/2, this.start_y + this.cell_size * i + this.cell_size/2, );
+      }
       this.ctx.moveTo(this.start_x + this.cell_size, this.start_y + i * this.cell_size + this.cell_size);
       this.ctx.lineTo(this.start_x + this.cell_size*length_a, this.start_y + i * this.cell_size + this.cell_size);
     }
     this.ctx.stroke();
-    
+
     this.ctx.beginPath();
     for (let i = 0; i < this.diff.left.length; i++) {
       for (let j = 0; j < this.diff.right.length; j++) {
-        if (this.diff.left.charAt(i) === this.diff.right.charAt(j)) {
+        if (this.diff.left[i] === this.diff.right[j]) {
           this.ctx.moveTo(this.start_x + (i + 1) * this.cell_size, this.start_y + (j + 1) * this.cell_size);
           this.ctx.lineTo(this.start_x + (i + 1) * this.cell_size + this.cell_size, this.start_y + (j + 1) * this.cell_size + this.cell_size);
         }
@@ -347,25 +352,69 @@ class DiffGraph {
   }
 }
 
+const lcs_button = document.getElementById('diff_button') as HTMLButtonElement;
+const lcs_input_a = document.querySelector<HTMLInputElement>('#diff_input_a');
+const lcs_input_b = document.querySelector<HTMLInputElement>('#diff_input_b');
+const source_code_button2 = document.getElementById('source_code_button2') as HTMLButtonElement;
+const source_code_input_a2 = document.querySelector<HTMLInputElement>('#source_code_input_a2');
+const source_code_input_b2 = document.querySelector<HTMLInputElement>('#source_code_input_b2');
 
-const lcs_button = document.getElementById('lcs_button') as HTMLButtonElement;
-const lcs_input_a = document.querySelector<HTMLInputElement>('#lcs_input_a');
-const lcs_input_b = document.querySelector<HTMLInputElement>('#lcs_input_b');
 let diff: Diff, drawer: DiffGraph;
+let source_diff2: Diff;
 if (lcs_input_a && lcs_input_b && lcs_button) {
   async function main() {
     const handleClick = (_: MouseEvent) => {
-        if (lcs_input_a && lcs_input_b && lcs_button) {
-          diff = new Diff(lcs_input_a.value, lcs_input_b.value);
-          drawer = new DiffGraph(diff);
-          drawer.draw();
-        }
+      if (lcs_input_a && lcs_input_b && lcs_button) {
+        diff = new Diff([...lcs_input_a.value], [...lcs_input_b.value]);
+        drawer = new DiffGraph(diff);
+        drawer.draw();
+      }
     };
     lcs_button.addEventListener('click', handleClick);
-      // @ts-ignore
-      window.themeController.subscribe(() => {
-        if (drawer) { drawer.draw(); }
-      });
+    // @ts-ignore
+    window.themeController.subscribe(() => {
+      if (drawer) { drawer.draw(); }
+    });
+
+    //handle source code
+    const handleSourceClick2 = (_: MouseEvent) => {
+      if (source_code_input_a2 && source_code_input_b2 && source_code_button2) {
+        source_diff2 = new Diff(source_code_input_a2.value.split(/\r?\n/), source_code_input_b2.value.split(/\r?\n/));
+        let diff_data:DiffItem[]  = source_diff2.diff();
+        if (diff_data) {
+          const table = document.getElementById('diffSourceData2') as HTMLTableElement;
+          const tableBody = table.getElementsByTagName('tbody')[0];
+          tableBody.innerHTML = '';
+          [...diff_data].reverse().forEach(item => {
+            const row = tableBody.insertRow(); 
+            const changeCell = row.insertCell(0);
+            const pos1Cell = row.insertCell(1);
+            const pos2Cell = row.insertCell(2);
+            const contentCell = row.insertCell(3);
+
+            let changeText;
+            if (item.change == DiffType.Add) {
+              changeText = "+";
+              row.classList.add("diff-add");
+            } else if (item.change == DiffType.Delete) {
+              changeText = "-";
+              row.classList.add("diff-delete");
+            } else { 
+              changeText = " ";
+            }
+            changeCell.textContent = changeText;
+            pos1Cell.textContent = item.position_a?.toString();
+            pos2Cell.textContent = item.position_b?.toString();
+            contentCell.textContent = item.content;
+          });
+        }
+      }
+    };
+    source_code_button2.addEventListener('click', handleSourceClick2);
+    // @ts-ignore
+    window.themeController.subscribe(() => {
+      if (drawer) { drawer.draw(); }
+    });
   }
   main();
 } else {

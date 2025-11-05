@@ -69,14 +69,14 @@ impl Solver for DeadEndFilling {
                                     }
                                 }
                                 2 => {
-                                    if !current.walls.left {
+                                    if !current.walls.right {
                                         Some(c)
                                     } else {
                                         None
                                     }
                                 }
                                 3 => {
-                                    if !current.walls.right {
+                                    if !current.walls.left {
                                         Some(c)
                                     } else {
                                         None
@@ -136,14 +136,14 @@ impl Solver for DeadEndFilling {
                                     }
                                 }
                                 2 => {
-                                    if !current.walls.left {
+                                    if !current.walls.right {
                                         Some(c)
                                     } else {
                                         None
                                     }
                                 }
                                 3 => {
-                                    if !current.walls.right {
+                                    if !current.walls.left {
                                         Some(c)
                                     } else {
                                         None
@@ -163,7 +163,7 @@ impl Solver for DeadEndFilling {
             if neighbors.len() != 1 {
                 return Err(format!("neighbors is: {:?}", neighbors));
             }
-            if neighbors.len() > 0 {
+            if !neighbors.is_empty() {
                 self.path.push(*neighbors.first().unwrap());
                 path::update_path(board, &self.path);
             } else {

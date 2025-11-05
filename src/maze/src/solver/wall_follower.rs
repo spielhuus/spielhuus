@@ -1,4 +1,4 @@
-use crate::{solver::path, Board, Cell, Direction, MazeState, Solver, USE_WALL_FOLLOWER_PATH, WF_STRAIGHT_E, WF_STRAIGHT_N, WF_STRAIGHT_S, WF_STRAIGHT_W, WF_TURN_LEFT_E_TO_N, WF_TURN_LEFT_N_TO_W, WF_TURN_LEFT_S_TO_E, WF_TURN_LEFT_W_TO_S, WF_TURN_RIGHT_E_TO_S, WF_TURN_RIGHT_N_TO_E, WF_TURN_RIGHT_S_TO_W, WF_TURN_RIGHT_W_TO_N, WF_UTURN_ON_E_SIDE, WF_UTURN_ON_N_SIDE, WF_UTURN_ON_S_SIDE, WF_UTURN_ON_W_SIDE };
+use crate::{solver::path, Board, Cell, Direction, MazeState, Solver, USE_WALL_FOLLOWER_PATH, WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP, WF_TURN_TOP_LEFT, WF_TURN_TOP_RIGHT, WF_TURN_BOTTOM_LEFT, WF_TURN_BOTTOM_RIGHT };
 
 const LINE_WIDTH: f32 = 1.0;
 
@@ -21,12 +21,6 @@ pub struct WallFollower {
     direction: Direction,
     distance: usize,
 }
-
-// use raylib_egui_rs::color::Color;
-// use raylib_egui_rs::math::*;
-// use raylib_egui_rs::raylib;
-
-
 
 impl WallFollower {
     pub fn new(board: &Board) -> Self {
@@ -104,6 +98,7 @@ impl WallFollower {
             }
         }
     }
+
     fn push_wall(&mut self) {
         self.walls
             .push(Wall::new(self.direction, *self.walk_path.last().unwrap()));
@@ -126,16 +121,49 @@ impl WallFollower {
         else if dx == 0 && dy == -1 { Some(Direction::North) }
         else { None }
     }
+
+    fn get_wall(&self) -> u32 {
+        match self.direction {
+            Direction::North => WALL_LEFT,
+            Direction::South => WALL_RIGHT,
+            Direction::East => WALL_TOP,
+            Direction::West => WALL_BOTTOM,
+        }
+    }
+
+    fn get_turn(&self, old: Direction) -> u32 {
+        match (old, self.direction) {
+            (Direction::North, Direction::East) => WF_TURN_TOP_RIGHT,
+            (Direction::North, Direction::West) => WF_TURN_TOP_LEFT,
+            (Direction::South, Direction::East) => WF_TURN_BOTTOM_LEFT,
+            (Direction::South, Direction::West) => WF_TURN_BOTTOM_RIGHT,
+            (Direction::East, Direction::North) => WF_TURN_BOTTOM_LEFT,
+            (Direction::East, Direction::South) => WF_TURN_TOP_RIGHT,
+            (Direction::West, Direction::North) => WF_TURN_BOTTOM_RIGHT,
+            (Direction::West, Direction::South) => WF_TURN_TOP_LEFT,
+            (Direction::North, Direction::North) => todo!(),
+            (Direction::North, Direction::South) => todo!(),
+            (Direction::South, Direction::North) => todo!(),
+            (Direction::South, Direction::South) => todo!(),
+            (Direction::East, Direction::East) => todo!(),
+            (Direction::East, Direction::West) => todo!(),
+            (Direction::West, Direction::East) => todo!(),
+            (Direction::West, Direction::West) => todo!(),
+        }
+    }
 }
 
 impl Solver for WallFollower {
     fn step(&mut self, board: &mut Board) -> Result<MazeState, String> {
         let index = *self.walk_path.last().unwrap();
+        // did we reached the exit
         if index == self.end {
             let mut clean_path: Vec<usize> = Vec::new();
             for path in &self.walk_path {
-                if clean_path.len() > 2 && clean_path.get(clean_path.len() - 2).unwrap() == path {
+                if clean_path.len() >= 2 && clean_path.get(clean_path.len() - 2).unwrap() == path {
+                    let removed_cell_idx = *clean_path.last().unwrap();
                     clean_path.pop();
+                    path::clear_direction(board, removed_cell_idx);
                     path::update_path(board, &clean_path);
                 } else if clean_path.is_empty() || clean_path.last().unwrap() != path {
                     clean_path.push(*path);
@@ -143,31 +171,62 @@ impl Solver for WallFollower {
                 }
             }
             self.path = clean_path;
-            // self.update_gpu_for_wall_follower(board, &self.path);
+            for (i, item) in self.path.iter().enumerate() {
+                let x = board.get_cell(*item).x;
+                let y = board.get_cell(*item).y;
+                println!("{:04} {}x{} {:032b} {:032b}", i, x, y, board.gpu_data[*item][0], board.gpu_data[*item][1]); 
+            }
             return Ok(MazeState::Done);
         }
 
+        // search the next cell
         let current = &board.cells[index];
+        let old_direction = self.direction;
 
+        {
+        println!("process cell: {}x{}, directon: {:?}", current.x, current.y, self.direction);
+        }
         if self.wall_left(current) {
+            // when there is a wall on the left
             if self.front_wall(current) {
+                // when we stand in front of a wall
+                println!("add wall before turn: {}", self.get_wall());
+                println!("In front of wall: {}", self.get_wall());
+                board.gpu_data[*self.walk_path.last().unwrap()][0] |= USE_WALL_FOLLOWER_PATH;
+                board.gpu_data[*self.walk_path.last().unwrap()][1] |= self.get_wall();
                 self.push_wall();
-                // self.walls
-                //     .push(Wall::new(self.direction, *self.walk_path.last().unwrap()));
                 self.rotate_cw();
+                // board.gpu_data[*self.walk_path.last().unwrap()][1] |= self.get_wall();
+                board.gpu_data[*self.walk_path.last().unwrap()][1] |= self.get_turn(old_direction);
+                println!("after rotate cw: {:b}", board.gpu_data[*self.walk_path.last().unwrap()][1]);
                 self.push_wall();
-                // self.walls
-                //     .push(Wall::new(self.direction, *self.walk_path.last().unwrap()));
             }
+            // go forward
             let new_cell = self.fwd(board, current);
+            board.gpu_data[*self.walk_path.last().unwrap()][0] |= USE_WALL_FOLLOWER_PATH;
+            println!("Add wall: {}", self.get_wall());
+            board.gpu_data[*self.walk_path.last().unwrap()][1] |= self.get_wall();
             self.push_wall();
+            println!("LEFT_WALL: {:032b} {:032b}", board.gpu_data[*self.walk_path.last().unwrap()][0], board.gpu_data[*self.walk_path.last().unwrap()][1]); 
             // self.walls
             //     .push(Wall::new(self.direction, *self.walk_path.last().unwrap()));
             self.walk_path.push(new_cell);
+
         } else {
             self.rotate_ccw();
+             board.gpu_data[*self.walk_path.last().unwrap()][0] |= USE_WALL_FOLLOWER_PATH;
+             board.gpu_data[*self.walk_path.last().unwrap()][1] |= self.get_turn(old_direction);
+            println!("ROTATE_CCW: {:032b} {:032b}", board.gpu_data[*self.walk_path.last().unwrap()][0], board.gpu_data[*self.walk_path.last().unwrap()][1]); 
+
+             println!("after rotate ccw: {} {}", self.walk_path.last().unwrap(), self.get_wall());
             let new_cell = self.fwd(board, current);
             self.walk_path.push(new_cell);
+            board.gpu_data[*self.walk_path.last().unwrap()][0] |= USE_WALL_FOLLOWER_PATH;
+            println!("Add wall: {}", self.get_wall());
+            if self.wall_left(current) {
+                board.gpu_data[*self.walk_path.last().unwrap()][1] |= self.get_wall();
+                println!("NO_WALL   : {:032b} {:032b}", board.gpu_data[*self.walk_path.last().unwrap()][0], board.gpu_data[*self.walk_path.last().unwrap()][1]); 
+            }
         }
 
         Ok(MazeState::Solve)

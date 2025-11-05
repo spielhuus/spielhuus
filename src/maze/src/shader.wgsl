@@ -61,6 +61,11 @@ const CROSSED: u32 = 1u << 25u;
 const CELL_WEIGHT: u32 = 1u << 26u;
 const USE_WALL_FOLLOWER_PATH: u32 = 1u << 27u;
 
+const WF_TURN_TOP_RIGHT: u32 = 1u << 4;
+const WF_TURN_TOP_LEFT: u32 = 1u << 5;
+const WF_TURN_BOTTOM_RIGHT: u32 = 1u << 6;
+const WF_TURN_BOTTOM_LEFT: u32 = 1u << 7;
+
 const wall_thickness: f32 = 0.1;
   
 const cursor_radius = 0.2;
@@ -101,7 +106,7 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
 
     let uv = vec2(
         frag_coord.x / uniforms.resolution.x,
-        1.0 - (frag_coord.y / uniforms.resolution.y)
+        /*1.0 -*/ (frag_coord.y / uniforms.resolution.y)
     );
 
     let screen_aspect = uniforms.resolution.x / uniforms.resolution.y;
@@ -117,7 +122,7 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
 
     let grid_f = f32(uniforms.grid_size);
     let cell_coord = floor(maze_uv * grid_f);
-    let cell_index = u32(cell_coord.x * grid_f + cell_coord.y);
+    let cell_index = u32(cell_coord.y * grid_f + cell_coord.x); 
     if cell_index >= arrayLength(&maze_data) {
         return vec4(0.0, 0.0, 0.0, 1.0);
     }
@@ -335,11 +340,144 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
         } else {
             floor_color =  uniforms.colors.visited_floor_color;
         }
+
+
+
     } else if is_backtrack {
         floor_color =  uniforms.colors.backtrack_floor_color;
     } else if is_visited {
         floor_color =  uniforms.colors.visited_floor_color;
     }
+
+
+     if (cell_data.x & USE_WALL_FOLLOWER_PATH) != 0u {
+      if (cell_data.y & WALL_TOP) != 0 && (cell_data.y & WALL_RIGHT) != 0u {
+        if inner_uv.y >= 0.1 && inner_uv.y <= 0.2 {
+            floor_color =  uniforms.colors.cursor_color;
+        } else if inner_uv.x >= 0.8 && inner_uv.x <= 0.9 {
+            floor_color =  uniforms.colors.cursor_color;
+        }
+      } else if (cell_data.y & WALL_BOTTOM) != 0 && (cell_data.y & WALL_RIGHT) != 0u {
+        if inner_uv.y >= 0.8 && inner_uv.y <= 0.9 {
+            floor_color =  uniforms.colors.cursor_color;
+        } else if inner_uv.x >= 0.8 && inner_uv.x <= 0.9 {
+            floor_color =  uniforms.colors.cursor_color;
+        }
+      } else if (cell_data.y & WALL_TOP) != 0 && (cell_data.y & WALL_LEFT) != 0u {
+        if inner_uv.y >= 0.1 && inner_uv.y <= 0.2 {
+            floor_color =  uniforms.colors.cursor_color;
+        } else if inner_uv.x >= 0.1 && inner_uv.x <= 0.2 {
+            floor_color =  uniforms.colors.cursor_color;
+        }
+      } else if (cell_data.y & WALL_BOTTOM) != 0 && (cell_data.y & WALL_LEFT) != 0u {
+        if inner_uv.y >= 0.8 && inner_uv.y <= 0.9 {
+            floor_color =  uniforms.colors.cursor_color;
+        } else if inner_uv.x >= 0.1 && inner_uv.x <= 0.2 {
+            floor_color =  uniforms.colors.cursor_color;
+        }
+      } else if (cell_data.y & WALL_TOP) != 0u {
+        if inner_uv.y >= 0.1 && inner_uv.y <= 0.2 {
+            floor_color =  uniforms.colors.cursor_color;
+//        } else {
+//            floor_color =  uniforms.colors.visited_floor_color;
+        }
+      } else if (cell_data.y & WALL_BOTTOM) != 0u {
+        if inner_uv.y >= 0.8 && inner_uv.y <= 0.9 {
+            floor_color =  uniforms.colors.cursor_color;
+//        } else {
+//            floor_color =  uniforms.colors.visited_floor_color;
+        }
+      } else if (cell_data.y & WALL_LEFT) != 0u {
+        if inner_uv.x >= 0.1 && inner_uv.x <= 0.2 {
+            floor_color =  uniforms.colors.cursor_color;
+//        } else {
+//            floor_color =  uniforms.colors.visited_floor_color;
+        }
+      } else if (cell_data.y & WALL_RIGHT) != 0u {
+        if inner_uv.x >= 0.8 && inner_uv.x <= 0.9 {
+            floor_color =  uniforms.colors.cursor_color;
+//        } else {
+ //           floor_color =  uniforms.colors.visited_floor_color;
+        }
+
+      } else if (cell_data.y & WF_TURN_BOTTOM_LEFT) != 0u { 
+        let center = vec2<f32>(1.0, 0.0); 
+        let inner_radius = 0.1; 
+        let outer_radius = 0.2; 
+        let dist = distance(inner_uv, center); 
+        if dist >= inner_radius && dist <= outer_radius { 
+            floor_color = uniforms.colors.cursor_color; 
+        } 
+      } else if (cell_data.y & WF_TURN_BOTTOM_RIGHT) != 0u { 
+        let center = vec2<f32>(0.0, 0.0); 
+        let inner_radius = 0.1; 
+        let outer_radius = 0.2; 
+        let dist = distance(inner_uv, center); 
+        if dist >= inner_radius && dist <= outer_radius { 
+            floor_color = uniforms.colors.cursor_color; 
+        } 
+      } else if (cell_data.y & WF_TURN_TOP_LEFT) != 0u { 
+        let center = vec2<f32>(1.0, 1.0); 
+        let inner_radius = 0.1; 
+        let outer_radius = 0.2; 
+        let dist = distance(inner_uv, center); 
+        if dist >= inner_radius && dist <= outer_radius { 
+            floor_color = uniforms.colors.cursor_color; 
+        } 
+      } else if (cell_data.y & WF_TURN_TOP_RIGHT) != 0u { 
+        let center = vec2<f32>(0.0, 1.0); 
+        let inner_radius = 0.1; 
+        let outer_radius = 0.2; 
+        let dist = distance(inner_uv, center); 
+        if dist >= inner_radius && dist <= outer_radius { 
+            floor_color = uniforms.colors.cursor_color; 
+        } 
+      } 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//      } else if (cell_data.y & WF_TURN_TOP_RIGHT) != 0u {
+//
+//        let center = vec2<f32>(0.75, 0.75);
+//        let radius = START_RADIUS;
+//        let dist_from_center = distance(inner_uv, center);
+//        if dist_from_center < 0.2 {
+//            floor_color =  uniforms.colors.cursor_color;
+//        } else if inner_uv.x > 0.1 && (inner_uv.y >= MIN_PATH_THICKNESS && inner_uv.y <= MAX_PATH_THICKNESS) {
+//            floor_color =  uniforms.colors.cursor_color;
+////        } else {
+////            floor_color =  uniforms.colors.visited_floor_color;
+//        }
+//      } else if (cell_data.y & WF_TURN_TOP_LEFT) != 0u {
+//
+//        let center = vec2<f32>(0.75, 0.75);
+//        let radius = START_RADIUS;
+//        let dist_from_center = distance(inner_uv, center);
+//        if dist_from_center < 0.2 {
+//            floor_color =  uniforms.colors.cursor_color;
+//        } else if inner_uv.x > 0.1 && (inner_uv.y >= MIN_PATH_THICKNESS && inner_uv.y <= MAX_PATH_THICKNESS) {
+//            floor_color =  uniforms.colors.cursor_color;
+// //       } else {
+//  //          floor_color =  uniforms.colors.visited_floor_color;
+//        }
+//     }
+     }
+
 
     // draw the walls
     let has_top_wall = (cell_data.x & WALL_TOP) != 0u;
