@@ -27,8 +27,8 @@ github = 'diff'
   #codeForm textarea, #codeForm2 textarea {  
     min-width: 400px; /* Ensure textareas have enough width */  
   }  
-  #diffData .diff-add td,    
-  #diffData tr.diff-add, 
+  #diff-table .diff-add td,    
+  #diff-table tr.diff-add, 
   #diffSourceData .diff-add td,
   #diffSourceData tr.diff-add, 
   #diffSourceData2 .diff-add td,    
@@ -36,8 +36,8 @@ github = 'diff'
       color: var(--green);   
       background-color: var(--darkgreen);   
   }  
-  #diffData .diff-delete td,   
-  #diffData tr.diff-delete, 
+  #diff-table .diff-delete td,   
+  #diff-table tr.diff-delete, 
   #diffSourceData .diff-delete td,
   #diffSourceData tr.diff-delete, 
   #diffSourceData2 .diff-delete td,   
@@ -45,7 +45,7 @@ github = 'diff'
       color: var(--red);  
       background-color: var(--darkred);  
   }  
-  #diffData, #diffSourceData, #diffSourceData2 {
+  #diff-table, #diffSourceData, #diffSourceData2 {
     border: 0;  
     border-spacing: 0;  
     border-collapse: collapse;  
@@ -92,6 +92,7 @@ While the `V` array determines the length of the shortest edit script, reconstru
  
 ### Interactive Demonstration 
  
+
 Visualize the Myers algorithm's progress on an edit graph. Observe how `d` increases, `k` varies, and snakes are utilized to find the shortest edit path. 
  
 <form id="diffForm"> 
@@ -99,16 +100,18 @@ Visualize the Myers algorithm's progress on an edit graph. Observe how `d` incre
   <input type="text" id="diff_input_a" name="a" value="ABCABBA"> 
   <label for="b">Input B:</label> 
   <input type="text" id="diff_input_b" name="b" value="CBABAC"> 
-  <button type="button" id="diff_button">Calculate</button> 
+  <button type="button" id="step_button">Step</button> 
 </form> 
  
 <figure> 
-  <canvas id="diff_canvas_1" width="400" height="400"></canvas> 
+  <canvas id="diff_grid" width="400" height="400"></canvas> 
 </figure> 
 
 Once the shortest edit script is found, the result can be displayed. 
 
-<table id="diffData" class="diffData">
+and the final diff
+
+<table id="diff-table" class="diff-table">
     <thead>
         <tr>
             <th width="20px"></th>
@@ -147,10 +150,9 @@ To create a diff for source code, the Myers algorithm works with lines of text r
    x += 2 
   } 
   </textarea> 
-  <button type="button" id="source_code_button2">Calculate</button> 
 </form> 
  
-<table id="diffSourceData2" class="diffData"> 
+<table id="diffSourceData2" class="diff-table"> 
     <thead> 
         <tr> 
             <th width="20px"></th> 
