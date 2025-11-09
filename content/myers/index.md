@@ -2,10 +2,11 @@
 title = 'Myers Algorithm' 
 description = 'Building an edit script with the Myers algorithm' 
 date = 2025-11-01T16:35:00+02:00 
-draft = true 
+draft = false
 tags = ['graph', 'algorithm', 'diff'] 
 script = "myers/js/main.ts" 
 github = 'diff' 
+links = [ "Myers", "MyersDiff", "PatienceDiff" ]
 +++ 
  
 <style> 
@@ -91,7 +92,6 @@ The algorithm chooses the path that yields the greatest `x` value for `d`. After
 While the `V` array determines the length of the shortest edit script, reconstructing the actual sequence of operations requires storing additional information (e.g., the predecessor `k` or `d` values) during the forward pass, or by re-running the algorithm in reverse. This allows tracing back the specific insertions and deletions that form the SES. 
  
 ### Interactive Demonstration 
- 
 
 Visualize the Myers algorithm's progress on an edit graph. Observe how `d` increases, `k` varies, and snakes are utilized to find the shortest edit path. 
  

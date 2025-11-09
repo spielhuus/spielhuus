@@ -105,3 +105,17 @@
   url: "https://en.wikipedia.org/wiki/Disjoint_sets"
   description: "Disjoint sets"
 
+- id: "Myers"
+  name: "An O(ND) Difference Algorithm and Its Variations"
+  url: "http://www.xmailserver.org/diff2.pdf"
+  description: "The original paper from Eugene W. Myers."
+
+- id: "MyersDiff"
+  name: "The Myers Diff algorithm"
+  url: "https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/"
+  description: "Article series about the Myers algorithm"
+
+- id: "PatienceDiff"
+  name: "Patience Diff Advantages"
+  url: "https://bramcohen.livejournal.com/73318.html"
+  description: "Explanation of the Patience Diff"
