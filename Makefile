@@ -24,11 +24,14 @@ clean_bindgen-%:
 	@echo "--- Removing generated files for: $* ---"
 	rm -rf src/$*/js/$*
 
-web: bindgen
+node_modules: package.json
+	npm install
+
+web: bindgen node_modules
 	@echo "--- Building Hugo site ---"
 	hugo build --gc --minify
 
-serve: bindgen
+serve: bindgen node_modules
 	@echo "--- Run Hugo server ---"
 	hugo serve --buildDrafts --buildFuture
 
@@ -38,3 +41,4 @@ clean: $(CLEAN_BINDGEN_TARGETS)
 	rm -rf public
 	rm -rf .hugo_build.lock
 	rm -rf resources
+	rm -rf node_modules
