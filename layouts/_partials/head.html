@@ -3,6 +3,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="darkreader-lock">
 <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
+<link rel="stylesheet" href="{{ "monaco/vs/editor/editor.main.css" | relURL }}">
 {{ with resources.Get "sass/main.scss" }}
   {{ $opts := dict
     "enableSourceMap" hugo.IsDevelopment
@@ -23,9 +24,5 @@
   {{ end }}
 {{ end }}
 <script>
-  var siteBaseUrl = "{{ site.BaseURL }}";
-  if (siteBaseUrl.endsWith("/")) {
-    siteBaseUrl = siteBaseUrl.slice(0, -1);
-  }
-  window.siteBaseUrl = siteBaseUrl;
+  window.siteBaseUrl = '{{ .Site.BaseURL }}'.replace(/\/$/, "");
 </script>

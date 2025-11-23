@@ -9,8 +9,12 @@ export interface EditorError {
 
 function getBasePath() {
   // @ts-ignore
-  const baseUrl = window.siteBaseUrl || '';
-  return baseUrl ? `${baseUrl}/monaco/vs` : '/monaco/vs';
+  const baseUrl = window.siteBaseUrl;
+  if (baseUrl) {
+    return `${baseUrl}/monaco/vs`;
+  } else {
+    return '/monaco/vs';
+  }
 }
 
 self.MonacoEnvironment = {
