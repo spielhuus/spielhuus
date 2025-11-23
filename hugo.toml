@@ -1,7 +1,6 @@
 baseURL = "http://localhost:1313"
 languageCode = 'en-us'
 title = 'spielhuus'
-# theme = 'default'
 
 [[module.mounts]]
   source = "assets"
@@ -18,6 +17,9 @@ title = 'spielhuus'
 [[module.mounts]]
   source = "layouts"
   target = "layouts"
+[[module.mounts]]
+  source = "node_modules/monaco-editor/min/vs"
+  target = "static/monaco/vs"
 
 [markup.goldmark.renderer]
   unsafe = true # Allow HTML in md files

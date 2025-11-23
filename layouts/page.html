@@ -38,7 +38,8 @@
     {{ $wasm := resources.Get $wasmResourcePath }}
     {{ if $mainJS }}
       {{ $isProduction := eq hugo.Environment "production" }}
-      {{ $opts := dict "minify" $isProduction "target" "es2020" }}
+      {{ $loaders := dict ".ttf" "file" ".css" "css" }}
+      {{ $opts := dict "minify" $isProduction "target" "es2020" "loaders" $loaders}}
       {{ $transpiled := $mainJS | js.Build $opts }}
       {{ $attrs := dict "src" $transpiled.RelPermalink "defer" true }}
       {{ if $wasm }}

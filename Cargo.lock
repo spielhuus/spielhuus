@@ -41,24 +41,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ahoi_wgpu"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytemuck",
- "console_error_panic_hook",
- "console_log",
- "env_logger",
- "log",
- "pollster",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "wgpu 27.0.1",
- "winit",
-]
-
-[[package]]
 name = "android-activity"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

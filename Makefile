@@ -1,5 +1,5 @@
 WWW_TARGET_DIR := target/wasm
-BINDGEN := monkey ahoi_wgpu ca game_of_life fertilization maze
+BINDGEN := monkey ca game_of_life fertilization maze
 BINDGEN_TARGETS := $(foreach svc,$(BINDGEN),bindgen-$(svc))
 CLEAN_BINDGEN_TARGETS := $(foreach svc,$(BINDGEN),clean_bindgen-$(svc))
 

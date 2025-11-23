@@ -22,3 +22,10 @@
     {{ end }}
   {{ end }}
 {{ end }}
+<script>
+  var siteBaseUrl = "{{ site.BaseURL }}";
+  if (siteBaseUrl.endsWith("/")) {
+    siteBaseUrl = siteBaseUrl.slice(0, -1);
+  }
+  window.siteBaseUrl = siteBaseUrl;
+</script>

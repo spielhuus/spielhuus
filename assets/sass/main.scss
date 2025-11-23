@@ -2,6 +2,8 @@
 @use 'themes';
 @use 'forms';
 
+@import url('/monaco/vs/editor/editor.main.css');
+
 $link-color-default: #ff73e8;
 $link-color-visited: #ff3ab2;
 $link-color-hover:   #ff59c1;
@@ -278,6 +280,7 @@ footer > .arrows {
 }
 
 
+//icons
 .icon {
   display: inline-block;
   background-size: contain;
@@ -359,3 +362,122 @@ $chroma-dark: (
   @include generate-chroma-styles($chroma-dark);
 }
 
+// monaco styles
+.monaco-editor,
+.monaco-editor .inputarea,
+.monaco-editor .view-lines,
+.monaco-editor .margin-view-overlays {
+  font-family: 'SourceCodePro-Regular', 'Roboto Mono', monospace !important;
+}
+
+#monaco-container {
+  width: 100%;
+  height: 500px;
+  border: 1px solid var(--form-border);
+  margin-top: 20px;
+}
+.inline-error-decoration {
+  color: #ff6b6b !important;
+  font-style: italic;
+  font-size: 0.9em !important;
+  font-family: sans-serif !important; /* Use system font to ensure render */
+  opacity: 0.9 !important;
+  margin-left: 15px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+// .inline-error-decoration {
+//   color: #ff6b6b;
+//   font-style: italic;
+//   font-size: 0.9em;
+//   opacity: 0.8;
+//   margin-left: 10px;
+//   user-select: none;
+//   pointer-events: none;
+// }
+.gpu_canvas-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  background: black;
+  cursor: none;
+
+  &.gpu_user-active {
+    cursor: default;
+    .gpu_canvas-controls {
+      opacity: 1;
+      transition: opacity 0.2s ease 0s;
+    }
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  // Fullscreen specific styles
+  &:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    canvas {
+      height: 100%;
+      width: 100%;
+      object-fit: contain;
+    }
+  }
+}
+
+.gpu_canvas-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: white;
+  font-family: monospace;
+  z-index: 10;
+  
+  opacity: 0;
+  transition: opacity 0.5s ease 1s;
+  pointer-events: none;
+
+  button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    font-size: 1.1rem;
+    padding: 0;
+    line-height: 1;
+    pointer-events: auto; /* Re-enable clicking on buttons */
+
+    &::before {
+      content: none;
+      display: none;
+    }
+
+    &:hover {
+      background: rgba(255,255,255,0.2);
+    }
+  }
+}
