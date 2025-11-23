@@ -119,3 +119,18 @@
   name: "Patience Diff Advantages"
   url: "https://bramcohen.livejournal.com/73318.html"
   description: "Explanation of the Patience Diff"
+
+- id: "gradients"
+  name: "gradients"
+  url: "https://dev.thi.ng/gradients/"
+  description: "Cosine gradient generator"
+
+- id: "graphtoy"
+  name: "graphtoy"
+  url: "https://graphtoy.com/"
+  description: "Visualize graph functions"
+
+- id: "2ddist"
+  name: "2D SDF"
+  url: "https://iquilezles.org/articles/distfunctions2d/"
+  description: "2D signed distance field functions"

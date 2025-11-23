@@ -5,7 +5,7 @@ date = 2025-08-24T13:35:00+02:00
 draft = false
 tags = ['WebGPU']
 script = "ahoi_wgpu/js/main.ts"
-links = [ "webgpu-fundamentals", "wgpu", "learn-wgpu" ]
+links = [ "webgpu-fundamentals", "gradients", "graphtoy", "2ddist" ]
 +++
 
 This project is a "Hello World" for modern graphics programming, demonstrating how to create a raw WebGPU rendering context using TypeScript. Unlike standard pre-compiled demos, this page integrates the **Monaco Editor**, allowing you to modify the shader code in real-time and see the results instantly on the GPU.
