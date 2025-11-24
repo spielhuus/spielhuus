@@ -100,4 +100,4 @@ return vec4<f32>(0.0, 0.0, 1.0 * color, color);
 
 Or modify get_rule_output to create entirely new cellular behaviors that don't follow the standard Wolfram rules.
 
-<div id="monaco-container" style="height: 600px; border: 1px solid #444;"></div>
+<div id="monaco-container" style="height: 600px; border: none;"></div>

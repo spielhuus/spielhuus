@@ -26,14 +26,14 @@ $link-transition: all 0.2s ease-in-out;
 }
 
 @font-face {
-  font-family: 'cmunss';
-  src: url('../fonts/cmunss-webfont.woff') format('woff');
+  font-family: 'JetBrainsMono-Regular';
+  src: url('../fonts/JetBrainsMono-Regular.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
-  font-family: 'SourceCodePro-Regular';
-  src: url('../fonts/SourceCodePro-Regular.ttf') format('truetype');
+  font-family: 'cmunss';
+  src: url('../fonts/cmunss-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -316,7 +316,7 @@ pre,
 pre code {
   grid-column: 2;
   background-color: var(--paper-white);
-  font-family: "SourceCodePro-Regular", sens;
+  font-family: "JetBrainsMono-Regular", sens;
   font-size: 0.9em;
 }
 
@@ -365,7 +365,7 @@ $chroma-dark: (
 .monaco-editor .inputarea,
 .monaco-editor .view-lines,
 .monaco-editor .margin-view-overlays {
-  font-family: 'SourceCodePro-Regular', 'Roboto Mono', monospace !important;
+ font-family: JetBrainsMono-Regular, monospace !important;
 }
 
 #monaco-container {

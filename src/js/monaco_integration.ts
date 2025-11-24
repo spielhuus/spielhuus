@@ -56,18 +56,14 @@ export class CodeEditor {
       automaticLayout: true,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
-      fontFamily: "'SourceCodePro-Regular', 'Roboto Mono', monospace",
+      fontFamily: "JetBrainsMono-Regular, 'Roboto Mono', monospace",
       fontSize: 14,
       fontLigatures: true,
       scrollBeyondLastColumn: 20,
     });
-
     // Initialize empty collection
     this.decorations = this.editor.createDecorationsCollection([]);
 
-    document.fonts.ready.then(() => {
-      monaco.editor.remeasureFonts();
-    });
 
     // @ts-ignore
     if (window.themeController) {
@@ -77,6 +73,10 @@ export class CodeEditor {
         monaco.editor.setTheme(monacoTheme);
       });
     }
+
+    document.fonts.ready.then(() => {
+      monaco.editor.remeasureFonts();
+    });
   }
 
   setMarkers(errors: EditorError[]) {
