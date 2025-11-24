@@ -1,5 +1,8 @@
 import * as monaco from 'monaco-editor';
 
+import 'monaco-editor/esm/vs/editor/editor.worker';
+import 'monaco-editor/esm/vs/language/json/json.worker';
+
 export interface EditorError {
   line: number;
   column: number;
@@ -11,9 +14,9 @@ function getBasePath() {
   // @ts-ignore
   const baseUrl = window.siteBaseUrl;
   if (baseUrl) {
-    return `${baseUrl}/monaco/vs`;
+    return `${baseUrl}/monaco-editor/vs`;
   } else {
-    return '/monaco/vs';
+    return '/monaco-editor/vs';
   }
 }
 

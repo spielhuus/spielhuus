@@ -3,7 +3,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="darkreader-lock">
 <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
-<link rel="stylesheet" href="{{ "monaco/vs/editor/editor.main.css" | relURL }}">
+<link rel="stylesheet" href="{{ (resources.Get "monaco-editor/min/vs/editor/editor.main.css").RelPermalink }}">
 {{ with resources.Get "sass/main.scss" }}
   {{ $opts := dict
     "enableSourceMap" hugo.IsDevelopment

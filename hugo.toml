@@ -9,6 +9,9 @@ title = 'spielhuus'
   source = "src"
   target = "assets"
 [[module.mounts]]
+  source = "node_modules"
+  target = "assets"
+[[module.mounts]]
   source = "content"
   target = "content"
 [[module.mounts]]
@@ -19,7 +22,7 @@ title = 'spielhuus'
   target = "layouts"
 [[module.mounts]]
   source = "node_modules/monaco-editor/esm/vs"
-  target = "static/monaco/vs"
+  target = "static/monaco-editor/vs"
 
 [markup.goldmark.renderer]
   unsafe = true # Allow HTML in md files
