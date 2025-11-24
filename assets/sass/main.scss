@@ -150,7 +150,7 @@ a {
   margin-right: auto;
   @media (min-width: 1281px) {
     width: 1280px;
-    height: 800px;
+    height: auto; //800px;
   }
 }
 
@@ -399,7 +399,6 @@ $chroma-dark: (
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  background: black;
   cursor: none;
 
   &.gpu_user-active {
@@ -409,8 +408,8 @@ $chroma-dark: (
       transition: opacity 0.2s ease 0s;
     }
   }
-
   canvas {
+    background-color: transparent; 
     display: block;
     width: 100%;
     height: auto;

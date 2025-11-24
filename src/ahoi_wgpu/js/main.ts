@@ -1,4 +1,5 @@
-import { CodeEditor, EditorError } from '../../js/monaco_integration';
+import { CodeEditor } from '../../js/monaco_integration';
+import type { EditorError } from '../../js/monaco_integration';
 
 const STORAGE_KEY = 'wgpu_shader_code';
 
@@ -297,7 +298,7 @@ renderer.init();
 
 // Monaco
 try {
-  const myEditor = new CodeEditor('monaco-container', startCode, 'rust');
+  const myEditor = new CodeEditor('monaco-container', startCode, 'c');
   myEditor.editor.onDidChangeModelContent(async () => {
     const newCode = myEditor.getValue();
     localStorage.setItem(STORAGE_KEY, newCode);

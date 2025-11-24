@@ -20,11 +20,18 @@ function getBasePath() {
 self.MonacoEnvironment = {
   getWorkerUrl: function(_moduleId: any, label: string) {
     const path = getBasePath();
-
-    if (label === 'json') return `${path}/language/json/json.worker.js`;
-    if (label === 'css' || label === 'scss' || label === 'less') return `${path}/language/css/css.worker.js`;
-    if (label === 'html' || label === 'handlebars' || label === 'razor') return `${path}/language/html/html.worker.js`;
-    if (label === 'typescript' || label === 'javascript') return `${path}/language/typescript/ts.worker.js`;
+    if (label === 'json') {
+      return `${path}/language/json/json.worker.js`;
+    }
+    if (label === 'css' || label === 'scss' || label === 'less') {
+      return `${path}/language/css/css.worker.js`;
+    }
+    if (label === 'html' || label === 'handlebars' || label === 'razor') {
+      return `${path}/language/html/html.worker.js`;
+    }
+    if (label === 'typescript' || label === 'javascript') {
+      return `${path}/language/typescript/ts.worker.js`;
+    }
     return `${path}/editor/editor.worker.js`;
   }
 };

@@ -3,7 +3,6 @@ resolver = "3"
 members = [
   "src/genetic",
   "src/monkey",
-  "src/ca",
   "src/game_of_life",
   "src/fertilization",
   "src/mandelbrot",

@@ -44,7 +44,14 @@ issue is to wrap around the cells such that the neighbor for the first cell is
 the last one, and the neighbor for the last cell is the first one in the grid.
 
 <figure class="fullwidth">
-    <canvas id="shader" class='fullwidth'></canvas>
+    <div class="gpu_canvas-wrapper" id="gpu_wrapper">
+      <canvas id="gpu_shader" width="1280" height="860"></canvas>
+      <div class="gpu_canvas-controls">
+        <span id="gpu_fps-counter">00 FPS</span>
+        <button id="gpu_btn-reset" title="Reset Code">↺</button>
+        <button id="gpu_btn-fullscreen" title="Toggle Fullscreen">⛶</button>
+      </div>
+    </div>
 </figure>
 
 <div><form action="#" id="rules">
@@ -63,6 +70,7 @@ the last one, and the neighbor for the last cell is the first one in the grid.
     </select>
 </form></div>
 
+
 Another crucial aspect is defining the initial state of the cells. Commonly,
 the central cell of the row is selected as the initial active cell. Alternative
 possibilities include initiating the activity at the left or right side of the
@@ -71,10 +79,25 @@ as per the specific requirements or conditions of the simulation.
 
 ## Implementation Overview
 
-This Rust implementation leverages `wgpu` for GPU-accelerated computation and rendering of the cellular automaton.
-It uses a compute shader to calculate the next generation of cells based on the defined rule and a render pipeline
-to visualize the grid on the screen. The core components include storage textures to hold the automaton's state,
-uniform buffers to pass parameters like the rule number and grid dimensions to the shaders, and bind groups to
-manage the resources bound to the compute and render pipelines.  The `State` struct encapsulates the `wgpu`
-context and resources, while the `App` struct manages the application lifecycle and user interactions,
-enabling dynamic modification of simulation parameters such as the rule, cell size, and initial state. 
+The TypeScript code establishes the WebGPU pipeline, creates the texture buffers for the simulation grid, 
+and manages the animation loop. However, the specific logic for the Cellular Automata—how cells interact
+and how they are colored—resides entirely within the **WGSL** (WebGPU Shading Language) code.
+
+The shader is split into two distinct stages:
+
+1.  **Compute Shader (`compute_main`)**: This function calculates the simulation logic. It runs in parallel for every cell in the row. It reads the state of the left, center, and right neighbors from the previous generation's texture, combines them into an index, and applies the selected Rule (0-255) to determine the cell's new state.
+2.  **Render Shader (`vs_main` & `fs_main`)**: These functions handle the visualization. The vertex shader maps the grid coordinates to the screen, while the fragment shader samples the grid texture to determine the pixel color.
+
+### Live Code Editor
+
+The editor below contains the actual shader code running the simulation above. You can modify this code to customize the behavior.
+
+For example, inside `fs_main` in the fragment shader, you can change the color output:
+```ts
+// Change from Red to Blue
+return vec4<f32>(0.0, 0.0, 1.0 * color, color);
+```
+
+Or modify get_rule_output to create entirely new cellular behaviors that don't follow the standard Wolfram rules.
+
+<div id="monaco-container" style="height: 600px; border: 1px solid #444;"></div>
