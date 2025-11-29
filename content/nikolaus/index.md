@@ -1,6 +1,6 @@
 +++
 title = 'Das kleine Haus des Nikolaus'
-description = 'The small house of Nikolaus is a drawing puzzle for children. The house must be drawn in a single stroke using eight lines without tracing any line twice. To do this, one says, “Das klei-ne Haus des Ni-ko-laus.”'
+description = 'The small house of Nikolaus is a drawing puzzle for children. The house must be drawn in a single stroke using eight lines without tracing any line twice. To do this, one says: “Das klei-ne Haus des Ni-ko-laus.”'
 date = 2025-08-13T18:35:00+02:00
 draft = false
 tags = ['graph']
@@ -23,7 +23,7 @@ github = 'nikolaus'
 ## "Das Kleine Haus des Nikolaus" Puzzle
 
 **"Das kleine Haus des Nikolaus"** is a popular children's puzzle where the
-objective is to draw a continuous line that traces eight segments without
+objective is to draw a house with a continuous line that traces eight segments without
 lifting the pencil and without retracing any segment. This can be accomplished
 while verbalizing the phrase, "das-klei-ne-Haus-des-Ni-ko-laus."
 
@@ -79,7 +79,7 @@ Next, we iterate over this path array, adding subsequent nodes only if they
 haven't already been included in the path. If adding a node results in a path
 that is already in our result list, we skip that solution.
 
-```rust
+```typescript
 function extend_paths(current_paths: Result): Result {
   const new_paths: Result = [];
 
@@ -114,7 +114,7 @@ function extend_paths(current_paths: Result): Result {
 
 ## Result 
 
- E Voilà, we've collected all possible solutions, resulting in 
+Voilà, we've collected all possible solutions, resulting in
 
 **44 distinct Eulerian paths**
 
