@@ -36,7 +36,15 @@ these rules can also be written as B2S23  ("B" for birth, "S" for survival).
 https://conwaylife.com/wiki/List_of_Generations_rules
 
 <figure class="fullwidth">
-  <canvas id="shader" class="fullwidth"></canvas>
+<div class="gpu_canvas-wrapper" id="gpu_wrapper">
+  <canvas id="gpu_shader" width="1280" height="860"></canvas>
+  <div class="gpu_canvas-controls">
+    <button id="gpu_btn-play-pause" title="Play/Pause">⏸</button>
+    <span id="gpu_fps-counter">00 FPS</span>
+    <button id="gpu_btn-reset" title="Reset Code">↺</button>
+    <button id="gpu_btn-fullscreen" title="Toggle Fullscreen">⛶</button>
+  </div>
+</div>
 </figure>
 
 <label for="targetInput">B:</label>
@@ -52,3 +60,6 @@ There are some
 - HighLife (B36/S23): Creates interesting "replicator" patterns.
 - Day & Night (B3678/S34678): Often results in symmetrical, crystal-like structures.
 - Seeds (B2/S): Every live cell dies each generation, and new ones are born from any empty cell with exactly 2 neighbors. (An empty 'S' means nothing survives).
+
+<div id="monaco-container"></div>
+

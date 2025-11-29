@@ -564,7 +564,6 @@ const fpsLabel = document.querySelector('#gpu_fps-counter') as HTMLElement;
 const fullBtn = document.querySelector('#gpu_btn-fullscreen') as HTMLButtonElement;
 const resetBtn = document.querySelector('#gpu_btn-reset') as HTMLButtonElement;
 
-// CHANGE: Get Input Elements
 const ruleInput = document.querySelector('#rule') as HTMLInputElement;
 const sizeInput = document.querySelector('#size') as HTMLInputElement;
 const initialInput = document.querySelector('#initial') as HTMLSelectElement;
