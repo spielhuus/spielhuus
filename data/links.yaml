@@ -134,3 +134,12 @@
   name: "2D SDF"
   url: "https://iquilezles.org/articles/distfunctions2d/"
   description: "2D signed distance field functions"
+
+- id: "palettes"
+  name: "palettes"
+  url: "https://iquilezles.org/articles/palettes/"
+  description: "Article from Inigo Quilez"
+- id: ""
+  name: "2D SDF"
+  url: "https://iquilezles.org/articles/distfunctions2d/"
+  description: "2D signed distance field functions"
