@@ -54,10 +54,7 @@ color gradients powered by WebGPU.
     <div class="gpu_canvas-wrapper" id="gpu_wrapper">
       <canvas id="gpu_shader" width="1280" height="200"></canvas>
       <div class="gpu_canvas-controls">
-        <button id="gpu_btn-play-pause" title="Play/Pause">⏸</button>
-        <span id="gpu_fps-counter">00 FPS</span>
         <button id="gpu_btn-reset" title="Reset Code">↺</button>
-        <button id="gpu_btn-fullscreen" title="Toggle Fullscreen">⛶</button>
       </div>
     </div>
 </figure>
