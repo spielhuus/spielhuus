@@ -577,7 +577,7 @@ impl State {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[&projection_bind_group_layout],
-                push_constant_ranges: &[],
+                immediate_size: 0,
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -614,8 +614,8 @@ impl State {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-            multiview: None,
             cache: None,
+            multiview_mask: None,
         });
 
         #[cfg(target_arch = "wasm32")]
@@ -673,6 +673,7 @@ impl State {
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        info!("resize: {:?}", new_size);
         if new_size.width > 0 && new_size.height > 0 {
             self.size = new_size;
             self.config.width = new_size.width;
@@ -734,10 +735,11 @@ impl State {
                 .filter(|g| g.winner)
                 .count() as i32;
             let start_y = self.config.height as f32 / 2.0 - 50.0;
-            population
-                .get_phenotypes_mut()
-                .iter_mut()
-                .for_each(|p| {p.reset(); p.pos.x = 20.0; p.pos.y = start_y });
+            population.get_phenotypes_mut().iter_mut().for_each(|p| {
+                p.reset();
+                p.pos.x = 20.0;
+                p.pos.y = start_y
+            });
             self.round = 0;
             self.loops += 1;
 
@@ -826,6 +828,7 @@ impl State {
                 depth_stencil_attachment: None,
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
@@ -984,9 +987,7 @@ impl ApplicationHandler<UserEvent> for App {
         {
             let window_attributes = Window::default_attributes();
             let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
-            self.state = Some(Box::new(
-                pollster::block_on(State::new(window)).unwrap(),
-            ));
+            self.state = Some(Box::new(pollster::block_on(State::new(window)).unwrap()));
         }
     }
 
