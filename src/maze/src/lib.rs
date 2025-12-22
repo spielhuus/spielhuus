@@ -79,7 +79,6 @@ pub const WF_TURN_TOP_LEFT: u32 = 1 << 5;
 pub const WF_TURN_BOTTOM_RIGHT: u32 = 1 << 6;
 pub const WF_TURN_BOTTOM_LEFT: u32 = 1 << 7;
 
-
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -255,68 +254,68 @@ impl Board {
         board
     }
 
-fn init(&mut self) {
-    for j in 0..self.board_size {
-        for i in 0..self.board_size {
-            self.cells.push(Cell::new(i, j));
+    fn init(&mut self) {
+        for j in 0..self.board_size {
+            for i in 0..self.board_size {
+                self.cells.push(Cell::new(i, j));
+            }
         }
-    }
-    
-    self.cells[0].walls.left = false;
-    self.gpu_data[0][0] &= !WALL_LEFT;
-    self.gpu_data[0][0] |= START_LEFT;
 
-    let last_index = self.cells.len() - 1;
-    self.cells[last_index].walls.right = false;
-    self.gpu_data[last_index][0] &= !WALL_RIGHT;
-    self.gpu_data[last_index][0] |= END_RIGHT;
-}
+        self.cells[0].walls.left = false;
+        self.gpu_data[0][0] &= !WALL_LEFT;
+        self.gpu_data[0][0] |= START_LEFT;
+
+        let last_index = self.cells.len() - 1;
+        self.cells[last_index].walls.right = false;
+        self.gpu_data[last_index][0] &= !WALL_RIGHT;
+        self.gpu_data[last_index][0] |= END_RIGHT;
+    }
 
     pub fn get_cell(&mut self, index: usize) -> &mut Cell {
         &mut self.cells[index]
     }
 
-pub fn get_index(&self, x: usize, y: usize) -> usize {
-    let index = y * self.board_size + x;
-    assert!(self.cells[index].x == x && self.cells[index].y == y);
-    index
-}
-pub fn neighbors(&self, cell_index: usize) -> Vec<Option<usize>> {
-    let mut res = Vec::<Option<usize>>::new();
-    let x = self.cells[cell_index].x;
-    let y = self.cells[cell_index].y;
+    pub fn get_index(&self, x: usize, y: usize) -> usize {
+        let index = y * self.board_size + x;
+        assert!(self.cells[index].x == x && self.cells[index].y == y);
+        index
+    }
+    pub fn neighbors(&self, cell_index: usize) -> Vec<Option<usize>> {
+        let mut res = Vec::<Option<usize>>::new();
+        let x = self.cells[cell_index].x;
+        let y = self.cells[cell_index].y;
 
-    // Top (North, y-1)
-    if y > 0 {
-        res.push(Some(cell_index - self.board_size));
-    } else {
-        res.push(None);
+        // Top (North, y-1)
+        if y > 0 {
+            res.push(Some(cell_index - self.board_size));
+        } else {
+            res.push(None);
+        }
+
+        // Bottom (South, y+1)
+        if y < self.board_size - 1 {
+            res.push(Some(cell_index + self.board_size));
+        } else {
+            res.push(None);
+        }
+
+        // Right (East, x+1)
+        if x < self.board_size - 1 {
+            res.push(Some(cell_index + 1));
+        } else {
+            res.push(None);
+        }
+
+        // Left (West, x-1)
+        if x > 0 {
+            res.push(Some(cell_index - 1));
+        } else {
+            res.push(None);
+        }
+
+        res
     }
 
-    // Bottom (South, y+1)
-    if y < self.board_size - 1 {
-        res.push(Some(cell_index + self.board_size));
-    } else {
-        res.push(None);
-    }
-
-    // Right (East, x+1)
-    if x < self.board_size - 1 {
-        res.push(Some(cell_index + 1));
-    } else {
-        res.push(None);
-    }
-
-    // Left (West, x-1)
-    if x > 0 {
-        res.push(Some(cell_index - 1));
-    } else {
-        res.push(None);
-    }
-    
-    res
-}
- 
     pub fn remove_wall(&mut self, cell: usize, neighbor: usize) {
         match self.cells[cell].direction(&self.cells[neighbor]) {
             crate::Direction::North => {
@@ -427,7 +426,13 @@ impl State {
         #[cfg(target_arch = "wasm32")]
         let start_time = web_sys::window().unwrap().performance().unwrap().now();
 
+        //TODO let size = window.inner_size();
+        #[cfg(target_arch = "wasm32")]
+        let size = winit::dpi::PhysicalSize::new(canvas.width(), canvas.height());
+        #[cfg(not(target_arch = "wasm32"))]
         let size = window.inner_size();
+        let cell_size = (size.width as usize - 2 * BORDER) / INITIAL_CELL_COUNT;
+
         let is_surface_configured = size.width > 0 && size.height > 0;
         let board = Board::new(BORDER, INITIAL_CELL_COUNT, 5); //TODO: is the cell size used?
         let solver = Box::new(solver::djikstra::Djikstra::new(&board));
@@ -550,7 +555,8 @@ impl State {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[&uniform_bind_group_layout],
-                push_constant_ranges: &[],
+                immediate_size: 0,
+                //TODO push_constant_ranges: &[],
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -575,7 +581,7 @@ impl State {
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -589,7 +595,7 @@ impl State {
             selected_generator: MazeAlgorithm::RecursiveBacktracker,
             selected_solver: PathfindingAlgorithm::RecursiveBacktracker,
             cell_count: INITIAL_CELL_COUNT,
-            cell_size: (window.inner_size().width as usize - 2 * BORDER) / 5,
+            cell_size, //TODO : (window.inner_size().width as usize - 2 * BORDER) / 5,
             steps_per_frame: 5,
             generator,
             solver,
@@ -741,8 +747,11 @@ impl State {
                     self.state = self.generator.step(&mut self.board);
                     maze_updated = true;
                     if self.state == MazeState::GenerationDone {
-                       #[cfg(target_arch = "wasm32")] { needs_next_frame = true; }
-                       break;
+                        #[cfg(target_arch = "wasm32")]
+                        {
+                            needs_next_frame = true;
+                        }
+                        break;
                     }
                 }
                 #[cfg(target_arch = "wasm32")]
@@ -755,8 +764,11 @@ impl State {
                     self.state = self.solver.step(&mut self.board).unwrap();
                     maze_updated = true;
                     if self.state == MazeState::Done {
-                       #[cfg(target_arch = "wasm32")] { needs_next_frame = true; }
-                       break;
+                        #[cfg(target_arch = "wasm32")]
+                        {
+                            needs_next_frame = true;
+                        }
+                        break;
                     }
                     #[cfg(target_arch = "wasm32")]
                     if self.state == MazeState::Solve {
@@ -814,6 +826,7 @@ impl State {
                 depth_stencil_attachment: None,
                 occlusion_query_set: None,
                 timestamp_writes: None,
+                multiview_mask: None,
             });
 
             // Update uniforms for the maze shader
@@ -827,14 +840,12 @@ impl State {
             };
 
             let updated_uniforms = Uniforms {
-                resolution: [
-                    self.window.inner_size().width as f32,
-                    self.window.inner_size().height as f32,
-                ],
+                resolution: [self.config.width as f32, self.config.height as f32],
                 time: elapsed,
                 grid_size: self.cell_count as u32,
                 colors: self.colors,
             };
+
             self.queue.write_buffer(
                 &self.uniform_buffer,
                 0,
@@ -888,7 +899,9 @@ impl State {
                                     )
                                     .changed()
                                 {
-                                    self.proxy.send_event(UserEvent::StepsPerFrame(new_steps_per_frame)).ok();
+                                    self.proxy
+                                        .send_event(UserEvent::StepsPerFrame(new_steps_per_frame))
+                                        .ok();
                                 }
                                 ui.end_row();
                                 ui.label("Generator:");
@@ -1263,7 +1276,7 @@ impl ApplicationHandler<UserEvent> for App {
                 )
                 .unwrap();
             self._event_closures.push(on_select_size_callback);
-            
+
             let steps_choice = document
                 .get_element_by_id("steps")
                 .expect("should have an input with id 'steps'");
@@ -1358,10 +1371,10 @@ impl ApplicationHandler<UserEvent> for App {
             UserEvent::StateInitialized(mut initial_state) => {
                 #[cfg(target_arch = "wasm32")]
                 {
-                    initial_state.resize(
-                        initial_state.window.inner_size().width,
-                        initial_state.window.inner_size().height,
-                    );
+                    // initial_state.resize(
+                    //     initial_state.window.inner_size().width,
+                    //     initial_state.window.inner_size().height,
+                    // );
                     initial_state.window.request_redraw();
                 }
                 self.state = Some(initial_state);
