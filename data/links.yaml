@@ -139,7 +139,19 @@
   name: "palettes"
   url: "https://iquilezles.org/articles/palettes/"
   description: "Article from Inigo Quilez"
+
 - id: ""
   name: "2D SDF"
   url: "https://iquilezles.org/articles/distfunctions2d/"
   description: "2D signed distance field functions"
+
+- id: "6502"
+  name: "6502"
+  url: "http://6502.org/"
+  description: "The 6502 microprocessor resource"
+
+- id: "nesdev"
+  name: "nesdev"
+  url: "https://www.nesdev.org/"
+  description: "A community of homebrew game developers and hardware researchers for the Nintendo Entertainment System (NES) and other retro consoles."
+
